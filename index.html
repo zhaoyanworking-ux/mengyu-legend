@@ -188,7 +188,7 @@ function canvasTex(draw, size, repeatX, repeatY, nearest){
   const t=new THREE.CanvasTexture(c);
   t.colorSpace=THREE.SRGBColorSpace;
   t.wrapS=t.wrapT=THREE.RepeatWrapping;
-  t.anisotropy=isMobile?1:4;
+  t.anisotropy=isMobile?4:8;
   t.repeat.set(repeatX||1, repeatY||1);
   if(nearest){ t.minFilter=t.magFilter=THREE.LinearFilter; }
   t.needsUpdate=true;
@@ -1753,11 +1753,22 @@ function buildClassCards(){
   if(sv&&sv.hasSave){ $("btnCont").style.display="inline-block"; $("btnCont").addEventListener("click", ()=>{ G.save=sv; startAdventure(sv.classId||"swordsman", false); }); }
 }
 
+const _shV=new THREE.Vector3();
+const G_DPR={max:1,cur:1,acc:0,frames:0,checks:0};
+// adaptive resolution: drop render scale a little if the phone cannot hold ~45fps
+function adaptDPR(dt){
+  if(G_DPR.checks>=4) return;
+  G_DPR.acc+=dt; G_DPR.frames++;
+  if(G_DPR.acc>=2.5){
+    const fps=G_DPR.frames/G_DPR.acc; G_DPR.acc=0; G_DPR.frames=0; G_DPR.checks++;
+    if(fps<42 && G_DPR.cur>1.25){ G_DPR.cur=Math.max(1.25,G_DPR.cur-0.25); renderer.setPixelRatio(G_DPR.cur); renderer.setSize(innerWidth,innerHeight,false); }
+  }
+}
 function init(){
   if(!window.THREE){ document.body.insertAdjacentHTML("beforeend","<p style='padding:20px'>无法加载 Three.js。</p>"); return; }
   const canvas=$("c");
-  renderer=new THREE.WebGLRenderer({ canvas, antialias:!isMobile, alpha:false, powerPreference:"high-performance" });
-  const dpr=Math.min(window.devicePixelRatio||1, isMobile?1.25:1.75);
+  renderer=new THREE.WebGLRenderer({ canvas, antialias:true, alpha:false, powerPreference:"high-performance" });
+  const dpr=Math.min(window.devicePixelRatio||1, isMobile?2:2); G_DPR.max=dpr; G_DPR.cur=dpr;
   renderer.setPixelRatio(dpr);
   renderer.setSize(innerWidth, innerHeight, false);
   renderer.outputColorSpace=THREE.SRGBColorSpace;
@@ -1775,11 +1786,11 @@ function init(){
   const hemi=new THREE.HemisphereLight(0xc8e8ff, 0x6a9a58, 0.72); scene.add(hemi);
   sun=new THREE.DirectionalLight(0xfff1c8, 1.35); sun.position.set(14,18,7); scene.add(sun);
   sun.castShadow=true;
-  const ss=isMobile?512:1024;
+  const ss=isMobile?1024:2048;
   sun.shadow.mapSize.set(ss,ss);
   sun.shadow.camera.near=1; sun.shadow.camera.far=70;
-  sun.shadow.camera.left=-30; sun.shadow.camera.right=30;
-  sun.shadow.camera.top=30; sun.shadow.camera.bottom=-30;
+  sun.shadow.camera.left=-16; sun.shadow.camera.right=16; scene.add(sun.target); sun.shadow.bias=-0.0006; sun.shadow.normalBias=0.02;
+  sun.shadow.camera.top=16; sun.shadow.camera.bottom=-16;
   sun.shadow.bias=-0.0008;
   const rim=new THREE.DirectionalLight(0xd8f0ff, 0.45); rim.position.set(-10,8,-12); scene.add(rim);
 
@@ -1808,6 +1819,11 @@ function init(){
     requestAnimationFrame(loop);
     const dt=Math.min(0.05, clock.getDelta());
     update(dt);
+    adaptDPR(dt);
+    { // keep the tight, sharp shadow box centred on where the camera looks
+      const dir=camera.getWorldDirection(_shV); const t=dir.y<-0.05? -camera.position.y/dir.y : 12;
+      const fx=camera.position.x+dir.x*t, fz=camera.position.z+dir.z*t;
+      sun.position.set(fx+14,18,fz+7); sun.target.position.set(fx,0,fz); sun.target.updateMatrixWorld(); }
     if(G.atkHeld && G.classId==="swordsman") tryAttack();
     renderer.render(scene, camera);
     if(!loop._ready){ loop._ready=1; document.documentElement.setAttribute("data-ready","1"); document.title="ready"; }
