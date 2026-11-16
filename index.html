@@ -1454,7 +1454,10 @@ function update(dt){
   if($("talk")) $("talk").style.display=(G.near && G.mode==="play")?"block":"none";
 
   if(!G.freezeCam){
-    const cx=G.p.x, cy=11.5, cz=G.p.z-9.2;
+    // fixed 45-degree diagonal top-down follow camera (pitch 45, yaw 45); pull back on portrait screens
+    const asp=innerWidth/innerHeight, D=asp<1? 17+(1-asp)*8 : 15;
+    const h=D*0.7071, hz=D*0.7071*0.7071;
+    const cx=G.p.x+hz, cy=h, cz=G.p.z-hz;
     camera.position.lerp(tmpV.set(cx,cy,cz), 1-Math.exp(-8*dt));
     G.shake=Math.max(0,G.shake-dt*1.8);
     const sh=G.shake*G.shake;
@@ -1583,6 +1586,8 @@ function init(){
   });
 
   if(shot==="select"){ applyShotCamera(); }
+  else if(shot==="play"){ startAdventure("swordsman", true); }
+  else if(shot==="playfield"){ startAdventure("swordsman", true); G.p.x=0; G.p.z=26; }
   else if(shot==="town"||shot==="field"||shot==="combat"){ startAdventure("swordsman", true); applyShotCamera(); }
 
   function loop(){
