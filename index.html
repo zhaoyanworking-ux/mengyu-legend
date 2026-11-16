@@ -51,7 +51,7 @@
   #over button{margin:0 8px;padding:10px 22px;border:0;border-radius:18px;font-size:16px}
   #goTown{background:#f07a48;color:#fff} #goTitle{background:#5a5680;color:#fff}
   #select{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;background:linear-gradient(rgba(110,196,245,.38) 0%,rgba(184,228,255,.16) 42%,rgba(200,236,176,.08) 100%);
-    display:flex;flex-direction:column;align-items:center;overflow:auto;pointer-events:auto;color:#2a3040}
+    display:flex;flex-direction:column;align-items:center;overflow-y:auto;-webkit-overflow-scrolling:touch;touch-action:pan-y;overscroll-behavior:contain;pointer-events:auto;color:#2a3040}
   #select h1{font-size:clamp(32px,8vw,64px);margin:28px 0 4px;color:#fff6c8;text-shadow:0 3px 0 #3a7ab0,0 8px 18px rgba(40,80,140,.25)}
   #select .sub{color:#fff;text-shadow:0 1px 2px #3a6aaa;margin-bottom:6px;font-size:14px;text-align:center;padding:0 16px}
   #select .hint{color:#8a4a10;background:rgba(255,255,255,.65);padding:4px 12px;border-radius:12px;font-size:13px;margin-bottom:14px}
@@ -65,7 +65,8 @@
   .card .st{color:#b06020;margin:6px 0;font-size:14px}
   .card p{font-size:13px;line-height:1.5;margin:0 0 8px;color:#334}
   .rec{display:inline-block;background:#e85a48;color:#fff;border-radius:10px;padding:1px 8px;font-size:12px}
-  #startRow{display:flex;gap:12px;margin:6px 0 28px;flex-wrap:wrap;justify-content:center}
+  #startRow{display:flex;gap:12px;margin:6px 0 28px;flex-wrap:wrap;justify-content:center;position:sticky;bottom:0;z-index:5;width:100%;padding:12px 0 calc(14px + env(safe-area-inset-bottom));background:linear-gradient(rgba(255,255,255,0),rgba(255,255,255,.85) 35%)}
+  @media (max-width:600px){#select h1{margin-top:14px}.card{padding:12px 14px 14px}.card p{font-size:12.5px}}
   #startRow button{border:0;border-radius:22px;padding:12px 28px;font-size:18px;font-weight:700;pointer-events:auto}
   #btnGo{background:#f07040;color:#fff} #btnCont{background:#4a88d0;color:#fff;display:none}
   #stage{flex:1;min-height:38vh;width:100%;pointer-events:none}
@@ -1510,7 +1511,7 @@ function bindInput(){
     if(e.code==="KeyE"||e.code==="KeyF") tryTalk();
   });
   window.addEventListener("keyup", e=>G.keys[e.code]=false);
-  document.addEventListener("touchmove", e=>e.preventDefault(), {passive:false});
+  document.addEventListener("touchmove", e=>{ if(e.target.closest&&e.target.closest("#select")) return; e.preventDefault(); }, {passive:false});
   document.addEventListener("gesturestart", e=>e.preventDefault());
   document.addEventListener("dblclick", e=>e.preventDefault());
 }
