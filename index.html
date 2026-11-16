@@ -1388,6 +1388,10 @@ function update(dt){
   if(G.keys["KeyS"]||G.keys["ArrowDown"]) iz-=1;
   if(G.keys["KeyA"]||G.keys["ArrowLeft"]) ix-=1;
   if(G.keys["KeyD"]||G.keys["ArrowRight"]) ix+=1;
+  // camera-relative input: up = away from camera, right = screen right
+  { const fx=G.p.x-camera.position.x, fz=G.p.z-camera.position.z, fl=Math.hypot(fx,fz)||1;
+    const ffx=fx/fl, ffz=fz/fl, rx=-ffz, rz=ffx; // right vector (screen right) for a Y-up camera
+    const wx=ix*rx+iz*ffx, wz=ix*rz+iz*ffz; ix=wx; iz=wz; }
   const len=Math.hypot(ix,iz);
   if(len>1){ ix/=len; iz/=len; }
   const busy=G.p.atkT>0||G.p.spinT>0||G.p.dead;
