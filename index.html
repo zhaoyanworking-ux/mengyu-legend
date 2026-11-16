@@ -8,6 +8,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="theme-color" content="#7EC8F5">
 <title>萌域传说</title>
+<link rel="icon" href="data:,">
 <style>
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
   html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden;background:#7ec8f5;
@@ -23,7 +24,7 @@
   #hpfill{background:linear-gradient(90deg,#f07070,#ff9a9a)}
   #mpfill{background:linear-gradient(90deg,#5a8cff,#9ad0ff)}
   #bars .lab{font-size:11px;opacity:.95;margin-top:2px}
-  #gold{position:absolute;right:12px;top:12px;font-size:14px;color:#ffe9a8;text-shadow:0 1px 0 #533}
+  #gold{position:absolute;right:84px;top:20px;font-size:14px;color:#ffe9a8;text-shadow:0 1px 0 #533}
   #quest{position:absolute;right:12px;top:42px;width:min(48vw,280px);font-size:13px}
   #quest b{color:#ffd36a;display:block;margin-bottom:4px}
   #toast{position:absolute;left:50%;top:22%;transform:translateX(-50%);background:rgba(20,16,28,.8);
@@ -71,11 +72,16 @@
   #btnGo{background:#f07040;color:#fff} #btnCont{background:#4a88d0;color:#fff;display:none}
   #stage{flex:1;min-height:38vh;width:100%;pointer-events:none}
   #playHud{display:none}
+  #loadbar{position:fixed;left:50%;top:calc(10px + env(safe-area-inset-top));transform:translateX(-50%);z-index:50;width:min(70vw,300px);
+    background:rgba(28,24,40,.78);border-radius:14px;padding:8px 12px 10px;display:none;pointer-events:none;color:#fff;font-size:12px;text-align:center}
+  #loadfill{width:0;background:linear-gradient(90deg,#ffd36a,#ff9a6a);transition:width .2s}
+  .card .thumb{float:right;width:92px;height:110px;object-fit:contain;margin:-8px -6px 2px 6px;filter:drop-shadow(0 4px 6px rgba(40,70,110,.25))}
 </style>
 </head>
 <body>
 <canvas id="c"></canvas>
 <div id="ui">
+  <div id="loadbar"><div id="loadtxt">角色模型加载中 0%</div><div class="bar"><i id="loadfill"></i></div></div>
   <div id="select">
     <h1>萌域传说</h1>
     <div class="sub">Chibi Realm Legends　·　青岚镇的风里，已经能闻到蚀雾的锈味</div>
@@ -108,6 +114,7 @@
 </div>
 <script src="./three.min.js"></script>
 <script>if(!window.THREE){document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/0.160.0/three.min.js"><\/script>');}</script>
+<script src="./three-addons.min.js"></script>
 <script>
 (function(){
 "use strict";
@@ -252,6 +259,209 @@ function blobShadow(parent, s){
     new THREE.MeshBasicMaterial({color:0x3a4a2e, transparent:true, opacity:0.22, depthWrite:false}));
   m.rotation.x=-Math.PI/2; m.position.y=0.015;
   parent.add(m); return m;
+}
+
+/* ---------- Tripo GLB characters (rigged + animated); procedural chibis stay as fallback ---------- */
+const GLB_FILES={ swordsman:"models/warrior.glb", mage:"models/mage.glb", archer:"models/archer.glb" };
+// attack windows (seconds) cut out of the long Tripo preset clips
+const GLB_ATTACK={ swordsman:{clip:"slash",t0:1.95,t1:2.85}, mage:{clip:"slash",t0:1.5,t1:2.4}, archer:{clip:"shoot",t0:0.8,t1:1.8} };
+const GLB={ data:{}, height:1.7, yawFix:-Math.PI/2 };
+function glbReady(id){ return !!GLB.data[id]; }
+function stripRootMotion(clip){
+  clip.tracks.forEach(t=>{
+    if(/Hips\.position$/.test(t.name)){ const v=t.values; const x0=v[0], z0=v[2]; for(let i=0;i<v.length;i+=3){ v[i]=x0; v[i+2]=z0; } }
+  });
+}
+function cutClip(clip, t0, t1, name){
+  const c=clip.clone(); c.name=name;
+  c.tracks.forEach(tr=>{
+    const times=[], vals=[], n=tr.getValueSize();
+    for(let i=0;i<tr.times.length;i++){
+      const t=tr.times[i];
+      if(t>=t0-1e-4 && t<=t1+1e-4){ times.push(t-t0); for(let k=0;k<n;k++) vals.push(tr.values[i*n+k]); }
+    }
+    if(!times.length){ times.push(0); for(let k=0;k<n;k++) vals.push(tr.values[k]); }
+    tr.times=new Float32Array(times); tr.values=new Float32Array(vals);
+  });
+  c.duration=Math.max(0.05, t1-t0); return c;
+}
+function outlineMat(w){
+  const m=new THREE.MeshBasicMaterial({ color:0x3a2a32, side:THREE.BackSide });
+  m.onBeforeCompile=sh=>{
+    sh.vertexShader=sh.vertexShader.replace("#include <skinning_vertex>",
+      "#include <skinning_vertex>\n#if defined(USE_SKINNING)\ntransformed += normalize(objectNormal) * "+w.toFixed(5)+";\n#endif");
+  };
+  return m;
+}
+function prepGlb(id, gltf){
+  const root=gltf.scene;
+  root.updateMatrixWorld(true);
+  const box=new THREE.Box3().setFromObject(root);
+  const h=Math.max(0.01, box.max.y-box.min.y);
+  const skinned=[];
+  root.traverse(o=>{
+    if(!o.isMesh) return;
+    const old=o.material;
+    o.material=new THREE.MeshToonMaterial({ color:0xffffff, map:old.map||null, normalMap:old.normalMap||null, gradientMap,
+      emissive:old.map?0xffffff:0x000000, emissiveMap:old.map||null, emissiveIntensity:0.22 });
+    if(old.metalnessMap && old.metalnessMap!==old.map) old.metalnessMap.dispose();
+    old.dispose();
+    o.castShadow=true; o.receiveShadow=false; o.frustumCulled=false;
+    if(o.isSkinnedMesh) skinned.push(o);
+  });
+  // inverted-hull outline that follows the skeleton (keeps the toon look of the procedural props)
+  skinned.forEach(o=>{
+    if(!o.geometry.attributes.normal) return;
+    o.geometry.computeBoundingBox();
+    const gh=o.geometry.boundingBox.max.y-o.geometry.boundingBox.min.y || 1;
+    const ol=new THREE.SkinnedMesh(o.geometry, outlineMat(gh*0.006));
+    ol.bind(o.skeleton, o.bindMatrix); ol.frustumCulled=false; ol.renderOrder=-1; ol.name="outline";
+    o.parent.add(ol); ol.position.copy(o.position); ol.quaternion.copy(o.quaternion); ol.scale.copy(o.scale);
+  });
+  const clips={};
+  gltf.animations.forEach(c=>{ stripRootMotion(c); clips[c.name]=c; });
+  const a=GLB_ATTACK[id], src=clips[a.clip];
+  if(src) clips.attack=cutClip(src, a.t0, Math.min(a.t1, src.duration), "attack");
+  GLB.data[id]={ scene:root, clips, srcH:h, minY:box.min.y };
+}
+function makeGlbChar(id){
+  const d=GLB.data[id]; if(!d || !window.THREE_ADDONS) return null;
+  const g=new THREE.Group();
+  const inner=THREE_ADDONS.SkeletonUtils.clone(d.scene);
+  const s=GLB.height/d.srcH;
+  inner.scale.setScalar(s); inner.position.y=-d.minY*s; inner.rotation.y=GLB.yawFix;
+  g.add(inner);
+  const mixer=new THREE.AnimationMixer(inner);
+  const acts={};
+  ["idle","run","attack"].forEach(k=>{ if(d.clips[k]) acts[k]=mixer.clipAction(d.clips[k]); });
+  if(acts.attack){ acts.attack.setLoop(THREE.LoopOnce,1); acts.attack.clampWhenFinished=true; }
+  if(acts.run) acts.run.setEffectiveTimeScale(1.25);
+  if(acts.idle){ acts.idle.play(); acts.idle.time=Math.random()*3; }
+  mixer.update(0);
+  g.userData={ gltf:true, kind:id, mixer, acts, cur:"idle", atkUntil:0, atkLen:d.clips.attack?d.clips.attack.duration:0.5, phase:0 };
+  blobShadow(g, 0.5);
+  return g;
+}
+function glbFadeTo(u, name, dur){
+  const next=u.acts[name], prev=u.acts[u.cur];
+  if(!next || u.cur===name) return;
+  next.reset(); next.setEffectiveWeight(1); next.play();
+  if(name==="run") next.setEffectiveTimeScale(1.25);
+  if(prev) next.crossFadeFrom(prev, dur, false);
+  u.cur=name;
+}
+function playAttack(ch, dur){
+  const u=ch&&ch.userData; if(!u||!u.gltf||!u.acts.attack) return;
+  const a=u.acts.attack, prev=u.acts[u.cur];
+  dur=dur||0.3;
+  a.reset(); a.setEffectiveWeight(1); a.setEffectiveTimeScale(u.atkLen/dur); a.play();
+  if(prev && prev!==a) a.crossFadeFrom(prev, 0.05, false);
+  u.cur="attack"; u.atkUntil=performance.now()/1000+dur;
+}
+function animGlb(ch, moving, dt, attacking, spinning, dead){
+  const u=ch.userData, now=performance.now()/1000;
+  if(spinning && (u.cur!=="attack" || now>=u.atkUntil)) playAttack(ch, 0.24);
+  const atkLive=u.cur==="attack" && now<u.atkUntil+0.06;
+  if(!atkLive && !spinning){
+    const want=(!dead && moving)?"run":"idle";
+    if(want!==u.cur) glbFadeTo(u, want, u.cur==="attack"?0.12:0.18);
+  }
+  u.mixer.update(dt);
+  ch.position.y=(u.groundY||0);
+  const uni=u.uniScale||1;
+  if(!dead) ch.scale.setScalar(uni);
+  if(spinning) ch.rotation.y += dt*12;
+  if(dead){
+    ch.scale.y=Math.max(0.12*uni, ch.scale.y-dt*1.6);
+    ch.scale.x=Math.min(1.8*uni, ch.scale.x+dt);
+    ch.scale.z=ch.scale.x;
+  }
+}
+function makeClassVisual(id){
+  return makeGlbChar(id) || (id==="mage"?makeMage(): id==="archer"?makeArcher(): makeSwordsman());
+}
+function loadCharacterModels(onDone){
+  window.__modelsDone=false;
+  const bar=$("loadbar"), fill=$("loadfill"), txt=$("loadtxt");
+  if(!window.THREE_ADDONS){ window.__modelsDone=true; if(onDone) onDone(); return; }
+  // match the procedural chibi height so NPCs / props stay in proportion
+  try{ const ref=makeSwordsman(); ref.updateMatrixWorld(true); const b=new THREE.Box3().setFromObject(ref); GLB.height=Math.max(1.2,(b.max.y-b.min.y)*1.08); }catch(e){}
+  const ids=Object.keys(GLB_FILES), prog={}; let left=ids.length;
+  const upd=()=>{ let s=0; ids.forEach(i=>s+=(prog[i]||0)); const p=Math.round(s/ids.length*100); fill.style.width=p+"%"; txt.textContent="角色模型加载中 "+p+"%"; };
+  const loader=new THREE_ADDONS.GLTFLoader();
+  loader.setMeshoptDecoder(THREE_ADDONS.MeshoptDecoder);
+  bar.style.display="block"; upd();
+  function fin(){
+    if(--left>0) return;
+    fill.style.width="100%";
+    setTimeout(()=>{ bar.style.display="none"; }, 350);
+    window.__modelsDone=true; if(onDone) onDone();
+  }
+  const fromFile=location.protocol==="file:";
+  ids.forEach(id=>{
+    if(fromFile){
+      // file:// cannot fetch(); load a base64 copy through a plain <script> tag instead
+      const sc=document.createElement("script"); sc.src=GLB_FILES[id]+".js";
+      sc.onload=()=>{
+        try{
+          const bin=atob((window.__GLB_B64||{})[id]||""); const buf=new Uint8Array(bin.length);
+          for(let i=0;i<bin.length;i++) buf[i]=bin.charCodeAt(i);
+          loader.parse(buf.buffer, "", g=>{ try{ prepGlb(id,g); }catch(e){ console.warn("GLB prep failed", id, e); delete GLB.data[id]; } prog[id]=1; upd(); fin(); },
+            err=>{ console.warn("GLB parse failed, using procedural", id, err); prog[id]=1; upd(); fin(); });
+        }catch(e){ console.warn("GLB decode failed", id, e); prog[id]=1; upd(); fin(); }
+      };
+      sc.onerror=()=>{ console.warn("GLB script missing, using procedural", id); prog[id]=1; upd(); fin(); };
+      document.head.appendChild(sc); return;
+    }
+    loader.load(GLB_FILES[id],
+      g=>{ try{ prepGlb(id,g); }catch(e){ console.warn("GLB prep failed, using procedural", id, e); delete GLB.data[id]; } prog[id]=1; upd(); fin(); },
+      e=>{ if(e && e.total){ prog[id]=Math.min(0.95, e.loaded/e.total); upd(); } },
+      err=>{ console.warn("GLB load failed, using procedural", id, err && err.message); prog[id]=1; upd(); fin(); });
+  });
+}
+function cardThumbs(){
+  // render each GLB once into a small sRGB target and drop the image into its class card
+  const W=200, H=240;
+  const rt=new THREE.WebGLRenderTarget(W,H,{ samples:0 }); rt.texture.colorSpace=THREE.SRGBColorSpace;
+  const sc=new THREE.Scene();
+  sc.add(new THREE.HemisphereLight(0xe8f4ff, 0x8aa070, 1.25));
+  const dl=new THREE.DirectionalLight(0xfff4dc, 1.6); dl.position.set(1.5,3,4); sc.add(dl);
+  const cam=new THREE.PerspectiveCamera(30, W/H, 0.05, 50);
+  const buf=new Uint8Array(W*H*4);
+  const cv=document.createElement("canvas"); cv.width=W; cv.height=H; const cx=cv.getContext("2d");
+  CLASS_ORDER.forEach(id=>{
+    if(!glbReady(id)) return;
+    const card=document.querySelector('.card[data-id="'+id+'"]'); if(!card) return;
+    const m=makeGlbChar(id); m.rotation.y=0.35; sc.add(m);
+    m.updateMatrixWorld(true);
+    const hgt=GLB.height;
+    cam.position.set(0, hgt*0.55, hgt*2.35); cam.lookAt(0, hgt*0.5, 0);
+    const prevT=renderer.getRenderTarget(), prevC=renderer.getClearColor(new THREE.Color()), prevA=renderer.getClearAlpha();
+    renderer.setRenderTarget(rt); renderer.setClearColor(0x000000, 0); renderer.clear(); renderer.render(sc, cam);
+    renderer.readRenderTargetPixels(rt, 0,0,W,H, buf);
+    renderer.setRenderTarget(prevT); renderer.setClearColor(prevC, prevA);
+    sc.remove(m);
+    const im=cx.createImageData(W,H);
+    for(let y=0;y<H;y++){ im.data.set(buf.subarray((H-1-y)*W*4, (H-y)*W*4), y*W*4); }
+    cx.putImageData(im,0,0);
+    let img=card.querySelector("img.thumb");
+    if(!img){ img=document.createElement("img"); img.className="thumb"; img.alt=CLASSES[id].name; card.insertBefore(img, card.firstChild); }
+    img.src=cv.toDataURL("image/png");
+  });
+  rt.dispose();
+}
+function upgradeVisuals(){
+  // swap already-spawned procedural chibis for GLB ones once loading finishes
+  function swap(old){
+    const id=old.userData && old.userData.kind; if(!glbReady(id) || old.userData.gltf) return old;
+    const n=makeGlbChar(id); n.position.copy(old.position); n.rotation.copy(old.rotation);
+    n.userData.uniScale=old.userData.uniScale||1; n.scale.setScalar(n.userData.uniScale);
+    if(old.parent){ old.parent.add(n); old.parent.remove(old); }
+    return n;
+  }
+  if(G.player) G.player=swap(G.player);
+  if(G._lineup) G._lineup=G._lineup.map(swap);
+  if(G._cast) G._cast=G._cast.map(swap);
 }
 
 /* ---------- canvas materials ---------- */
@@ -733,6 +943,7 @@ function makeBoss(){
 }
 
 function animBob(ch, moving, dt, attacking, spinning, dead){
+  if(ch.userData && ch.userData.gltf){ animGlb(ch, moving, dt, attacking, spinning, dead); return; }
   const u=ch.userData; if(!u||!u.body) return;
   u.phase=(u.phase||0)+dt*(moving?11:2.4);
   const s=Math.sin(u.phase);
@@ -1128,7 +1339,7 @@ function turnIn(q){
 
 function spawnPlayerVisual(classId){
   if(G.player) scene.remove(G.player);
-  G.player = classId==="mage"?makeMage(): classId==="archer"?makeArcher(): makeSwordsman();
+  G.player = makeClassVisual(classId);
   G.player.userData.uniScale=1;
   scene.add(G.player);
   G.player.position.set(G.p.x,0,G.p.z);
@@ -1183,7 +1394,7 @@ function poseLineup(z, faceYaw){
     G._lineup.forEach(m=>scene.remove(m));
   }
   // when the camera looks toward +Z, world +X appears on the LEFT of the frame
-  const sw=makeSwordsman(), mg=makeMage(), ar=makeArcher();
+  const sw=makeClassVisual("swordsman"), mg=makeClassVisual("mage"), ar=makeClassVisual("archer");
   sw.position.set(2.15,0,z); sw.rotation.y=faceYaw;
   mg.position.set(0.0,0,z+0.15); mg.rotation.y=faceYaw;
   ar.position.set(-2.20,0,z); ar.rotation.y=faceYaw;
@@ -1211,9 +1422,9 @@ function applyShotCamera(){
     G.p.x=-3.15; G.p.z=1.85; G.p.yaw=0.7;
     if(G.player){ G.player.position.set(-3.15,0,1.85); G.player.rotation.y=0.7; }
     if(!G._cast){
-      const mage=makeMage(); mage.position.set(-1.15,0,3.35); mage.rotation.y=0.25; scene.add(mage);
-      const arch=makeArcher(); arch.position.set(3.15,0,1.95); arch.rotation.y=-0.55; scene.add(arch);
-      const arch2=makeArcher(); arch2.position.set(3.45,0,5.55); arch2.rotation.y=-0.9; scene.add(arch2);
+      const mage=makeClassVisual("mage"); mage.position.set(-1.15,0,3.35); mage.rotation.y=0.25; scene.add(mage);
+      const arch=makeClassVisual("archer"); arch.position.set(3.15,0,1.95); arch.rotation.y=-0.55; scene.add(arch);
+      const arch2=makeClassVisual("archer"); arch2.position.set(3.45,0,5.55); arch2.rotation.y=-0.9; scene.add(arch2);
       G._cast=[mage,arch,arch2];
     }
     camera.fov=36; camera.updateProjectionMatrix();
@@ -1269,7 +1480,7 @@ function tryAttack(){
     doMelee();
   } else {
     if(G.atkCd>0) return;
-    G.atkCd=c.atkCd; G.p.atkT=0.25;
+    G.atkCd=c.atkCd; G.p.atkT=0.25; playAttack(G.player, G.classId==="mage"?0.4:0.3);
     fireShot(G.classId==="mage", 0, c.atk, G.classId==="mage"?11:18);
   }
 }
@@ -1279,6 +1490,7 @@ function doMelee(){
   G.p.atkT=0.28; G.comboExp=performance.now()/1000+0.42;
   let dmg=c.atk*(0.85+0.25*G.combo); if(G.combo===3) dmg*=1.25;
   const heavy=G.combo===3;
+  playAttack(G.player, heavy?0.34:0.28);
   G.p.x+=Math.sin(G.p.yaw)*(heavy?0.4:0.22);
   G.p.z+=Math.cos(G.p.yaw)*(heavy?0.4:0.22);
   slashArc(G.p.x+Math.sin(G.p.yaw)*0.7, G.p.z+Math.cos(G.p.yaw)*0.7, G.p.yaw);
@@ -1293,11 +1505,11 @@ function trySkill(){
   G.p.mp-=c.skillMp; G.skillCd=c.skillCd;
   if(G.classId==="swordsman"){ G.p.spinT=0.7; G.shake=0.35; }
   else if(G.classId==="mage"){
-    G.p.atkT=0.3; G.shake=0.28;
+    G.p.atkT=0.3; G.shake=0.28; playAttack(G.player, 0.45);
     const cx=G.p.x+Math.sin(G.p.yaw)*2.2, cz=G.p.z+Math.cos(G.p.yaw)*2.2;
     burst(cx,0.6,cz,0xb48cff,18); hitEnemies(cx,cz,2.4,c.skill,3.0,false);
   } else {
-    G.p.atkT=0.3;
+    G.p.atkT=0.3; playAttack(G.player, 0.35);
     [-24,-12,0,12,24].forEach((a,i)=>setTimeout(()=>fireShot(false,a*Math.PI/180,c.skill,20), i*40));
   }
   refreshHUD();
@@ -1455,7 +1667,7 @@ function update(dt){
 
   if(!G.freezeCam){
     // fixed 45-degree diagonal top-down follow camera (pitch 45, yaw 45); pull back on portrait screens
-    const asp=innerWidth/innerHeight, D=asp<1? 17+(1-asp)*8 : 15;
+    const asp=innerWidth/innerHeight, D=asp<1? 14+(1-asp)*6 : 11;
     const h=D*0.7071, hz=D*0.7071*0.7071;
     const cx=G.p.x+hz, cy=h, cz=G.p.z-hz;
     camera.position.lerp(tmpV.set(cx,cy,cz), 1-Math.exp(-8*dt));
@@ -1580,6 +1792,8 @@ function init(){
   camera.lookAt(0,0.6,3);
   bindInput();
   buildClassCards();
+  window.__mengyu={ G, GLB };
+  loadCharacterModels(()=>{ upgradeVisuals(); try{ cardThumbs(); }catch(e){ console.warn('thumbs', e); } });
   window.addEventListener("resize", ()=>{
     camera.aspect=innerWidth/innerHeight; camera.updateProjectionMatrix();
     renderer.setSize(innerWidth, innerHeight, false);
