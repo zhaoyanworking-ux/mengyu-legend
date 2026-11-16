@@ -202,6 +202,15 @@
   #title .tb button.alt{background:linear-gradient(#7ab4f0,#4a80d0);box-shadow:0 5px 0 #2a5098,0 8px 18px rgba(0,0,0,.2)}
   #title .tb button.gray{background:rgba(255,255,255,.85);color:#5a4a70;box-shadow:0 4px 0 rgba(90,74,112,.4)}
   #title .tb button small{display:block;font-size:12px;font-weight:600;opacity:.9;margin-top:2px}
+  #title::before{content:"";position:absolute;left:0;right:0;top:0;height:42%;background:linear-gradient(rgba(30,60,110,.28),rgba(30,60,110,0));pointer-events:none;z-index:-1}
+  #title .logo{animation:logoIn .9s cubic-bezier(.2,1.4,.4,1) both,logoFloat 4.5s ease-in-out .9s infinite}
+  #title .logo-en{animation:fadeUp .8s ease .35s both}
+  #title .tag{margin-top:10px;padding:5px 16px;border-radius:14px;background:rgba(20,40,80,.32);color:#fff3c0;font-size:13.5px;font-weight:700;letter-spacing:3px;text-shadow:0 1px 2px rgba(0,0,0,.35);animation:fadeUp .8s ease .6s both}
+  #title .tb button{animation:fadeUp .6s ease both}
+  #title .tb button:nth-child(2){animation-delay:.1s} #title .tb button:nth-child(3){animation-delay:.2s}
+  @keyframes logoIn{0%{transform:scale(.6) translateY(-20px);opacity:0}100%{transform:none;opacity:1}}
+  @keyframes logoFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+  @keyframes fadeUp{0%{transform:translateY(14px);opacity:0}100%{transform:none;opacity:1}}
   #title .ver{position:absolute;right:12px;bottom:calc(8px + var(--sb));font-size:11px;opacity:.8}
 
   /* ---------- class select ---------- */
@@ -276,7 +285,7 @@
     <div id="loadtip">小提示：翻滚瞬间无敌，看到红色预警圈时滚出去！</div>
   </div>
   <div id="title">
-    <div class="logo">萌域传说</div><div class="logo-en">CHIBI REALM LEGENDS</div>
+    <div class="logo">萌域传说</div><div class="logo-en">CHIBI REALM LEGENDS</div><div class="tag">驱散蚀雾 · 守护青岚镇</div>
     <div class="tb">
       <button id="btnCont" type="button">继续冒险<small id="contInfo"></small></button>
       <button id="btnNew" type="button" class="alt">新的冒险</button>
@@ -1927,7 +1936,7 @@ function _noise(ft,f0,f1,q,dur,vol,delay){
 }
 function sfx(name){
   if(SFX.muted||!SFX.ctx||SFX.ctx.state!=="running") return;
-  const now=SFX.ctx.currentTime; if(now-(SFX.last[name]||0)<0.045) return; SFX.last[name]=now;
+  const now=SFX.ctx.currentTime; if(now-(SFX.last[name]||0)<0.045) return; SFX.last[name]=now; musDuck(name);
   try{
   switch(name){
     case "swing": _noise("bandpass",2600,520,1.3,0.14,0.32); break;
@@ -2093,6 +2102,7 @@ function migrateSave(s){
   }
   s.pots=s.pots||{h:0,m:0}; s.bag=s.bag||[]; s.equip=s.equip||{weapon:null,armor:null,acc:null};
   QUESTS.forEach(q=>{ if(!s.quests[q.id]) s.quests[q.id]={ st:"locked", pr:0 }; });
+  if(typeof unlockPostgame==="function") unlockPostgame(s);
   return s;
 }
 function newQuestState(){ const o={}; QUESTS.forEach(q=>o[q.id]={ st:q.id==="q1"?"avail":"locked", pr:0 }); return o; }
@@ -2163,7 +2173,15 @@ const QUESTS = [
   { id:"q6", title:"雾石坡巡逻", giver:"guard", turn:"guard", type:"kill", target:["slime","spike","wisp"], count:10, gold:70, xp:160, reward:{ pots:[1,1] }, repeat:true, lv:5, where:"雾石坡 / 林地",
     tname:"击败魔物",
     greet:["蚀雾虽然退了，坡上的小家伙还会冒出来。"], accept:["再去巡一圈吧，击败 10 只魔物。报酬照旧。"],
-    progress:["还差一些。小心林子里的雾灵。"], turnIn:["辛苦了，守护者。这是今天的报酬。"] }
+    progress:["还差一些。小心林子里的雾灵。"], turnIn:["辛苦了，守护者。这是今天的报酬。"] },
+  { id:"q7", title:"岩甲讨伐", giver:"herb", turn:"herb", type:"kill", target:["elite"], count:1, gold:150, xp:320, reward:{ pots:[2,1], item:{ slot:null, rar:2, up:0.3 } }, repeat:true, lv:6, where:"蚀雾林地（东侧）",
+    tname:"击败岩甲史莱姆",
+    greet:["岩甲史莱姆又在林子东边结壳了。它的碎甲是上好的药引。"], accept:["帮我敲一块回来吧，报酬里有你用得上的装备。"],
+    progress:["岩甲就在林地东侧，壳很硬，记得用翻滚躲它的跳砸。"], turnIn:["就是这个！拿着，这是谢礼，路上小心。"] },
+  { id:"q8", title:"首领再临", giver:"mayor", turn:"mayor", type:"kill", target:["boss"], count:1, gold:400, xp:800, reward:{ item:{ slot:null, rar:3, up:0.25 } }, repeat:true, lv:8, where:"蚀源祭坛（最北）",
+    tname:"击败蚀雾史莱姆王",
+    greet:["祭坛那边的雾又浓了……它似乎会随着你的成长一起变强。"], accept:["再去祭坛看看吧。打退它，镇里的仓库任你挑。"],
+    progress:["它比上次更强了。药水带够，保持移动。"], turnIn:["你又一次把雾推回去了。收下这个，青岚镇欠你一份情。"] }
 ];
 const NPCS = {
   mayor:{ id:"mayor", name:"镇长 苏晚晴", x:-2.4, z:5.8, yaw:0.4, kind:"npcElder" },
@@ -2172,6 +2190,7 @@ const NPCS = {
 };
 const NPC_SHORT={ mayor:"苏晚晴", herb:"叶青", guard:"石川" };
 function qst(id){ return (G.save.quests[id]||(G.save.quests[id]={st:"locked",pr:0})); }
+function unlockPostgame(s){ if(!s||!s.storyDone||!s.quests) return; ["q7","q8"].forEach(k=>{ const e=s.quests[k]||(s.quests[k]={st:"locked",pr:0}); if(e.st==="locked") e.st="avail"; }); }
 function tracked(){
   let ready=null, act=null, av=null;
   QUESTS.forEach(q=>{ const s=qst(q.id).st; if(s==="ready"&&!ready)ready=q; if(s==="active"&&!act)act=q; if(s==="avail"&&!av)av=q; });
@@ -2250,10 +2269,10 @@ function turnIn(q){
   e.st="done"; e.pr=q.count; G.save.gold+=q.gold;
   const r=q.reward||{};
   if(r.pots){ G.save.pots.h+=r.pots[0]; G.save.pots.m+=r.pots[1]; }
-  if(r.item && q.id!=="q3") addItem(genItem(Math.max(q.lv,G.save.level), r.item.rar, r.item.slot));
+  if(r.item && q.id!=="q3") addItem(genItem(Math.max(q.lv,G.save.level), Math.min(4, r.item.rar+((r.item.up&&Math.random()<r.item.up)?1:0)), r.item.slot||undefined));
   if(q.repeat){ e.st="avail"; e.pr=0; }
   else if(q.next){ const n=qst(q.next); if(n.st==="locked") n.st="avail"; }
-  if(q.id==="q5"){ G.save.storyDone=true; later(1.2, ()=>banner("青岚篇 · 完", "感谢游玩！可继续巡逻、刷装备与挑战首领")); }
+  if(q.id==="q5"){ G.save.storyDone=true; unlockPostgame(G.save); later(1.2, ()=>banner("青岚篇 · 完", "感谢游玩！可继续巡逻、刷装备与挑战首领")); }
   toast("完成「"+q.title+"」 +"+q.gold+" 金  +"+q.xp+" 经验"); sfx("quest");
   gainXP(q.xp); persist(G.save); refreshHUD();
 }
@@ -2297,7 +2316,7 @@ function dlgButtons(){
   if(d.acceptId){ add("接受任务","next",advDlg); }
   else if(d.turnId){ add("完成任务","next",advDlg); }
   else add(d.shop?"好的":"再见","next",advDlg);
-  if(d.shop && !d.acceptId && !d.turnId) add("购买药水","opt",()=>{ d.shopMode=true; $("dlgBody").textContent="药水都是今早新熬的，一瓶 25 金。（持有 "+G.save.gold+" 金）"; dlgButtons(); });
+  if(d.shop && !d.turnId) add("购买药水","opt",()=>{ d.shopMode=true; $("dlgBody").textContent="药水都是今早新熬的，一瓶 25 金。（持有 "+G.save.gold+" 金）"; dlgButtons(); });
 }
 function buyPot(k){
   if(G.save.gold<25){ $("dlgBody").textContent="金币不够呢……去坡上转转再来吧。"; sfx("ui"); return; }
@@ -2439,9 +2458,9 @@ function updateSpawners(dt){
   const q5=qst("q5").st, want=(q5==="active"||G.save.storyDone);
   const inAltar=Math.hypot(G.p.x-ALTAR.x,G.p.z-ALTAR.z)<ALTAR.r+3;
   if(want && inAltar && !G.boss && SPAWN.bossT<=0 && !G.p.dead){
-    const b=spawnEnemy("boss", ALTAR.x, ALTAR.z+2.5, 8, "altar"); b.state="intro"; b.t=1.6; b.y=9; b.vy=0; G.boss=b;
+    const blv=G.save.storyDone?Math.max(8,G.save.level+1):8; const b=spawnEnemy("boss", ALTAR.x, ALTAR.z+2.5, blv, "altar"); b.state="intro"; b.t=1.6; b.y=9; b.vy=0; G.boss=b;
     banner("蚀雾史莱姆王", "蚀源的主人苏醒了！"); sfx("roar"); addShake(0.4); setMusicMood("boss");
-    $("bossbar").style.display="block"; $("bossName").textContent="蚀雾史莱姆王  Lv.8";
+    $("bossbar").style.display="block"; $("bossName").textContent="蚀雾史莱姆王  Lv."+blv;
   }
 }
 
@@ -2817,10 +2836,12 @@ let _zoneId="";
 function updateZone(){
   const Z=zoneAt(G.p.x,G.p.z);
   if(Z.id!==_zoneId){
-    const first=_zoneId===""; _zoneId=Z.id; $("zoneName").textContent=Z.name+(Z.lv?"  "+Z.lv:"");
-    if(!first) toast("进入「"+Z.name+"」"+(Z.lv?"　推荐 "+Z.lv:""));
+    const first=_zoneId==="", nowT=performance.now();
+    if(!first){ if(updateZone._c!==Z.id){ updateZone._c=Z.id; updateZone._t=nowT; return; } if(nowT-updateZone._t<700) return; }
+    _zoneId=Z.id; updateZone._c=""; $("zoneName").textContent=Z.name+(Z.lv?"  "+Z.lv:"");
+    const tk=updateZone._tk||(updateZone._tk={}); if(!first && !(tk[Z.id] && nowT-tk[Z.id]<6000)) toast("进入「"+Z.name+"」"+(Z.lv?"　推荐 "+Z.lv:"")); tk[Z.id]=nowT;
     if(!G.boss) setMusicMood(Z.id==="town"?"town":"field");
-  }
+  } else updateZone._c="";
 }
 function updateBossBar(dt){
   const b=G.boss, el=$("bossbar");
@@ -3291,6 +3312,12 @@ function updateGuide(dt){
     const x=P.x+ux*off, z=P.z+uz*off; m.position.set(x, groundAt(x,z)+0.07, z); m.rotation.y=yaw;
     m.material.opacity=Math.sin(ph*Math.PI)*0.75;
   }
+}
+
+/* ===================== music ducking under big moments ===================== */
+function musDuck(name){
+  const k={ boom:0.45, roar:0.4, lvl:0.35, quest:0.5, slam:0.6, die:0.3 }[name]; if(!k || !MUS.gain || !SFX.ctx) return;
+  try{ const g=MUS.gain.gain, t=SFX.ctx.currentTime, base=0.22*SET.mus/100; g.cancelScheduledValues(t); g.setValueAtTime(Math.max(0.0001,g.value),t); g.linearRampToValueAtTime(base*k,t+0.05); g.setValueAtTime(base*k,t+0.35); g.linearRampToValueAtTime(base,t+1.3); }catch(e){}
 }
 
 /* ===================== rewritten core loop pieces ===================== */
