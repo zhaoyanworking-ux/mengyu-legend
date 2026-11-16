@@ -225,7 +225,7 @@ function makeGradientMap(){
 let charRamp=null;
 function makeCharRamp(){
   // even softer 2-band ramp for the Tripo characters so painted albedo is not crushed
-  return rampTex([[0,[200,194,224]],[0.38,[206,200,228]],[0.52,[250,246,244]],[1,[255,255,255]]]);
+  return rampTex([[0,[178,172,210]],[0.38,[186,180,216]],[0.52,[244,240,240]],[1,[255,255,255]]]);
 }
 function toon(color, map, opts){
   const o={ color:new THREE.Color(color), gradientMap, ...opts };
@@ -281,11 +281,12 @@ function blobShadow(parent, s){
   parent.add(m); return m;
 }
 
-/* ---------- Tripo GLB characters (rigged + animated); procedural chibis stay as fallback ---------- */
+/* ---------- user-modelled characters, Tripo auto-rig + preset clips (idle / run / attack baked in GLB); procedural chibis stay as fallback ---------- */
 const GLB_FILES={ swordsman:"models/warrior.glb", mage:"models/mage.glb", archer:"models/archer.glb" };
-// attack windows (seconds) cut out of the long Tripo preset clips
+// attack windows are pre-cut into an "attack" clip at build time; these are only used for legacy GLBs that ship the raw preset
 const GLB_ATTACK={ swordsman:{clip:"slash",t0:1.95,t1:2.85}, mage:{clip:"slash",t0:1.5,t1:2.4}, archer:{clip:"shoot",t0:0.8,t1:1.8} };
-const GLB={ data:{}, height:1.7, yawFix:-Math.PI/2 };
+// user models face -Z in file space; the game expects +Z
+const GLB={ data:{}, height:1.7, yawFix:Math.PI };
 function glbReady(id){ return !!GLB.data[id]; }
 function stripRootMotion(clip){
   clip.tracks.forEach(t=>{
@@ -316,13 +317,13 @@ function outlineMat(w){
 function charMaterial(old){
   // soft toon + sky-blue rim light + slight saturation lift: painted-figure look instead of flat cel bands
   const m=new THREE.MeshToonMaterial({ color:0xffffff, map:old.map||null, normalMap:old.normalMap||null, gradientMap:charRamp,
-    emissive:old.map?0xffffff:0x000000, emissiveMap:old.map||null, emissiveIntensity:0.10, side:THREE.DoubleSide });
+    emissive:old.map?0xffffff:0x000000, emissiveMap:old.map||null, emissiveIntensity:0.0, side:THREE.DoubleSide });
   if(m.normalMap) m.normalScale=new THREE.Vector2(0.6,0.6);
   m.onBeforeCompile=sh=>{
     sh.fragmentShader=sh.fragmentShader.replace("#include <opaque_fragment>",
       "{ vec3 vd=normalize(vViewPosition); float rimF=pow(1.0-clamp(dot(normal,vd),0.0,1.0),2.6);\n"+
-      "  outgoingLight += vec3(0.62,0.80,1.0)*rimF*0.42;\n"+
-      "  float lum=dot(outgoingLight,vec3(0.299,0.587,0.114)); outgoingLight=mix(vec3(lum),outgoingLight,1.12); }\n"+
+      "  outgoingLight += vec3(0.62,0.80,1.0)*rimF*0.30;\n"+
+      "  float lum=dot(outgoingLight,vec3(0.299,0.587,0.114)); outgoingLight=mix(vec3(lum),outgoingLight,1.22); }\n"+
       "#include <opaque_fragment>");
   };
   m.customProgramCacheKey=()=>"charToon1";
@@ -357,7 +358,7 @@ function prepGlb(id, gltf){
   const clips={};
   gltf.animations.forEach(c=>{ stripRootMotion(c); clips[c.name]=c; });
   const a=GLB_ATTACK[id], src=clips[a.clip];
-  if(src) clips.attack=cutClip(src, a.t0, Math.min(a.t1, src.duration), "attack");
+  if(!clips.attack && src) clips.attack=cutClip(src, a.t0, Math.min(a.t1, src.duration), "attack");
   GLB.data[id]={ scene:root, clips, srcH:h, minY:box.min.y };
 }
 function makeGlbChar(id){
@@ -1952,7 +1953,7 @@ function init(){
   camera.lookAt(0,0.6,3);
   bindInput();
   buildClassCards();
-  window.__mengyu={ G, GLB, TOWN, TOWN_CFG, groundAt, inTownBounds, get camera(){ return camera; } };
+  window.__mengyu={ G, GLB, TOWN, TOWN_CFG, groundAt, inTownBounds, startAdventure, tryAttack, get camera(){ return camera; } };
   loadCharacterModels(()=>{ upgradeVisuals(); try{ cardThumbs(); }catch(e){ console.warn('thumbs', e); } });
   window.addEventListener("resize", ()=>{
     camera.aspect=innerWidth/innerHeight; camera.updateProjectionMatrix();
