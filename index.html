@@ -165,10 +165,17 @@ const QUESTS = [
     turnIn:["碎片的纹路……与镇外那道黑影同出一源。你已经让「蚀雾史莱姆」退了。","青岚镇今夜能点灯到很晚。蚀雾并未消失，可它第一次被推了回去。","旅人，青岚记住你的剑、你的光。这只是萌域边境的第一页——但第一页，已经写好了。"] }
 ];
 const NPCS = {
-  mayor:{ id:"mayor", name:"苏晚晴", x:-2.2, z:2.4, yaw:0.5, kind:"npcElder" },
-  herb:{ id:"herb", name:"叶青", x:6.0, z:-6.2, yaw:-0.3, kind:"npcHerb" },
-  guard:{ id:"guard", name:"石川", x:2.4, z:13.1, yaw:Math.PI, kind:"npcGuard" }
+  mayor:{ id:"mayor", name:"苏晚晴", x:-2.4, z:5.8, yaw:0.4, kind:"npcElder" },
+  herb:{ id:"herb", name:"叶青", x:-3.2, z:-2.0, yaw:-0.2, kind:"npcHerb" },
+  guard:{ id:"guard", name:"石川", x:2.2, z:13.4, yaw:Math.PI, kind:"npcGuard" }
 };
+// user-authored fused town (Tripo "童话村落"), scaled so ~1.7m chibis sit naturally at the doors
+const TOWN_CFG = {
+  url:"models/town.glb", scale:22, rotY:Math.PI/2,
+  fountainX:0, fountainZ:4, fieldZ:17,
+  spawnX:-2.4, spawnZ:2.2, cobbleR:8.2
+};
+const TOWN = { ready:false, root:null, meshes:[], grid:null, fx:0, fz:0 };
 
 function loadSave(){ try{ return JSON.parse(localStorage.getItem(SAVE_KEY)||"null"); }catch(e){ return null; } }
 function persist(s){ try{ localStorage.setItem(SAVE_KEY, JSON.stringify(s)); }catch(e){} }
@@ -990,7 +997,119 @@ function animBob(ch, moving, dt, attacking, spinning, dead){
   }
 }
 
-/* ---------- town ---------- */
+/* ---------- authored town model ---------- */
+
+function townMaterial(old){
+  const m=new THREE.MeshToonMaterial({ color:0xffffff, map:old.map||null, gradientMap, side:THREE.DoubleSide,
+    emissive:old.map?0xffffff:0x000000, emissiveMap:old.map||null, emissiveIntensity:0.06 });
+  if(m.map){ m.map.colorSpace=THREE.SRGBColorSpace; m.map.anisotropy=renderer.capabilities.getMaxAnisotropy?Math.min(8,renderer.capabilities.getMaxAnisotropy()):4; }
+  return m;
+}
+function buildTownGrid(meshes){
+  const box=new THREE.Box3().setFromObject(TOWN.root);
+  const pad=2.2, cell=0.32;
+  const ox=box.min.x-pad, oz=box.min.z-pad;
+  const nx=Math.ceil((box.max.x-box.min.x+pad*2)/cell);
+  const nz=Math.ceil((box.max.z-box.min.z+pad*2)/cell);
+  const height=new Float32Array(nx*nz);
+  const walk=new Uint8Array(nx*nz);
+  const ray=new THREE.Raycaster();
+  const origin=new THREE.Vector3(), dir=new THREE.Vector3(0,-1,0);
+  const maxWalkH=0.48;
+  for(let iz=0;iz<nz;iz++){
+    for(let ix=0;ix<nx;ix++){
+      const x=ox+(ix+0.5)*cell, z=oz+(iz+0.5)*cell;
+      origin.set(x, 40, z);
+      ray.set(origin, dir);
+      const rec=ray.intersectObjects(meshes, true);
+      if(!rec.length){ height[iz*nx+ix]=0; walk[iz*nx+ix]=1; }
+      else { const y=Math.max(0, rec[0].point.y); height[iz*nx+ix]=y; walk[iz*nx+ix]=y<=maxWalkH?1:0; }
+    }
+  }
+  const walk2=new Uint8Array(walk);
+  for(let iz=0;iz<nz;iz++){
+    for(let ix=0;ix<nx;ix++){
+      if(walk[iz*nx+ix]) continue;
+      for(let dz=-1;dz<=1;dz++) for(let dx=-1;dx<=1;dx++){
+        const jx=ix+dx, jz=iz+dz;
+        if(jx>=0&&jz>=0&&jx<nx&&jz<nz) walk2[jz*nx+jx]=0;
+      }
+    }
+  }
+  const maxR=Math.max(box.max.x-TOWN.fx, TOWN.fx-box.min.x, box.max.z-TOWN.fz, TOWN.fz-box.min.z)+1.4;
+  for(let iz=0;iz<nz;iz++){
+    for(let ix=0;ix<nx;ix++){
+      const x=ox+(ix+0.5)*cell, z=oz+(iz+0.5)*cell;
+      const inCorridor=z>TOWN.fz+6 && Math.abs(x-TOWN.fx)<4.6;
+      const r=Math.hypot(x-TOWN.fx, z-TOWN.fz);
+      if(r>maxR && !inCorridor) walk2[iz*nx+ix]=0;
+    }
+  }
+  // keep a clear cobble path from the plaza through the open north side to the field gate
+  const pathHalf=1.7;
+  for(let iz=0;iz<nz;iz++){
+    const z=oz+(iz+0.5)*cell;
+    if(z<TOWN.fz+5.5 || z>TOWN_CFG.fieldZ+0.6) continue;
+    for(let ix=0;ix<nx;ix++){
+      const x=ox+(ix+0.5)*cell;
+      if(Math.abs(x-TOWN.fx)>pathHalf) continue;
+      const i=iz*nx+ix;
+      if(height[i]<2.5){ walk2[i]=1; if(height[i]>0.45) height[i]=0; }
+    }
+  }
+  TOWN.grid={ ox, oz, cell, nx, nz, height, walk:walk2 };
+}
+function placeTown(gltf){
+  const root=gltf.scene;
+  root.scale.setScalar(TOWN_CFG.scale);
+  root.rotation.y=TOWN_CFG.rotY;
+  root.position.set(0,0,0);
+  root.updateMatrixWorld(true);
+  const box0=new THREE.Box3().setFromObject(root);
+  root.position.set(TOWN_CFG.fountainX, -box0.min.y, TOWN_CFG.fountainZ);
+  root.updateMatrixWorld(true);
+  const meshes=[];
+  root.traverse(o=>{
+    if(!o.isMesh) return;
+    const old=o.material;
+    o.material=townMaterial(old);
+    if(old && old!==o.material && old.dispose) old.dispose();
+    o.castShadow=true; o.receiveShadow=true;
+    meshes.push(o);
+  });
+  if(TOWN.root && TOWN.root.parent) scene.remove(TOWN.root);
+  scene.add(root);
+  TOWN.root=root; TOWN.meshes=meshes;
+  TOWN.fx=TOWN_CFG.fountainX; TOWN.fz=TOWN_CFG.fountainZ;
+  buildTownGrid(meshes);
+  TOWN.ready=true;
+}
+function loadTownModel(onDone){
+  window.__townReady=false;
+  function fail(err){ console.warn("town GLB failed", err); window.__townReady=true; if(onDone) onDone(false); }
+  function ok(gltf){ try{ placeTown(gltf); }catch(e){ console.warn("town prep failed", e); } window.__townReady=true; if(onDone) onDone(!!TOWN.ready); }
+  if(!window.THREE_ADDONS){ fail("no addons"); return; }
+  const loader=new THREE_ADDONS.GLTFLoader();
+  if(THREE_ADDONS.MeshoptDecoder) loader.setMeshoptDecoder(THREE_ADDONS.MeshoptDecoder);
+  const fromFile=location.protocol==="file:";
+  if(fromFile){
+    const sc=document.createElement("script"); sc.src=TOWN_CFG.url+".js";
+    sc.onload=()=>{
+      try{
+        const bin=atob((window.__GLB_B64||{}).town||""); const buf=new Uint8Array(bin.length);
+        for(let i=0;i<bin.length;i++) buf[i]=bin.charCodeAt(i);
+        loader.parse(buf.buffer, "", ok, err=>fail(err));
+      }catch(e){ fail(e); }
+    };
+    sc.onerror=()=>fail("town script missing");
+    document.head.appendChild(sc);
+    return;
+  }
+  loader.load(TOWN_CFG.url, ok, undefined, err=>fail(err&&err.message));
+}
+
+
+/* ---------- procedural props (field + fallback) ---------- */
 function makeHouse(x,z,yaw, roofHex, opt){
   opt=opt||{};
   const g=new THREE.Group(); g.position.set(x,0,z); g.rotation.y=yaw; scene.add(g);
@@ -1128,16 +1247,14 @@ function makeMist(x,y,z,s){
   return m;
 }
 function scatterFlowers(){
-  // clustered flower beds like the town concept: a ring around the fountain, a border around the plaza, meadow clumps
+  // field meadow only — the authored town already has its own props
   const cols=[0xfff8f0,0xffb3c8,0xffe08a,0xa9c8ff,0xffffff,0xd8b0ff];
   const geoS=new THREE.SphereGeometry(0.15, 8, 6);
-  const per=Math.ceil((isMobile?360:520)/cols.length);
+  const per=Math.ceil((isMobile?280:400)/cols.length);
   let seed=29; const rnd=(a,b)=>{ seed=(seed*16807)%2147483647; return a+(seed/2147483647)*(b-a); };
   const spots=[];
-  const ok=(x,z)=>{ const r=Math.hypot(x,z); if(r>2.05 && r<2.6) return true; if(r<9.25) return false; if(Math.abs(x)<2.0 && z>8 && z<17) return false; if(Math.abs(z-15.8)<1.2) return false; return true; };
-  for(let i=0;i<90;i++){ const a=rnd(0,6.283), r=rnd(2.1,2.5); spots.push([Math.cos(a)*r, Math.sin(a)*r]); }
-  for(let i=0;i<150;i++){ const a=rnd(0,6.283), r=rnd(9.35,10.6); const x=Math.cos(a)*r, z=Math.sin(a)*r; if(ok(x,z)) spots.push([x,z]); }
-  for(let c=0;c<28;c++){ const cx=rnd(-15,15), cz=rnd(-15,14); if(!ok(cx,cz)) continue; for(let k=0;k<8;k++){ const x=cx+rnd(-0.9,0.9), z=cz+rnd(-0.9,0.9); if(ok(x,z)) spots.push([x,z]); } }
+  const ok=(x,z)=>{ if(z<18.5||z>44) return false; if(Math.abs(x)>15) return false; if(Math.abs(x)<2.2 && z<22) return false; return true; };
+  for(let c=0;c<36;c++){ const cx=rnd(-14,14), cz=rnd(19,42); if(!ok(cx,cz)) continue; for(let k=0;k<8;k++){ const x=cx+rnd(-0.9,0.9), z=cz+rnd(-0.9,0.9); if(ok(x,z)) spots.push([x,z]); } }
   cols.forEach((col,ci)=>{
     const im=new THREE.InstancedMesh(geoS, toon(col), per);
     im.castShadow=false; im.receiveShadow=false;
@@ -1149,21 +1266,18 @@ function scatterFlowers(){
     }
     im.count=n; scene.add(im);
   });
-  // leafy bed under the fountain ring flowers
-  const bed=new THREE.Mesh(new THREE.RingGeometry(1.95, 2.65, 40), toon(0x7cc860));
-  bed.rotation.x=-Math.PI/2; bed.position.y=0.04; bed.receiveShadow=true; scene.add(bed);
 }
 function buildWorld(){
   // lush grass — one big plane, field is the same grass (no purple floor)
   const grass=new THREE.Mesh(new THREE.PlaneGeometry(90,100), toon(0xffffff, tex("grass", grassTex)));
   grass.rotation.x=-Math.PI/2; grass.position.set(0,0,14);
   grass.receiveShadow=true; scene.add(grass);
-  // cobble plaza
-  const plaza=new THREE.Mesh(new THREE.CircleGeometry(9.2, 48), toon(0xffffff, tex("cobble", cobbleTex)));
-  plaza.rotation.x=-Math.PI/2; plaza.position.y=0.02; plaza.receiveShadow=true; scene.add(plaza);
-  // stone path to gate
-  const path=new THREE.Mesh(new THREE.PlaneGeometry(3.3, 16.5), toon(0xffffff, tex("cobble", cobbleTex)));
-  path.rotation.x=-Math.PI/2; path.position.set(0,0.025,8.5); path.receiveShadow=true; scene.add(path);
+  // cobble plaza under the authored town (mesh has no ground of its own)
+  const plaza=new THREE.Mesh(new THREE.CircleGeometry(TOWN_CFG.cobbleR, 48), toon(0xffffff, tex("cobble", cobbleTex)));
+  plaza.rotation.x=-Math.PI/2; plaza.position.set(TOWN_CFG.fountainX, 0.02, TOWN_CFG.fountainZ); plaza.receiveShadow=true; scene.add(plaza);
+  // stone path from the town's open north edge to the field gate
+  const path=new THREE.Mesh(new THREE.PlaneGeometry(3.3, 6.4), toon(0xffffff, tex("cobble", cobbleTex)));
+  path.rotation.x=-Math.PI/2; path.position.set(0,0.025,16.2); path.receiveShadow=true; scene.add(path);
   // purple corruption PATCHES only (irregular discs), not a floor
   const patchTex=canvasTex((g,S)=>{ const gr=g.createRadialGradient(S/2,S/2,0,S/2,S/2,S/2); gr.addColorStop(0,"rgba(150,96,200,0.85)"); gr.addColorStop(0.6,"rgba(160,110,210,0.6)"); gr.addColorStop(1,"rgba(170,120,220,0)"); g.fillStyle=gr; g.fillRect(0,0,S,S); }, 128, 1, 1);
   const patchMat=new THREE.MeshBasicMaterial({ map:patchTex, transparent:true, depthWrite:false, fog:true });
@@ -1172,25 +1286,13 @@ function buildWorld(){
     d.rotation.x=-Math.PI/2; d.position.set(p[0], 0.03, p[1]); d.receiveShadow=true; scene.add(d);
   });
 
-  makeFountain();
-  makeHouse(-8.6, 3.4,  1.92, 0x5f84da, { chimney:true, window2:true });
-  makeHouse(-7.8, 8.2,  2.62, 0xe2604c, { chimney:true, awning:0x8a5a32 });
-  makeHouse(-4.0, 10.8, 3.05, 0x5f84da, { chimney:true });
-  makeHouse( 8.8, 4.8, -1.92, 0x5f84da, { chimney:true });
-  makeHouse( 8.4,-3.6, -0.70, 0xa07ad8, { chimney:true });
-  makeHouse(-8.6,-5.6,  0.70, 0x5f84da, { chimney:false, awning:0x6ec0ee });
-  makeStall(-6.2,-7.8,  0.35, 0x6ec0ee, 0xffffff);
-  makeStall( 6.4,-7.2, -0.35, 0xf0b060, 0xffffff);
-  makeStall( 7.8, 1.2, -1.57, 0x6ec0ee, 0xffffff);
-  makeNotice(-5.4,-9.4, 0.26);
-  [[-3.6,3.8],[3.6,3.8],[-4.2,-4.0],[4.4,-3.5],[0,8.6]].forEach(p=>makeLamp(p[0],p[1]));
-  [[-5.6,-10.6,0x7edc6a],[5.8,-10.2,0xe8a448],[-12.2,2,0x6cc85a],[12.5,1.6,0x85d078],
-   [-11.6,-8.5,0x7bc96a],[12,-8,0x9ae07a],[-11.2,12,0x6cb85a],[11.4,12.4,0x7edc6a],
-   [4.8,-11.4,0x7edc6a],[-3.8,-12.2,0x8ee07a],
-   [-11,24,0x5aa85a],[12,25,0x68b868],[-9,38,0x4a9a58],[10,40,0x5aaa5a],
-   [-13,32,0x5a9a5a],[13.5,34,0x4a8a50],[-4,42,0x5aa85a],[5,43,0x68b060]].forEach(t=>makeTree(t[0],t[1],t[2]));
+  // field trees only (the town model already has its own trees)
+  [[-11,24,0x5aa85a],[12,25,0x68b868],[-9,38,0x4a9a58],[10,40,0x5aaa5a],
+   [-13,32,0x5a9a5a],[13.5,34,0x4a8a50],[-4,42,0x5aa85a],[5,43,0x68b060],
+   [-14,20,0x68b868],[13,20,0x5aa85a]].forEach(t=>makeTree(t[0],t[1],t[2]));
   makeArch(15.8);
   scatterFlowers();
+  loadTownModel();
   makeMist(-3,1.5,30,2.2); makeMist(4,1.7,34,2.5); makeMist(0,2.1,40,3.0);
   makeMist(6,1.4,29,1.7); makeMist(-6,1.6,37,2.3); makeMist(2,1.8,36,1.5);
   mesh(geo.box, toon(0x8a7a90), -6, 0.28, 28, 1.4, 0.55, 1.1, scene, 0.02, true);
@@ -1254,7 +1356,7 @@ function dmgText(x,z,y, amt){
 /* ---------- game ---------- */
 const G = {
   mode:"select", classId:"swordsman", player:null,
-  p:{x:0,z:-3.2,y:0,yaw:0,vx:0,vz:0,hp:160,mp:50,dead:false,atkT:0,spinT:0,hitStop:0},
+  p:{x:TOWN_CFG.spawnX,z:TOWN_CFG.spawnZ,y:0,yaw:0,vx:0,vz:0,hp:160,mp:50,dead:false,atkT:0,spinT:0,hitStop:0},
   enemies:[], npcs:[], shots:[], parts:[], pickups:[],
   save:null, near:null, dlg:null, skillCd:0, atkCd:0, combo:0, comboExp:0,
   shake:0, keys:{}, joy:{x:0,y:0,on:false}, paused:false, bossSpawned:false, freezeCam:false
@@ -1394,7 +1496,7 @@ function startAdventure(classId, fresh){
   if(fresh || !G.save){ G.save=newSave(classId); persist(G.save); G.bossSpawned=false; }
   else { G.save.classId=classId; persist(G.save); }
   const c=CLASSES[classId];
-  G.p={x:0,z:-3.2,y:0,yaw:0,vx:0,vz:0,hp:c.hp,mp:c.mp,dead:false,atkT:0,spinT:0,hitStop:0};
+  G.p={x:TOWN_CFG.spawnX,z:TOWN_CFG.spawnZ,y:0,yaw:0,vx:0,vz:0,hp:c.hp,mp:c.mp,dead:false,atkT:0,spinT:0,hitStop:0};
   G.skillCd=0; G.atkCd=0; G.mode="play"; G.paused=false; G.freezeCam=false;
   spawnPlayerVisual(classId);
   $("select").style.display="none"; $("playHud").style.display="block";
@@ -1438,17 +1540,17 @@ function applyShotCamera(){
   if(shot==="town"){
     // 3/4 aerial like the town concept; characters around the fountain on cobbles (not in water)
     // stand on the cobbles around the basin (radius ~3.2), not in the water
-    G.p.x=-3.15; G.p.z=1.85; G.p.yaw=0.7;
-    if(G.player){ G.player.position.set(-3.15,0,1.85); G.player.rotation.y=0.7; }
+    G.p.x=-3.0; G.p.z=2.4; G.p.yaw=0.7;
+    if(G.player){ G.player.position.set(-3.0,0,2.4); G.player.rotation.y=0.7; }
     if(!G._cast){
-      const mage=makeClassVisual("mage"); mage.position.set(-1.15,0,3.35); mage.rotation.y=0.25; scene.add(mage);
-      const arch=makeClassVisual("archer"); arch.position.set(3.15,0,1.95); arch.rotation.y=-0.55; scene.add(arch);
-      const arch2=makeClassVisual("archer"); arch2.position.set(3.45,0,5.55); arch2.rotation.y=-0.9; scene.add(arch2);
+      const mage=makeClassVisual("mage"); mage.position.set(-1.2,0,5.6); mage.rotation.y=0.25; scene.add(mage);
+      const arch=makeClassVisual("archer"); arch.position.set(3.0,0,3.2); arch.rotation.y=-0.55; scene.add(arch);
+      const arch2=makeClassVisual("archer"); arch2.position.set(3.2,0,6.5); arch2.rotation.y=-0.9; scene.add(arch2);
       G._cast=[mage,arch,arch2];
     }
-    camera.fov=36; camera.updateProjectionMatrix();
-    camera.position.set(7.4, 11.6, -14.8);
-    camera.lookAt(0, 0.35, 5.0);
+    camera.fov=38; camera.updateProjectionMatrix();
+    camera.position.set(16.5, 22.0, -14.0);
+    camera.lookAt(0, 0.2, 5.0);
   } else if(shot==="field"){
     spawnBoss();
     G.p.x=2; G.p.z=27.5; G.p.yaw=0.25;
@@ -1485,9 +1587,30 @@ function applyShotCamera(){
 }
 
 function inTownBounds(x,z){
-  if(x<-17||x>17||z<-17||z>46) return false;
-  if(Math.abs(z-15.8)<0.7 && Math.abs(x)>1.8) return false;
-  return true;
+  if(z>=TOWN_CFG.fieldZ){
+    if(x<-17||x>17||z>46) return false;
+    return true;
+  }
+  if(Math.abs(z-15.8)<0.7 && Math.abs(x)>1.8) return false; // stone gate pillars
+  const g=TOWN.grid;
+  if(!g){
+    const r=Math.hypot(x-TOWN_CFG.fountainX, z-TOWN_CFG.fountainZ);
+    return r<12;
+  }
+  const ix=Math.floor((x-g.ox)/g.cell), iz=Math.floor((z-g.oz)/g.cell);
+  if(ix<0||iz<0||ix>=g.nx||iz>=g.nz) return false;
+  return !!g.walk[iz*g.nx+ix];
+}
+function groundAt(x,z){
+  if(z>=TOWN_CFG.fieldZ) return 0;
+  const g=TOWN.grid; if(!g) return 0;
+  const fx=(x-g.ox)/g.cell-0.5, fz=(z-g.oz)/g.cell-0.5;
+  const ix=Math.floor(fx), iz=Math.floor(fz);
+  if(ix<0||iz<0||ix>=g.nx-1||iz>=g.nz-1) return 0;
+  const tx=fx-ix, tz=fz-iz;
+  const h00=g.height[iz*g.nx+ix], h10=g.height[iz*g.nx+ix+1];
+  const h01=g.height[(iz+1)*g.nx+ix], h11=g.height[(iz+1)*g.nx+ix+1];
+  return h00*(1-tx)*(1-tz)+h10*tx*(1-tz)+h01*(1-tx)*tz+h11*tx*tz;
 }
 function tryAttack(){
   if(G.mode!=="play"||G.p.dead||G.paused) return;
@@ -1636,9 +1759,12 @@ function update(dt){
   if(G.p.atkT>0) G.p.atkT-=dt;
   if(G.p.spinT>0){ G.p.spinT-=dt; hitEnemies(G.p.x, G.p.z, 1.7, c.skill*dt*2.2, 1.2, true); }
   if(G.player){
+    G.p.y=groundAt(G.p.x,G.p.z);
+    G.player.userData.groundY=G.p.y;
     G.player.position.x=G.p.x; G.player.position.z=G.p.z;
     if(G.p.spinT<=0) G.player.rotation.y=G.p.yaw;
     if(!G.freezeCam) animBob(G.player, !busy && len>0.05, dt, G.p.atkT>0, G.p.spinT>0, G.p.dead);
+    else G.player.position.y=G.p.y;
   }
   for(let i=G.shots.length-1;i>=0;i--){
     const s=G.shots[i]; s.life-=dt; s.x+=s.vx*dt; s.z+=s.vz*dt;
@@ -1706,7 +1832,7 @@ function damagePlayer(amt){
 }
 function resurrect(){
   const c=CLASSES[G.classId];
-  G.p.hp=c.hp; G.p.mp=c.mp; G.p.dead=false; G.p.x=0; G.p.z=-3.2; G.p.yaw=0;
+  G.p.hp=c.hp; G.p.mp=c.mp; G.p.dead=false; G.p.x=TOWN_CFG.spawnX; G.p.z=TOWN_CFG.spawnZ; G.p.yaw=0;
   if(G.player) G.player.scale.set(1,1,1);
   $("over").style.display="none"; refreshHUD();
 }
@@ -1826,7 +1952,7 @@ function init(){
   camera.lookAt(0,0.6,3);
   bindInput();
   buildClassCards();
-  window.__mengyu={ G, GLB };
+  window.__mengyu={ G, GLB, TOWN, TOWN_CFG, groundAt, inTownBounds, get camera(){ return camera; } };
   loadCharacterModels(()=>{ upgradeVisuals(); try{ cardThumbs(); }catch(e){ console.warn('thumbs', e); } });
   window.addEventListener("resize", ()=>{
     camera.aspect=innerWidth/innerHeight; camera.updateProjectionMatrix();
