@@ -72,6 +72,14 @@
   #btnGo{background:#f07040;color:#fff} #btnCont{background:#4a88d0;color:#fff;display:none}
   #stage{flex:1;min-height:38vh;width:100%;pointer-events:none}
   #playHud{display:none}
+  #zoom{position:absolute;right:10px;bottom:200px;width:46px;height:178px;pointer-events:auto;touch-action:none;
+    border-radius:23px;background:rgba(28,24,40,.32);border:1.5px solid rgba(255,255,255,.45);backdrop-filter:blur(4px)}
+  #zoom .ztrack{position:absolute;left:50%;top:30px;bottom:30px;width:6px;margin-left:-3px;border-radius:3px;background:rgba(255,255,255,.45)}
+  #zoom .zfill{position:absolute;left:0;right:0;bottom:0;border-radius:3px;background:linear-gradient(#ffe6a0,#ffb070)}
+  #zoom .zthumb{position:absolute;left:50%;width:34px;height:34px;margin:-17px 0 0 -17px;border-radius:50%;background:rgba(255,255,255,.92);
+    box-shadow:0 3px 8px rgba(0,0,0,.25);border:2px solid #ffc27a}
+  #zoom .zl{position:absolute;left:0;right:0;text-align:center;font-size:12px;font-weight:700;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.45)}
+  #zoom .zl.t{top:7px} #zoom .zl.b{bottom:7px}
   #loadbar{position:fixed;left:50%;top:calc(10px + env(safe-area-inset-top));transform:translateX(-50%);z-index:50;width:min(70vw,300px);
     background:rgba(28,24,40,.78);border-radius:14px;padding:8px 12px 10px;display:none;pointer-events:none;color:#fff;font-size:12px;text-align:center}
   #loadfill{width:0;background:linear-gradient(90deg,#ffd36a,#ff9a6a);transition:width .2s}
@@ -103,6 +111,7 @@
     <div id="quest" class="panel"><b id="qtitle">青岚的访客</b><div id="qprog">去古井广场找镇长苏晚晴。</div></div>
     <div id="toast"></div>
     <div id="joy"><div id="knob"></div></div>
+    <div id="zoom" title="视角远近"><div class="zl t">远</div><div class="ztrack"><div class="zfill" id="zfill"></div></div><div class="zthumb" id="zthumb"></div><div class="zl b">近</div></div>
     <button id="atk" type="button">斩击</button>
     <button id="sk" type="button">旋斩<div class="cd" id="skcd" style="display:none"></div></button>
     <button id="talk" type="button">交谈</button>
@@ -225,7 +234,8 @@ function makeGradientMap(){
 let charRamp=null;
 function makeCharRamp(){
   // even softer 2-band ramp for the Tripo characters so painted albedo is not crushed
-  return rampTex([[0,[178,172,210]],[0.38,[186,180,216]],[0.52,[244,240,240]],[1,[255,255,255]]]);
+  // lit side = albedo, shadow side ~62% with a cool tint (real form, not washed out)
+  return rampTex([[0,[150,140,182]],[0.40,[160,150,190]],[0.52,[246,242,240]],[1,[255,255,255]]]);
 }
 function toon(color, map, opts){
   const o={ color:new THREE.Color(color), gradientMap, ...opts };
@@ -322,11 +332,12 @@ function charMaterial(old){
   m.onBeforeCompile=sh=>{
     sh.fragmentShader=sh.fragmentShader.replace("#include <opaque_fragment>",
       "{ vec3 vd=normalize(vViewPosition); float rimF=pow(1.0-clamp(dot(normal,vd),0.0,1.0),2.6);\n"+
-      "  outgoingLight += vec3(0.62,0.80,1.0)*rimF*0.30;\n"+
-      "  float lum=dot(outgoingLight,vec3(0.299,0.587,0.114)); outgoingLight=mix(vec3(lum),outgoingLight,1.22); }\n"+
+      "  outgoingLight += vec3(0.62,0.80,1.0)*rimF*0.12*outgoingLight;\n"+
+      "  float lum=dot(outgoingLight,vec3(0.299,0.587,0.114)); outgoingLight=mix(vec3(lum),outgoingLight,1.08); }\n"+
       "#include <opaque_fragment>");
   };
-  m.customProgramCacheKey=()=>"charToon1";
+  m.customProgramCacheKey=()=>"charToon2";
+  if(m.map) m.map.colorSpace=THREE.SRGBColorSpace;
   return m;
 }
 function prepGlb(id, gltf){
@@ -1268,6 +1279,45 @@ function scatterFlowers(){
     im.count=n; scene.add(im);
   });
 }
+// cheap distant scenery so a low WoW-style camera sees a horizon instead of the plane edge
+function buildHorizon(){
+  // huge outer meadow under the textured grass (fog hides the edge)
+  const outer=new THREE.Mesh(new THREE.CircleGeometry(260, 48), toon(0x8fca62));
+  outer.rotation.x=-Math.PI/2; outer.position.set(0,-0.03,10); outer.receiveShadow=false; scene.add(outer);
+  // rolling hills ring
+  const hillMat=toon(0x7fbf5a), hillMat2=toon(0x6aae55);
+  const nH=isMobile?16:22;
+  for(let i=0;i<nH;i++){
+    const a=i/nH*Math.PI*2+0.3, r=95+Math.sin(i*2.7)*14;
+    const h=new THREE.Mesh(geo.sphereL, i%2?hillMat:hillMat2);
+    h.position.set(Math.sin(a)*r, -2, 10+Math.cos(a)*r);
+    h.scale.set(48+Math.sin(i*1.7)*14, 16+Math.sin(i*3.1)*6, 34);
+    h.rotation.y=-a; scene.add(h);
+  }
+  // instanced distant trees (2 draw calls total)
+  const pts=[]; let seed=7; const rnd=()=>((seed=(seed*16807)%2147483647)/2147483647);
+  const want=isMobile?110:170;
+  for(let k=0;k<4000 && pts.length<want;k++){
+    const a=rnd()*Math.PI*2, r=22+rnd()*58, x=Math.sin(a)*r, z=14+Math.cos(a)*r;
+    if(Math.hypot(x-TOWN_CFG.fountainX, z-TOWN_CFG.fountainZ)<16) continue;
+    if(Math.abs(x)<20 && z>14 && z<50) continue;
+    if(Math.abs(x)<4 && z>-14 && z<17) continue;
+    pts.push([x,z,0.8+rnd()*0.7, rnd()]);
+  }
+  const crownG=new THREE.SphereGeometry(1, 10, 8), trunkG=new THREE.CylinderGeometry(0.18,0.26,1,6);
+  const crown=new THREE.InstancedMesh(crownG, toon(0xffffff), pts.length);
+  const trunk=new THREE.InstancedMesh(trunkG, toon(0x8a6040), pts.length);
+  const m4=new THREE.Matrix4(), q=new THREE.Quaternion(), sc=new THREE.Vector3(), ps=new THREE.Vector3(), col=new THREE.Color();
+  const greens=[0x5aa85a,0x68b868,0x4a9a58,0x78c070,0x5ab070];
+  pts.forEach((p,i)=>{
+    const s=p[2]*1.6;
+    ps.set(p[0], 1.0*s+1.1*s, p[1]); sc.set(1.25*s,1.1*s,1.25*s); m4.compose(ps,q,sc); crown.setMatrixAt(i,m4);
+    col.setHex(greens[Math.floor(p[3]*greens.length)]); crown.setColorAt(i,col);
+    ps.set(p[0], 0.6*s, p[1]); sc.set(s,1.2*s,s); m4.compose(ps,q,sc); trunk.setMatrixAt(i,m4);
+  });
+  crown.castShadow=false; trunk.castShadow=false;
+  scene.add(crown); scene.add(trunk);
+}
 function buildWorld(){
   // lush grass — one big plane, field is the same grass (no purple floor)
   const grass=new THREE.Mesh(new THREE.PlaneGeometry(90,100), toon(0xffffff, tex("grass", grassTex)));
@@ -1300,12 +1350,13 @@ function buildWorld(){
   mesh(geo.box, toon(0x7a6a80),  7, 0.22, 36, 1.6, 0.45, 1.2, scene, 0.02, true);
 
   // sky dome
-  const sky=new THREE.Mesh(new THREE.SphereGeometry(80, 24, 16), new THREE.ShaderMaterial({
+  const sky=new THREE.Mesh(new THREE.SphereGeometry(220, 24, 16), new THREE.ShaderMaterial({
     side:THREE.BackSide, depthWrite:false, fog:false,
     vertexShader:"varying vec3 vP; void main(){ vP=normalize(position); gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0); }",
-    fragmentShader:"varying vec3 vP; void main(){ float h=vP.y; vec3 top=vec3(0.38,0.72,0.98); vec3 mid=vec3(0.70,0.88,1.0); vec3 hor=vec3(0.96,0.96,0.94); vec3 col=mix(hor,mid,smoothstep(-0.08,0.22,h)); col=mix(col,top,smoothstep(0.22,0.9,h)); gl_FragColor=vec4(col,1.0); }"
+    fragmentShader:"varying vec3 vP; void main(){ float h=vP.y; vec3 top=vec3(0.38,0.72,0.98); vec3 mid=vec3(0.70,0.88,1.0); vec3 hor=vec3(0.851,0.925,0.976); vec3 col=mix(hor,mid,smoothstep(0.0,0.22,h)); col=mix(col,top,smoothstep(0.22,0.9,h)); gl_FragColor=vec4(col,1.0); }"
   }));
-  scene.add(sky);
+  sky.renderOrder=-10; sky.frustumCulled=false; scene.add(sky); G.sky=sky;
+  buildHorizon();
   // fluffy clouds
   const cloudMat=new THREE.MeshBasicMaterial({ color:0xffffff, fog:true, depthWrite:false });
   const nCloud=isMobile?8:14;
@@ -1501,12 +1552,18 @@ function startAdventure(classId, fresh){
   G.skillCd=0; G.atkCd=0; G.mode="play"; G.paused=false; G.freezeCam=false;
   spawnPlayerVisual(classId);
   $("select").style.display="none"; $("playHud").style.display="block";
+  camReset(G.p.yaw); updateCamera._init=false; setPlayFov();
   $("atk").textContent=c.atkLabel;
   const sk=$("sk"); if(sk.childNodes[0]) sk.childNodes[0].textContent=c.skillLabel;
   $("over").style.display="none";
   refreshHUD(); toast("欢迎来到青岚镇，"+c.name);
 }
 
+function setPlayFov(){
+  if(G.freezeCam) return;
+  const asp=innerWidth/innerHeight;
+  camera.fov= asp<1 ? 58 : 48; camera.updateProjectionMatrix();
+}
 function faceCam(m){
   const p=camera.position;
   m.lookAt(p.x, m.position.y, p.z);
@@ -1617,6 +1674,7 @@ function tryAttack(){
   if(G.mode!=="play"||G.p.dead||G.paused) return;
   if(G.p.spinT>0) return;
   const c=CLASSES[G.classId];
+  if(!(G.p.atkT>0)) faceNearest(G.classId==="swordsman"?3.2:11);
   if(G.classId==="swordsman"){
     if(G.p.atkT>0 && G.combo<3 && performance.now()/1000<G.comboExp){ G.comboQueued=true; return; }
     if(G.p.atkT>0||G.atkCd>0) return;
@@ -1646,6 +1704,7 @@ function trySkill(){
   const c=CLASSES[G.classId];
   if(G.skillCd>0||G.p.mp<c.skillMp) return;
   G.p.mp-=c.skillMp; G.skillCd=c.skillCd;
+  if(G.classId!=="swordsman") faceNearest(11);
   if(G.classId==="swordsman"){ G.p.spinT=0.7; G.shake=0.35; }
   else if(G.classId==="mage"){
     G.p.atkT=0.3; G.shake=0.28; playAttack(G.player, 0.45);
@@ -1713,6 +1772,133 @@ function advDlg(){
   $("dlg").style.display="none"; G.dlg=null; G.paused=false;
 }
 
+/* ---------- WoW-style third-person orbit camera ---------- */
+const CAM={ yaw:0, pitch:22*Math.PI/180, dist:7.0, curDist:7.0, minD:2.6, maxD:15, minP:5*Math.PI/180, maxP:70*Math.PI/180,
+  dragging:false, lastUser:-10, lookH:1.35, ptrs:new Map(), pinch0:0, dist0:0 };
+const _camT=new THREE.Vector3(), _camP=new THREE.Vector3();
+function camClamp(){
+  CAM.pitch=Math.min(CAM.maxP, Math.max(CAM.minP, CAM.pitch));
+  CAM.dist=Math.min(CAM.maxD, Math.max(CAM.minD, CAM.dist));
+  syncZoomUI();
+}
+function syncZoomUI(){
+  const th=document.getElementById("zthumb"), fl=document.getElementById("zfill"), z=document.getElementById("zoom");
+  if(!th||!z) return;
+  const H=z.clientHeight||178, top=30, bot=H-30;
+  const f=(CAM.dist-CAM.minD)/(CAM.maxD-CAM.minD); // 0 = near (bottom), 1 = far (top)
+  const y=bot-(bot-top)*f;
+  th.style.top=y+"px"; fl.style.height=((bot-top)*f)+"px";
+}
+function camReset(behindYaw){
+  CAM.yaw=behindYaw||0; CAM.pitch=22*Math.PI/180; CAM.dist=CAM.curDist=7.0; camClamp();
+}
+// camera-collision against the authored town: march the town height grid from the look target to the camera
+function gateBlocks(x,y,z){
+  // procedural stone gate at z=15.8 (pillars, arch band, low side walls)
+  const dz=Math.abs(z-15.8); if(dz>0.75) return false;
+  const ax=Math.abs(x);
+  if(ax>1.5 && ax<2.8 && y<3.2) return true;          // pillars
+  if(ax<2.8 && y>2.5 && y<5.5) return true;           // arch band + keystone
+  if(dz<0.4 && ax>=2.8 && ax<11.2 && y<1.45) return true; // side walls
+  return false;
+}
+function camOcclusion(tx,ty,tz, px,py,pz){
+  const g=TOWN.grid;
+  const N=28; let hit=1;
+  for(let i=2;i<=N;i++){
+    const f=i/N, x=tx+(px-tx)*f, y=ty+(py-ty)*f, z=tz+(pz-tz)*f;
+    if(gateBlocks(x,y,z)){ hit=Math.max(0.12,(i-1.5)/N); break; }
+    if(!g || z>=TOWN_CFG.fieldZ+1) continue;
+    const ix=Math.floor((x-g.ox)/g.cell), iz=Math.floor((z-g.oz)/g.cell);
+    if(ix<0||iz<0||ix>=g.nx||iz>=g.nz) continue;
+    const h=g.height[iz*g.nx+ix];
+    if(h>0.5 && y<h+0.35){ hit=Math.max(0.12,(i-1.5)/N); break; }
+  }
+  return hit;
+}
+function updateCamera(dt, moving){
+  const now=performance.now()/1000;
+  // gentle WoW-like auto-follow: swing behind the hero while running, never while the player is steering the camera
+  if(moving && !CAM.dragging && now-CAM.lastUser>1.6){
+    let d=G.p.yaw-CAM.yaw; d=Math.atan2(Math.sin(d),Math.cos(d));
+    if(Math.abs(d)<2.0) CAM.yaw+=d*(1-Math.exp(-0.7*dt));
+  }
+  const tx=G.p.x, ty=(G.p.y||0)+CAM.lookH, tz=G.p.z;
+  const cp=Math.cos(CAM.pitch), sp=Math.sin(CAM.pitch), fx=Math.sin(CAM.yaw), fz=Math.cos(CAM.yaw);
+  const want=CAM.dist;
+  const occ=camOcclusion(tx,ty,tz, tx-fx*cp*want, ty+sp*want, tz-fz*cp*want);
+  const target=want*occ;
+  // pull in fast when blocked, ease back out slowly
+  CAM.curDist += (target-CAM.curDist)*(1-Math.exp((target<CAM.curDist?-18:-3.5)*dt));
+  const D=CAM.curDist;
+  let cx=tx-fx*cp*D, cy=ty+sp*D, cz=tz-fz*cp*D;
+  const gy=groundAt(cx,cz)+0.25; if(cy<gy) cy=gy;
+  _camP.set(cx,cy,cz);
+  if(!updateCamera._init){ camera.position.copy(_camP); updateCamera._init=true; }
+  else camera.position.lerp(_camP, 1-Math.exp(-22*dt));
+  G.shake=Math.max(0,G.shake-dt*1.8);
+  const sh=G.shake*G.shake;
+  camera.position.x+=(Math.random()-0.5)*0.22*sh;
+  camera.position.y+=(Math.random()-0.5)*0.18*sh;
+  _camT.set(tx,ty,tz);
+  camera.lookAt(_camT);
+}
+function bindCameraInput(){
+  const cv=$("c");
+  const active=()=>G.mode==="play" && !G.freezeCam;
+  cv.addEventListener("pointerdown", e=>{
+    if(!active()) return;
+    try{ cv.setPointerCapture(e.pointerId); }catch(_){}
+    CAM.ptrs.set(e.pointerId,{x:e.clientX,y:e.clientY});
+    if(CAM.ptrs.size===2){ const a=[...CAM.ptrs.values()]; CAM.pinch0=Math.hypot(a[0].x-a[1].x,a[0].y-a[1].y)||1; CAM.dist0=CAM.dist; }
+    CAM.dragging=true; CAM.lastUser=performance.now()/1000;
+  });
+  cv.addEventListener("pointermove", e=>{
+    const pr=CAM.ptrs.get(e.pointerId); if(!pr) return;
+    const dx=e.clientX-pr.x, dy=e.clientY-pr.y; pr.x=e.clientX; pr.y=e.clientY;
+    if(CAM.ptrs.size>=2){
+      const a=[...CAM.ptrs.values()]; const d=Math.hypot(a[0].x-a[1].x,a[0].y-a[1].y)||1;
+      CAM.dist=CAM.dist0*CAM.pinch0/d;
+    } else {
+      const k=(e.pointerType==="mouse"?0.0055:0.0072);
+      CAM.yaw-=dx*k; CAM.pitch+=dy*k*0.8;
+    }
+    camClamp(); CAM.lastUser=performance.now()/1000;
+  });
+  const end=e=>{
+    CAM.ptrs.delete(e.pointerId);
+    if(CAM.ptrs.size===1){ CAM.pinch0=0; }
+    if(CAM.ptrs.size===0) CAM.dragging=false;
+    CAM.lastUser=performance.now()/1000;
+  };
+  cv.addEventListener("pointerup", end); cv.addEventListener("pointercancel", end); cv.addEventListener("lostpointercapture", end);
+  cv.addEventListener("wheel", e=>{ if(!active()) return; e.preventDefault(); CAM.dist*=Math.exp(e.deltaY*0.0012); camClamp(); CAM.lastUser=performance.now()/1000; }, {passive:false});
+  cv.addEventListener("contextmenu", e=>e.preventDefault());
+  // on-screen zoom slider (top = far, bottom = near), synced with pinch / wheel
+  const z=$("zoom");
+  function fromY(cy){
+    const r=z.getBoundingClientRect(), top=r.top+30, bot=r.bottom-30;
+    const f=Math.min(1,Math.max(0,(bot-cy)/(bot-top)));
+    CAM.dist=CAM.minD+(CAM.maxD-CAM.minD)*f; camClamp(); CAM.lastUser=performance.now()/1000;
+  }
+  let zon=false;
+  z.addEventListener("pointerdown", e=>{ e.preventDefault(); e.stopPropagation(); zon=true; try{ z.setPointerCapture(e.pointerId); }catch(_){} fromY(e.clientY); });
+  z.addEventListener("pointermove", e=>{ if(zon) fromY(e.clientY); });
+  const zend=()=>{ zon=false; };
+  z.addEventListener("pointerup", zend); z.addEventListener("pointercancel", zend);
+  syncZoomUI();
+}
+function nearestEnemy(maxD){
+  let best=null, bd=maxD*maxD;
+  G.enemies.forEach(e=>{ if(e.dead) return; const d=(e.x-G.p.x)**2+(e.z-G.p.z)**2; if(d<bd){ bd=d; best=e; } });
+  return best;
+}
+function faceNearest(maxD){
+  const e=nearestEnemy(maxD); if(!e) return;
+  G.p.yaw=Math.atan2(e.x-G.p.x, e.z-G.p.z);
+  if(G.player) G.player.rotation.y=G.p.yaw;
+}
+
 function update(dt){
   for(let i=G.parts.length-1;i>=0;i--){
     const p=G.parts[i], u=p.userData; u.life-=dt;
@@ -1744,8 +1930,7 @@ function update(dt){
   if(G.keys["KeyA"]||G.keys["ArrowLeft"]) ix-=1;
   if(G.keys["KeyD"]||G.keys["ArrowRight"]) ix+=1;
   // camera-relative input: up = away from camera, right = screen right
-  { const fx=G.p.x-camera.position.x, fz=G.p.z-camera.position.z, fl=Math.hypot(fx,fz)||1;
-    const ffx=fx/fl, ffz=fz/fl, rx=-ffz, rz=ffx; // right vector (screen right) for a Y-up camera
+  { const ffx=Math.sin(CAM.yaw), ffz=Math.cos(CAM.yaw), rx=-ffz, rz=ffx; // forward = away from camera, right = screen right
     const wx=ix*rx+iz*ffx, wz=ix*rz+iz*ffz; ix=wx; iz=wz; }
   const len=Math.hypot(ix,iz);
   if(len>1){ ix/=len; iz/=len; }
@@ -1811,18 +1996,7 @@ function update(dt){
   G.npcs.forEach(n=>{ const d=Math.hypot(n.x-G.p.x,n.z-G.p.z); if(d<2.6&&d<best){best=d;G.near=n;} });
   if($("talk")) $("talk").style.display=(G.near && G.mode==="play")?"block":"none";
 
-  if(!G.freezeCam){
-    // fixed 45-degree diagonal top-down follow camera (pitch 45, yaw 45); pull back on portrait screens
-    const asp=innerWidth/innerHeight, D=asp<1? 14+(1-asp)*6 : 11;
-    const h=D*0.7071, hz=D*0.7071*0.7071;
-    const cx=G.p.x+hz, cy=h, cz=G.p.z-hz;
-    camera.position.lerp(tmpV.set(cx,cy,cz), 1-Math.exp(-8*dt));
-    G.shake=Math.max(0,G.shake-dt*1.8);
-    const sh=G.shake*G.shake;
-    camera.position.x+=(Math.random()-0.5)*0.3*sh;
-    camera.position.y+=(Math.random()-0.5)*0.25*sh;
-    camera.lookAt(G.p.x, 1.1, G.p.z);
-  }
+  if(!G.freezeCam) updateCamera(dt, !busy && len>0.05);
   if((refreshHUD._acc=(refreshHUD._acc||0)+dt)>0.25){ refreshHUD._acc=0; refreshHUD(); }
 }
 function damagePlayer(amt){
@@ -1833,7 +2007,7 @@ function damagePlayer(amt){
 }
 function resurrect(){
   const c=CLASSES[G.classId];
-  G.p.hp=c.hp; G.p.mp=c.mp; G.p.dead=false; G.p.x=TOWN_CFG.spawnX; G.p.z=TOWN_CFG.spawnZ; G.p.yaw=0;
+  G.p.hp=c.hp; G.p.mp=c.mp; G.p.dead=false; G.p.x=TOWN_CFG.spawnX; G.p.z=TOWN_CFG.spawnZ; G.p.yaw=0; camReset(0); updateCamera._init=false;
   if(G.player) G.player.scale.set(1,1,1);
   $("over").style.display="none"; refreshHUD();
 }
@@ -1919,15 +2093,16 @@ function init(){
   renderer.setSize(innerWidth, innerHeight, false);
   renderer.outputColorSpace=THREE.SRGBColorSpace;
   // bright, saturated illustration look: tunable lighting rig (?look={"exp":1.1,...} for testing)
-  const LOOK=Object.assign({ tm:"aces", exp:1.08, hemi:1.0, sun:1.7, rim:0.45, fogN:34, fogF:92 },
+  const LOOK=Object.assign({ tm:"none", exp:1.0, hemi:1.0, sun:1.7, rim:0.3, fogN:38, fogF:150 },
     (()=>{ try{ return JSON.parse(new URLSearchParams(location.search).get("look")||"{}"); }catch(e){ return {}; } })());
-  renderer.toneMapping= LOOK.tm==="none"?THREE.NoToneMapping : LOOK.tm==="agx"?THREE.AgXToneMapping : THREE.ACESFilmicToneMapping;
+  renderer.toneMapping= LOOK.tm==="none"?THREE.NoToneMapping : LOOK.tm==="agx"?THREE.AgXToneMapping : LOOK.tm==="aces"?THREE.ACESFilmicToneMapping : THREE.NoToneMapping;
+  window.__LOOK=LOOK;
   renderer.toneMappingExposure=LOOK.exp;
   renderer.shadowMap.enabled=true;
   renderer.shadowMap.type=THREE.PCFSoftShadowMap;
   scene=new THREE.Scene();
-  scene.fog=new THREE.Fog(0xdcefff, LOOK.fogN, LOOK.fogF);
-  camera=new THREE.PerspectiveCamera(40, innerWidth/innerHeight, 0.2, 100);
+  scene.fog=new THREE.Fog(0xd9ecf9, LOOK.fogN, LOOK.fogF);
+  camera=new THREE.PerspectiveCamera(40, innerWidth/innerHeight, 0.15, 480);
   camera.position.set(10.5, 9.5, -13);
   clock=new THREE.Clock();
   gradientMap=makeGradientMap();
@@ -1952,11 +2127,13 @@ function init(){
   }
   camera.lookAt(0,0.6,3);
   bindInput();
+  bindCameraInput();
   buildClassCards();
-  window.__mengyu={ G, GLB, TOWN, TOWN_CFG, groundAt, inTownBounds, startAdventure, tryAttack, get camera(){ return camera; } };
+  window.__mengyu={ G, GLB, TOWN, TOWN_CFG, CAM, groundAt, inTownBounds, startAdventure, tryAttack, trySkill, camClamp, get camera(){ return camera; }, get renderer(){ return renderer; } };
   loadCharacterModels(()=>{ upgradeVisuals(); try{ cardThumbs(); }catch(e){ console.warn('thumbs', e); } });
   window.addEventListener("resize", ()=>{
     camera.aspect=innerWidth/innerHeight; camera.updateProjectionMatrix();
+    if(G.mode==="play") setPlayFov(); syncZoomUI();
     renderer.setSize(innerWidth, innerHeight, false);
   });
 
@@ -1971,10 +2148,13 @@ function init(){
     update(dt);
     adaptDPR(dt);
     { // keep the tight, sharp shadow box centred on where the camera looks
-      const dir=camera.getWorldDirection(_shV); const t=dir.y<-0.05? -camera.position.y/dir.y : 12;
-      const fx=camera.position.x+dir.x*t, fz=camera.position.z+dir.z*t;
+      let fx, fz;
+      if(G.mode==="play" && !G.freezeCam){ fx=G.p.x+Math.sin(CAM.yaw)*7; fz=G.p.z+Math.cos(CAM.yaw)*7; }
+      else { const dir=camera.getWorldDirection(_shV); const t=dir.y<-0.05? Math.min(40,-camera.position.y/dir.y) : 12;
+        fx=camera.position.x+dir.x*t; fz=camera.position.z+dir.z*t; }
       sun.position.set(fx+14,18,fz+7); sun.target.position.set(fx,0,fz); sun.target.updateMatrixWorld(); }
     if(G.atkHeld && G.classId==="swordsman") tryAttack();
+    if(G.sky) G.sky.position.set(camera.position.x, 0, camera.position.z);
     renderer.render(scene, camera);
     if(!loop._ready){ loop._ready=1; document.documentElement.setAttribute("data-ready","1"); document.title="ready"; }
   }
