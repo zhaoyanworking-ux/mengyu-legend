@@ -89,6 +89,8 @@
   #knob{position:absolute;left:50%;top:50%;width:60px;height:60px;margin:-30px 0 0 -30px;border-radius:50%;
     background:radial-gradient(circle at 40% 35%,#fff,#e6eeff);box-shadow:0 4px 10px rgba(0,0,0,.2)}
   #atk,.skb,#talk{position:absolute;border:0;border-radius:50%;color:#fff;font-weight:700;pointer-events:auto;box-shadow:0 6px 14px rgba(0,0,0,.22);touch-action:none}
+  .tut::after{content:"";position:absolute;inset:-9px;border-radius:50%;border:3px solid #ffe070;box-shadow:0 0 14px #ffd040;animation:tutp 1.15s ease-out infinite;pointer-events:none}
+  @keyframes tutp{0%{transform:scale(.92);opacity:1}100%{transform:scale(1.22);opacity:0}}
   #atk{right:calc(18px + var(--sr));bottom:calc(30px + var(--sb));width:86px;height:86px;background:radial-gradient(circle at 35% 30%,#ff9a80,#e44a38 72%);font-size:13px;border:3px solid rgba(255,255,255,.85);transition:transform .06s;padding:0}
   #atk img{width:44px;height:44px;display:block;margin:4px auto 0}
   #atk .lb{display:block;margin-top:-2px}
@@ -253,7 +255,15 @@
     #bagGrid{grid-template-columns:repeat(10,1fr);gap:5px}
     #bagGrid .slot,#eqSlots .slot{width:auto;height:48px}
     #eqSlots .slot{width:54px}
-    #settings .sheet{width:min(80vw,600px)}
+    #settings .sheet{width:min(92vw,760px)}
+    #settings h2{padding-top:8px;padding-bottom:2px}
+    #settings .sec{display:grid;grid-template-columns:1fr 1fr;column-gap:22px}
+    #settings .srow{padding:6px 0;font-size:13px}
+    #settings .srow input[type=range]{width:56%}
+    #setPlayBtns{grid-column:1/3;gap:12px;margin-top:8px}
+    #setPlayBtns:not([style*="none"]){display:flex!important}
+    #setPlayBtns .bigbtn{flex:1;margin:0}
+    #settings .shelp{grid-column:1/3;margin-top:6px!important;font-size:11px!important}
   }
 </style>
 </head>
@@ -338,7 +348,7 @@
         <button class="bigbtn" id="btnResume" type="button">继续游戏</button>
         <button class="bigbtn gray" id="btnQuit" type="button">保存并返回标题</button>
       </div>
-      <div style="font-size:11.5px;color:#8a6a40;margin-top:10px;line-height:1.6">操作：左摇杆移动 · 拖动屏幕转镜头 · 双指缩放<br>键盘：WASD 移动 · J/空格 攻击 · K/L 技能 · Shift 翻滚 · E 交谈 · 1/2 药水 · B 背包 · Esc 暂停</div>
+      <div class="shelp" style="font-size:11.5px;color:#8a6a40;margin-top:10px;line-height:1.6">操作：左摇杆移动 · 拖动屏幕转镜头 · 双指缩放<br>键盘：WASD 移动 · J/空格 攻击 · K/L 技能 · Shift 翻滚 · E 交谈 · 1/2 药水 · B 背包 · Esc 暂停</div>
     </div>
   </div></div>
   <div id="confirm" class="modal confirm"><div class="sheet"><h2 style="justify-content:center">提示</h2><p id="cfText"></p>
@@ -370,12 +380,12 @@ const CLASSES = {
     atkLabel:"斩击", skillLabel:"旋斩", sk2Label:"突斩", sk2Mp:14, sk2Cd:4, sk2Dmg:34, rec:true },
   mage: { id:"mage", name:"法师", en:"Mage", sub:"远程法术 · 高法力",
     desc:"白袍浅紫、尖顶宽沿帽，金杖托着岚光蓝珠。普通攻击射出魔弹，技能在前方引发范围魔爆。",
-    hp:90, mp:140, spd:5.2, atk:20, atkCd:0.55, skill:36, skillMp:28, skillCd:7,
-    atkLabel:"魔弹", skillLabel:"魔爆", sk2Label:"飞弹", sk2Mp:24, sk2Cd:5, sk2Dmg:17 },
+    hp:90, mp:140, spd:5.2, atk:30, atkCd:0.55, skill:52, skillMp:28, skillCd:7,
+    atkLabel:"魔弹", skillLabel:"魔爆", sk2Label:"飞弹", sk2Mp:24, sk2Cd:5, sk2Dmg:25 },
   archer: { id:"archer", name:"弓箭手", en:"Archer", sub:"急速射击 · 均衡",
     desc:"带耳尖的绿风帽、奶油色衬衣与棕色皮甲，背着箭袋与木弓。普攻快速射箭，技能扇形连射。",
-    hp:120, mp:80, spd:5.9, atk:12, atkCd:0.28, skill:11, skillMp:20, skillCd:6,
-    atkLabel:"射击", skillLabel:"扇射", sk2Label:"穿云", sk2Mp:18, sk2Cd:5, sk2Dmg:40 }
+    hp:120, mp:80, spd:5.9, atk:19, atkCd:0.28, skill:17, skillMp:20, skillCd:6,
+    atkLabel:"射击", skillLabel:"扇射", sk2Label:"穿云", sk2Mp:18, sk2Cd:5, sk2Dmg:62 }
 };
 const CLASS_ORDER = ["swordsman","mage","archer"];
 // user-authored fused town (Tripo "童话村落"), scaled so ~1.7m chibis sit naturally at the doors
@@ -1835,7 +1845,7 @@ function fireShot(kind, yawOff, dmg, spd, target){
   if(!s) return null;
   const P=G.p, yaw=P.yaw+(yawOff||0);
   s.on=true; s.kind=kind; s.x=P.x+Math.sin(yaw)*0.55; s.z=P.z+Math.cos(yaw)*0.55; s.y=(P.y||0)+(kind===1||kind===2?1.05:0.95);
-  s.vx=Math.sin(yaw)*spd; s.vz=Math.cos(yaw)*spd; s.spd=spd; s.dmg=dmg; s.age=0; s.hitN=0;
+  s.vx=Math.sin(yaw)*spd; s.vz=Math.cos(yaw)*spd; s.spd=spd; s.dmg=dmg; s.age=0; s.hitN=0; s.fx0=P.x; s.fz0=P.z;
   s.life=kind===0?0.7:(kind===3?1.0:1.2); s.target=target||null; s.knock=kind===3?6:(kind===1?3.6:kind===2?3:2.4);
   FX.add.emit(s.x,s.y,s.z, 0,0,0, 0.1, 0.25, kind===3?0.9:0.55, SHOT_COL[kind], 1, 0,0,0);
   return s;
@@ -1864,7 +1874,7 @@ function updateShots(dt){
     let dead=s.life<=0;
     for(let j=0;j<G.enemies.length && !dead;j++){
       const e=G.enemies[j]; if(e.dead) continue;
-      const dx=e.x-s.x, dz=e.z-s.z, rr=e.r+0.3; if(dx*dx+dz*dz>rr*rr) continue;
+      const ax0=(s.fx0!=null?s.fx0:ox), az0=(s.fz0!=null?s.fz0:oz), sgx=s.x-ax0, sgz=s.z-az0, sl2=sgx*sgx+sgz*sgz||1e-6; let tt=((e.x-ax0)*sgx+(e.z-az0)*sgz)/sl2; tt=tt<0?0:tt>1?1:tt; const dx=e.x-(ax0+sgx*tt), dz=e.z-(az0+sgz*tt), rr=e.r+0.3; if(dx*dx+dz*dz>rr*rr) continue;
       if(s.kind===3){ let seen=false; for(let h=0;h<s.hitN;h++) if(s.hits[h]===e){ seen=true; break; } if(seen) continue; if(s.hitN<12) s.hits[s.hitN++]=e; }
       const v=Math.hypot(s.vx,s.vz)||1, nx=s.vx/v, nz=s.vz/v;
       const crit=hitEnemy(e, s.dmg, nx, nz, s.knock, { power:s.kind===3?1:0.5, col:s.kind===0?0xfff2b0:col, pop:s.kind===3?2.6:0 });
@@ -1872,6 +1882,7 @@ function updateShots(dt){
       hitStop(s.kind===3?0.05:0.03*(crit?1.5:1)); addShake(s.kind===3?0.32:0.16*(crit?1.4:1));
       if(s.kind!==3) dead=true;
     }
+    s.fx0=null; s.fz0=null;
     if(dead){ s.on=false; if(s.life<=0 && (s.kind===1||s.kind===2)) fxBurst(s.x,s.y,s.z,col,6,2,0.3,0.08,1); continue; }
     _dummy.position.set(s.x,s.y,s.z);
     if(s.kind===0||s.kind===3){
@@ -2090,7 +2101,7 @@ function addItem(it, silent){
   const s=G.save;
   if(s.bag.length>=BAG_MAX){ const g=Math.round(it.price*0.6); s.gold+=g; if(!silent) toast("背包已满，"+it.name+" 自动出售 +"+g+" 金"); return false; }
   s.bag.push(it); G.saveDirty=true; G.bagNew=true;
-  if(!silent) toast("获得 <span class='c"+it.rar+"'>["+RAR[it.rar].n+"] "+it.name+"</span>", true);
+  if(!silent){ const up=(typeof isUpgrade==="function")&&isUpgrade(it); toast("获得 <span class='c"+it.rar+"'>["+RAR[it.rar].n+"] "+it.name+"</span>"+(up?" <b style='color:#8dff9a'>▲更强</b>":""), true); }
   return true;
 }
 function equipItem(uid){
@@ -2156,7 +2167,7 @@ const QUESTS = [
 ];
 const NPCS = {
   mayor:{ id:"mayor", name:"镇长 苏晚晴", x:-2.4, z:5.8, yaw:0.4, kind:"npcElder" },
-  herb:{ id:"herb", name:"药师 叶青", x:-3.2, z:-2.0, yaw:-0.2, kind:"npcHerb", shop:true },
+  herb:{ id:"herb", name:"药师 叶青", x:-6.5, z:1.4, yaw:1.35, kind:"npcHerb", shop:true },
   guard:{ id:"guard", name:"守卫 石川", x:2.2, z:13.4, yaw:Math.PI, kind:"npcGuard" }
 };
 const NPC_SHORT={ mayor:"苏晚晴", herb:"叶青", guard:"石川" };
@@ -2311,7 +2322,7 @@ const ETYPE={
   spike:{ name:"刺棘史莱姆", hp:36, dmg:9,  spd:3.7, r:0.5,  xp:10,  gold:2,  wind:0.44, reach:1.4, barY:1.3 },
   wisp: { name:"蚀雾灵",     hp:40, dmg:11, spd:2.4, r:0.5,  xp:13,  gold:3,  ranged:true, fly:0.95, barY:2.0 },
   elite:{ name:"岩甲史莱姆", hp:470,dmg:19, spd:2.2, r:1.05, xp:110, gold:14, wind:0.85, reach:2.5, barY:2.6, elite:true },
-  boss: { name:"蚀雾史莱姆王", hp:1500,dmg:22, spd:2.7, r:1.5, xp:360, gold:36, barY:4, boss:true }
+  boss: { name:"蚀雾史莱姆王", hp:2000,dmg:22, spd:2.7, r:1.5, xp:360, gold:36, barY:4, boss:true }
 };
 const ALTAR={ x:0, z:69, r:8.5 };
 const ELITE_SPOT={ x:8, z:51 };
@@ -2499,6 +2510,9 @@ function inField(x,z){ return z>=17.4; }
 function updateEnemy(e, dt, P){
   e.flash=Math.max(0,e.flash-dt*8); e.sq=Math.max(0,e.sq-dt*5);
   const kd=Math.exp(-9*dt); e.x+=e.kx*dt; e.z+=e.kz*dt; e.kx*=kd; e.kz*=kd;
+  if(!e.heavy && !e.fly && e.state!=="intro" && !P.dead){ const bx=e.x-P.x, bz=e.z-P.z, bd=Math.hypot(bx,bz), mn=e.r+0.3; if(bd<mn && bd>0.001){ const pu=Math.min(mn-bd, 6*dt); e.x+=bx/bd*pu; e.z+=bz/bd*pu; } }
+  if(e.heavy && e.state!=="leap" && e.state!=="intro" && !P.dead && !(P.y>0.6)){ const bx=P.x-e.x, bz=P.z-e.z, bd=Math.hypot(bx,bz), mn=e.r*(e.boss?1.25:0.8)+0.35; if(bd<mn){ const ux=bd>0.01?bx/bd:Math.sin(e.mesh.rotation.y), uz=bd>0.01?bz/bd:Math.cos(e.mesh.rotation.y), pu=Math.min(mn-bd, 9*dt+(mn-bd)*0.25); tryMove(ux*pu, uz*pu); } }
+  if(e.boss && e.state!=="return"){ const ax=e.x-ALTAR.x, az=e.z-ALTAR.z, ad=Math.hypot(ax,az); if(ad>ALTAR.r){ e.x=ALTAR.x+ax/ad*ALTAR.r; e.z=ALTAR.z+az/ad*ALTAR.r; } }
   if(e.state!=="leap" && e.state!=="intro" && (e.y>0||e.vy>0)){ e.vy-=24*dt; e.y+=e.vy*dt; if(e.y<0){ e.y=0; e.vy=0; } }
   const dx=P.x-e.x, dz=P.z-e.z, dist=Math.hypot(dx,dz)||0.001;
   let moving=false, glow=0;
@@ -2537,7 +2551,7 @@ function updateEnemy(e, dt, P){
     // idle / chase
     const aggroR=e.boss?22:e.elite?8:e.ranged?9:7;
     if(!e.aggro && canSee && dist<aggroR) { e.aggro=true; if(!e.boss) spawnNum(e.x,e.y+e.fly+(e.barY||1.2)+0.3,e.z,"!",6); }
-    if(e.aggro && (!canSee || homeD>(e.boss?16:15) || dist>(e.boss?26:16))){
+    if(e.aggro && (!canSee || (e.boss?Math.hypot(P.x-ALTAR.x,P.z-ALTAR.z)>ALTAR.r+14:homeD>15) || dist>(e.boss?26:16))){
       e.aggro=false; if(e.tele){ releaseDecal(e.tele); e.tele=null; } e.state="return";
       if(e.boss){ e.hp=e.max; }
     }
@@ -2623,7 +2637,7 @@ function bossThink(e, dt, P, dx, dz, dist){
   if(n%5===0 && adds<3){ startTele(e,"summon",e.x,e.z,1,0.9*sp); }
   else if(n%3===0){ startTele(e,"burst",e.x,e.z,1,0.95*sp); }
   else if(dist<4.6){ startTele(e,"slam",e.x,e.z,4.2,1.05*sp); }
-  else { startTele(e,"leap",P.x,P.z,3.0,1.15*sp); }
+  else { let tx=P.x, tz=P.z; const ax=tx-ALTAR.x, az=tz-ALTAR.z, ad=Math.hypot(ax,az), lim=ALTAR.r-0.8; if(ad>lim){ tx=ALTAR.x+ax/ad*lim; tz=ALTAR.z+az/ad*lim; } startTele(e,"leap",tx,tz,3.0,1.15*sp); }
 }
 
 /* ===================== loot: gear beams on the ground + potion drops ===================== */
@@ -3050,7 +3064,7 @@ function applyFade(f, target, dt){
   for(const o of f.outl) o.visible=!faded;
 }
 function updateFade(dt){
-  if(G.mode!=="play"){ for(const n of G.npcs){ const t=n.mesh.userData.tag; if(t&&t.visible) t.visible=false; } return; }
+  if(G.mode!=="play"){ for(const n of G.npcs){ const t=n.mesh.userData.tag; if(t&&t.visible) t.visible=false; if(!n.mesh.visible) n.mesh.visible=true; } return; }
   _fC.copy(camera.position); _fH.set(G.p.x,(G.p.y||0)+0.9,G.p.z); _fV.copy(_fH).sub(_fC);
   for(const n of G.npcs){ const t=n.mesh.userData.tag; if(t){ const d=Math.hypot(camera.position.x-n.x,camera.position.z-n.z); const v=d>4.2&&d<28&&!(n.fd&&n.fd.cur<0.9); if(t.visible!==v) t.visible=v; } }
   for(const f of FADERS){
@@ -3061,11 +3075,11 @@ function updateFade(dt){
     if(e.dead) continue;
     if(!e.fd){ e.fd=registerFaderLocal(e.mesh, e.r+(e.boss?0.6:0.25), 0.5); }
     const hit=segHit(e.x, e.y+e.fly+0.5*(e.mesh.userData.uniScale||1), e.z, e.fd.r);
-    const tgt=hit?(e.boss?0.5:0.3):1; if(tgt!==e.fd.cur) applyFade(e.fd,tgt,dt);
+    const tgt=hit?(e.boss?0.35:0.3):1; if(tgt!==e.fd.cur) applyFade(e.fd,tgt,dt);
   }
   for(const n of G.npcs){
     if(!n.fd) n.fd=registerFaderLocal(n.mesh, 0.75, 0.8);
-    const hit=segHit(n.x, 0.8, n.z, 0.75)||Math.hypot(camera.position.x-n.x,camera.position.z-n.z)<5.0; const tgt=hit?0.2:1; if(tgt!==n.fd.cur) applyFade(n.fd,tgt,dt);
+    const cd=Math.hypot(camera.position.x-n.x,camera.position.z-n.z); const near=cd<4.8; const hit=segHit(n.x, 0.8, n.z, 0.75); const tgt=near?0:(hit?0.4:1); if(tgt!==n.fd.cur) applyFade(n.fd,tgt,dt*1.6); const vis=n.fd.cur>0.04; if(n.mesh.visible!==vis) n.mesh.visible=vis; continue; if(tgt!==n.fd.cur) applyFade(n.fd,tgt,dt);
   }
 }
 function registerFaderLocal(obj, r, y){ const f=registerFader(obj,r,y); FADERS.pop(); return f; }
@@ -3080,7 +3094,7 @@ function updateCamera(dt, moving){
   // boss fight: when the player isn't steering the camera, ease the view round so the boss stays in frame
   if(G.boss && !G.boss.dead && G.boss.state!=="intro" && !CAM.dragging && now-CAM.lastUser>2.2){
     const bd=Math.hypot(G.boss.x-G.p.x,G.boss.z-G.p.z);
-    if(bd>2.5 && bd<20){ let d=Math.atan2(G.boss.x-G.p.x,G.boss.z-G.p.z)-CAM.yaw; d=Math.atan2(Math.sin(d),Math.cos(d)); if(Math.abs(d)<2.2) CAM.yaw+=d*(1-Math.exp(-0.9*dt)); }
+    if(bd>0.8 && bd<20){ let d=Math.atan2(G.boss.x-G.p.x,G.boss.z-G.p.z)-CAM.yaw; d=Math.atan2(Math.sin(d),Math.cos(d)); const rate=Math.abs(d)<2.2?0.9:0.55; CAM.yaw+=d*(1-Math.exp(-rate*dt)); }
   }
   // combat framing: a fight raises the camera a little, pulls back, and shifts the look point toward the foe so the hero never hides it
   const foe=nearestEnemy(G.boss&&!G.boss.dead?18:9.5);
@@ -3201,6 +3215,84 @@ function buildField(){
   crown.castShadow=false; trunk.castShadow=false; scene.add(crown); scene.add(trunk);
 }
 
+/* ===================== equipped-weapon glow (rarity aura) ===================== */
+const WFX={ key:"", glow:null, ring:null, hand:null, acc:0, tex:null, _v:new THREE.Vector3() };
+function wfxTex(){
+  if(WFX.tex) return WFX.tex;
+  const c=document.createElement("canvas"); c.width=c.height=64; const x=c.getContext("2d");
+  const g=x.createRadialGradient(32,32,0,32,32,32); g.addColorStop(0,"rgba(255,255,255,1)"); g.addColorStop(0.25,"rgba(255,255,255,.65)"); g.addColorStop(1,"rgba(255,255,255,0)");
+  x.fillStyle=g; x.fillRect(0,0,64,64); WFX.tex=new THREE.CanvasTexture(c); WFX.tex.colorSpace=THREE.SRGBColorSpace; return WFX.tex;
+}
+function wfxClear(){
+  if(WFX.glow){ WFX.glow.parent&&WFX.glow.parent.remove(WFX.glow); WFX.glow.material.dispose(); WFX.glow=null; }
+  if(WFX.ring){ WFX.ring.parent&&WFX.ring.parent.remove(WFX.ring); WFX.ring.material.dispose(); WFX.ring.geometry.dispose(); WFX.ring=null; }
+  WFX.hand=null;
+}
+function wfxBuild(rar){
+  wfxClear(); const pl=G.player; if(!pl || rar<1) return;
+  const bone=G.classId==="archer"?"mixamorigLeftHand":"mixamorigRightHand";
+  pl.traverse(o=>{ if(o.isBone && o.name===bone) WFX.hand=o; });
+  const col=RAR_HEX[rar];
+  const sm=new THREE.SpriteMaterial({ map:wfxTex(), color:col, transparent:true, opacity:0.75, depthWrite:false, blending:THREE.AdditiveBlending });
+  WFX.glow=new THREE.Sprite(sm); WFX.glow.renderOrder=5; scene.add(WFX.glow);
+  WFX.glow.userData.base=0.35+rar*0.12;
+  if(rar>=3){
+    const rg=new THREE.RingGeometry(0.55,0.78,40); rg.rotateX(-Math.PI/2);
+    const rm=new THREE.MeshBasicMaterial({ color:col, transparent:true, opacity:0.45, depthWrite:false, blending:THREE.AdditiveBlending, side:THREE.DoubleSide });
+    WFX.ring=new THREE.Mesh(rg, rm); WFX.ring.position.y=0.04; WFX.ring.renderOrder=2; pl.add(WFX.ring);
+  }
+}
+function updateWeaponFx(dt){
+  const w=G.save&&G.save.equip&&G.save.equip.weapon, rar=(w&&G.mode==="play")?w.rar:0;
+  const key=(G.player?G.player.uuid:"")+"|"+rar;
+  if(key!==WFX.key){ WFX.key=key; wfxBuild(rar); }
+  if(!WFX.glow) return;
+  const vis=G.player.visible && !G.p.dead; WFX.glow.visible=vis; if(WFX.ring) WFX.ring.visible=vis;
+  if(!vis) return;
+  const v=WFX._v; if(WFX.hand){ WFX.hand.getWorldPosition(v); } else v.set(G.p.x,(G.p.y||0)+0.9,G.p.z);
+  WFX.glow.position.copy(v);
+  const t=FX.time, b=WFX.glow.userData.base*(1+0.18*Math.sin(t*5.2)); WFX.glow.scale.set(b,b,1);
+  if(WFX.ring){ const s=1+0.08*Math.sin(t*2.6); WFX.ring.scale.set(s,1,s); WFX.ring.material.opacity=0.32+0.14*Math.sin(t*2.6); WFX.ring.rotation.y=t*0.6; }
+  // sparkles
+  const rate=[0,1.2,2.6,4.5,8][rar]; WFX.acc+=dt*rate;
+  const col=RAR_HEX[rar];
+  while(WFX.acc>=1){ WFX.acc-=1;
+    FX.add.emit(v.x+(Math.random()-0.5)*0.35, v.y+(Math.random()-0.3)*0.4, v.z+(Math.random()-0.5)*0.35, (Math.random()-0.5)*0.4, 0.6+Math.random()*0.6, (Math.random()-0.5)*0.4, 0.5+Math.random()*0.3, 0.07, 0.01, col, 0.9, 3, -0.6, 0.05);
+    if(rar>=4 && Math.random()<0.5){ const a=Math.random()*6.283; FX.add.emit(G.p.x+Math.sin(a)*0.7,(G.p.y||0)+0.1,G.p.z+Math.cos(a)*0.7, 0,1.4+Math.random(),0, 0.7, 0.08, 0.01, col, 0.8, 3, -0.4, 0.02); }
+  }
+}
+
+/* ===================== quest guide chevrons on the ground ===================== */
+const GUIDE={ g:null, ch:[], t:0 };
+function initGuide(){
+  const sh=new THREE.Shape(); sh.moveTo(-0.32,-0.12); sh.lineTo(0,0.2); sh.lineTo(0.32,-0.12); sh.lineTo(0.32,-0.3); sh.lineTo(0,-0.0); sh.lineTo(-0.32,-0.3); sh.closePath();
+  const geo=new THREE.ShapeGeometry(sh); geo.rotateX(-Math.PI/2); geo.rotateY(Math.PI); 
+  GUIDE.g=new THREE.Group(); GUIDE.g.visible=false; scene.add(GUIDE.g);
+  for(let i=0;i<3;i++){ const m=new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ color:0xffe070, transparent:true, opacity:0.0, depthWrite:false, blending:THREE.AdditiveBlending, side:THREE.DoubleSide })); m.renderOrder=3; m.scale.setScalar(1.25); GUIDE.g.add(m); GUIDE.ch.push(m); }
+}
+function updateGuide(dt){
+  if(G.tutAt && Math.hypot(G.p.x-G.tutAt.x,G.p.z-G.tutAt.z)>2.5){ G.tutAt=null; $("joy").classList.remove("tut"); }
+  if(G.tutT!=null){ G.tutT+=dt; if(G.tutT>14){ G.tutAt=null; $("joy").classList.remove("tut"); } if(G.tutT>12.5){ $("atk").classList.remove("tut"); G.tutT=G.tutT>14?null:G.tutT; } }
+  if(!GUIDE.g) initGuide();
+  let show=G.mode==="play" && !G.p.dead && !G.dlg && (CAM.cf||0)<0.35;
+  const tg=show && typeof questTarget==="function" ? questTarget() : null;
+  if(!tg) show=false;
+  let tx=0,tz=0,d=0;
+  if(show){
+    tx=tg.x; tz=tg.z; const P=G.p;
+    if(P.z<15.2 && tz>17) { tx=0; tz=16.2; } else if(P.z>18 && tz<15) { tx=0; tz=16.2; }
+    d=Math.hypot(tx-P.x,tz-P.z); if(Math.hypot(tg.x-P.x,tg.z-P.z)<5.5) show=false;
+  }
+  GUIDE.g.visible=show; if(!show) return;
+  const P=G.p, ux=(tx-P.x)/(d||1), uz=(tz-P.z)/(d||1), yaw=Math.atan2(ux,uz);
+  GUIDE.t+=dt;
+  for(let i=0;i<3;i++){
+    const m=GUIDE.ch[i], ph=((GUIDE.t*0.9)+i/3)%1, off=1.3+ph*2.2;
+    const x=P.x+ux*off, z=P.z+uz*off; m.position.set(x, groundAt(x,z)+0.07, z); m.rotation.y=yaw;
+    m.material.opacity=Math.sin(ph*Math.PI)*0.75;
+  }
+}
+
 /* ===================== rewritten core loop pieces ===================== */
 function newSave(classId){
   return { ver:2, classId:classId||"swordsman", level:1, xp:0, gold:30, shards:0, kills:0, storyDone:false, hasSave:true, bossKills:0,
@@ -3235,7 +3327,7 @@ function startAdventure(classId, fresh){
   $("over").style.display="none"; $("bossbar").style.display="none";
   _zoneId=""; updateZone(); refreshHUD();
   toast(fresh?"欢迎来到青岚镇，"+c.name+"！去找镇长苏晚晴吧":"欢迎回来，"+c.name);
-  if(fresh){ later(3.2, ()=>{ if(G.mode==="play") toast("左侧摇杆移动，右下按钮攻击与释放技能"); }); later(6.8, ()=>{ if(G.mode==="play") toast("拖动屏幕旋转视角，「远/近」滑条可调整镜头"); }); later(10.4, ()=>{ if(G.mode==="play") toast("看到红色预警圈时，点「翻滚」无敌闪避！"); }); }
+  if(fresh){ $("joy").classList.add("tut"); G.tutAt={x:G.p.x,z:G.p.z}; G.tutT=0; later(3.2, ()=>{ if(G.mode==="play"){ toast("左侧摇杆移动，右下按钮攻击与释放技能"); $("atk").classList.add("tut"); } }); later(6.8, ()=>{ if(G.mode==="play") toast("拖动屏幕旋转视角，「远/近」滑条可调整镜头"); }); later(10.4, ()=>{ if(G.mode==="play") toast("看到红色预警圈时，点「翻滚」无敌闪避！"); }); }
   setMusicMood("town");
 }
 function hitEnemy(e, dmg, nx, nz, knock, o){
@@ -3408,7 +3500,7 @@ function update(dt){
   FX_update(stopped?dt*0.12:dt);
   musicTick();
   if(G.freezeCam || !inPlay){
-    if(!G.freezeCam) updateMenuCamera(dt); updateFade(dt);
+    if(!G.freezeCam) updateMenuCamera(dt); updateFade(dt); if(GUIDE.g) GUIDE.g.visible=false; if(G.tutT!=null){ G.tutT=null; G.tutAt=null; $("joy").classList.remove("tut"); $("atk").classList.remove("tut"); }
     if(G.player && G.player.visible) animBob(G.player, false, dt, G.p.atkT>0, G.p.spinT>0, G.p.dead);
     (G._cast||[]).forEach(ch=>animBob(ch,false,dt,false,false,false));
     (G._lineup||[]).forEach(ch=>animBob(ch,false,dt,false,false,false));
@@ -3478,7 +3570,7 @@ function update(dt){
   updateShots(dt);
   updateEShots(dt);
   updateDrops(dt);
-  updateLoot(dt);
+  updateLoot(dt); updateWeaponFx(dt); updateGuide(dt);
   for(let i=G.pickups.length-1;i>=0;i--){
     const p=G.pickups[i]; p.mesh.rotation.y+=dt*3; p.mesh.position.y=0.45+Math.sin(FX.time*3.3)*0.1;
     if(Math.random()<0.3) FX.add.emit(p.x,0.5,p.z,(Math.random()-0.5)*0.6,1+Math.random(),(Math.random()-0.5)*0.6,0.5,0.06,0.01,0xd090ff,1,1,-1,0.05);
@@ -3767,9 +3859,9 @@ function groundAt(x,z){
 const DODGE={ dur:0.34, dist:3.9, inv:0.42, cd:1.2 };
 // 3-hit combo: segments of the attack clip (f0..f1) played at different speeds
 const SWING=[
-  { dur:0.30, f0:0.00, f1:0.60, dmg:1.0, arc:2.4, reach:1.75, tilt:0.38, mirror:false, lunge:0.35, knock:4.2, stop:0.05,  shake:0.24, pop:0 },
-  { dur:0.30, f0:0.30, f1:1.00, dmg:1.1, arc:2.4, reach:1.75, tilt:-0.42, mirror:true, lunge:0.35, knock:4.6, stop:0.055, shake:0.28, pop:0 },
-  { dur:0.44, f0:0.00, f1:1.00, dmg:1.9, arc:3.1, reach:2.05, tilt:0.0,  mirror:false, lunge:0.75, knock:8.5, stop:0.085, shake:0.5,  pop:3.2 }
+  { dur:0.30, f0:0.00, f1:0.60, dmg:0.85, arc:2.4, reach:1.75, tilt:0.38, mirror:false, lunge:0.35, knock:4.2, stop:0.05,  shake:0.24, pop:0 },
+  { dur:0.30, f0:0.30, f1:1.00, dmg:0.95, arc:2.4, reach:1.75, tilt:-0.42, mirror:true, lunge:0.35, knock:4.6, stop:0.055, shake:0.28, pop:0 },
+  { dur:0.44, f0:0.00, f1:1.00, dmg:1.65, arc:3.1, reach:2.05, tilt:0.0,  mirror:false, lunge:0.75, knock:8.5, stop:0.085, shake:0.5,  pop:3.2 }
 ];
 const LATER=[];
 function later(t,fn){ LATER.push({t,fn}); }
@@ -4141,7 +4233,7 @@ function init(){
   applyQuality();
   $("loadtip").textContent=TIPS[Math.floor(Math.random()*TIPS.length)];
   window.__mengyu={ G, GLB, TOWN, TOWN_CFG, CAM, groundAt, inTownBounds, startAdventure, tryAttack, trySkill, tryDodge, damagePlayer, hitEnemy, spawnSlime, spawnEnemy, FX, SFX, SHOTS, DROPS, LATER, camClamp,
-    ST, QUESTS, NPCS, ZONES, ALTAR, ELITE_SPOT, SPAWN, ESHOTS, LOOT, MUS, SET, gainXP, genItem, addItem, equipItem, recalcStats, usePotion, tryTalk, advDlg, closeDlg, openBag, closeBag, openSettings, closeSettings, showTitle, showSelect, selectClass, beginNew, toTitle, resurrect, xpNeed, qst, tracked, loadSave, persist, migrateSave, clearEnemies, populateField, killEnemy, refreshHUD, drawMinimap, charThumb, get camera(){ return camera; }, get renderer(){ return renderer; } };
+    ST, QUESTS, NPCS, ZONES, ALTAR, ELITE_SPOT, SPAWN, ESHOTS, LOOT, MUS, SET, gainXP, genItem, addItem, equipItem, recalcStats, usePotion, tryTalk, advDlg, closeDlg, openBag, closeBag, openSettings, closeSettings, showTitle, showSelect, selectClass, beginNew, toTitle, resurrect, xpNeed, qst, tracked, loadSave, persist, migrateSave, clearEnemies, populateField, killEnemy, refreshHUD, drawMinimap, charThumb, camera, scene, get camera(){ return camera; }, get renderer(){ return renderer; } };
   loadCharacterModels(()=>{ upgradeVisuals(); });
   window.addEventListener("resize", ()=>{
     camera.aspect=innerWidth/innerHeight; camera.updateProjectionMatrix();
