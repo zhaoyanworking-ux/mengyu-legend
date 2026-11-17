@@ -66,6 +66,16 @@
   .mbtn.has .dot{display:block}
 
   /* ---------- boss bar ---------- */
+  #trialHud{position:absolute;left:50%;top:calc(196px + var(--st));transform:translateX(-50%);display:none;padding:6px 16px;border-radius:16px;background:rgba(60,30,110,.78);color:#fff3c0;font-size:14px;font-weight:800;letter-spacing:1px;white-space:nowrap;box-shadow:0 3px 10px rgba(0,0,0,.25);pointer-events:none}
+  #trialHud.warn{background:rgba(170,40,40,.85);animation:tutp2 .8s ease-in-out infinite alternate}
+  @keyframes tutp2{to{transform:translateX(-50%) scale(1.06)}}
+  #achM{z-index:45}
+  #achM .sheet{width:min(92vw,520px)}
+  #achList{max-height:min(62vh,440px);overflow:auto;display:grid;grid-template-columns:1fr;gap:6px;padding:0 16px 14px}
+  .achHead{font-size:13px;color:#8a5a20;font-weight:700;margin-bottom:2px;grid-column:1/-1}
+  .ach{padding:7px 10px;border-radius:10px;background:rgba(160,110,40,.08);color:#9a8a7a;display:flex;flex-direction:column;font-size:12px}
+  .ach b{font-size:13.5px;color:#8a7a6a}
+  .ach.ok{background:rgba(240,160,48,.18);color:#7a5020} .ach.ok b{color:#c06a10}
   #bossbar{position:absolute;left:50%;top:calc(196px + var(--st));transform:translateX(-50%);width:min(84vw,420px);display:none;text-align:center}
   #bossbar .nm{font-size:14px;font-weight:900;color:#ffdcff;text-shadow:0 2px 3px #3a0a4a,0 0 8px #a040ff;margin-bottom:3px;letter-spacing:2px}
   #bossbar .bar{height:14px;border:2px solid rgba(255,220,255,.75)}
@@ -255,6 +265,10 @@
     #select .selTop{position:absolute;left:0;width:54%}
     #cards{margin:-40px 0 8px}
     #dlg{width:min(54vw,540px)}
+    #trialHud{top:calc(12px + var(--st));left:calc(484px + var(--sl));transform:none}
+    @keyframes tutp2{to{transform:scale(1.06)}}
+    #achList{grid-template-columns:1fr 1fr;max-height:62vh}
+    #achM .sheet{width:min(90vw,760px)}
     #bossbar{top:calc(12px + var(--st));left:calc(484px + var(--sl));transform:none;width:min(420px,calc(100vw - 664px - var(--sl) - var(--sr)))}
     #bossbar .nm{font-size:12.5px;margin-bottom:2px}
     #bag .sheet{width:min(94vw,820px)}
@@ -319,6 +333,7 @@
       <button id="btnBag" class="mbtn" type="button" aria-label="背包"><img id="icBag" alt=""><i class="dot"></i></button>
       <button id="btnSet" class="mbtn" type="button" aria-label="暂停"><img id="icSet" alt=""></button>
     </div>
+    <div id="trialHud"></div>
     <div id="bossbar"><div class="nm" id="bossName">蚀雾史莱姆王</div><div class="bar"><i id="bosslag"></i><i id="bossfill"></i><span id="bosst"></span></div></div>
     <div id="toasts"></div><div id="toast"></div>
     <div id="banner"><div class="t" id="bnT">等级提升</div><div class="s" id="bnS"></div></div>
@@ -356,10 +371,12 @@
       <div id="setPlayBtns">
         <button class="bigbtn" id="btnResume" type="button">继续游戏</button>
         <button class="bigbtn gray" id="btnQuit" type="button">保存并返回标题</button>
+        <button class="bigbtn gray" id="btnAch" type="button">成就</button>
       </div>
       <div class="shelp" style="font-size:11.5px;color:#8a6a40;margin-top:10px;line-height:1.6">操作：左摇杆移动 · 拖动屏幕转镜头 · 双指缩放<br>键盘：WASD 移动 · J/空格 攻击 · K/L 技能 · Shift 翻滚 · E 交谈 · 1/2 药水 · B 背包 · Esc 暂停</div>
     </div>
   </div></div>
+  <div id="achM" class="modal"><div class="sheet"><h2>成就 <button class="xbtn" id="achX" type="button">×</button></h2><div id="achList"></div></div></div>
   <div id="confirm" class="modal confirm"><div class="sheet"><h2 style="justify-content:center">提示</h2><p id="cfText"></p>
     <div class="row"><button class="bigbtn gray" id="cfNo" type="button">取消</button><button class="bigbtn" id="cfYes" type="button">确定</button></div></div></div>
   <button id="mute" type="button" style="display:none">音效</button>
@@ -2192,9 +2209,9 @@ const NPC_SHORT={ mayor:"苏晚晴", herb:"叶青", guard:"石川" };
 function qst(id){ return (G.save.quests[id]||(G.save.quests[id]={st:"locked",pr:0})); }
 function unlockPostgame(s){ if(!s||!s.storyDone||!s.quests) return; ["q7","q8"].forEach(k=>{ const e=s.quests[k]||(s.quests[k]={st:"locked",pr:0}); if(e.st==="locked") e.st="avail"; }); }
 function tracked(){
-  let ready=null, act=null, av=null;
-  QUESTS.forEach(q=>{ const s=qst(q.id).st; if(s==="ready"&&!ready)ready=q; if(s==="active"&&!act)act=q; if(s==="avail"&&!av)av=q; });
-  return ready||act||av;
+  let ready=null, act=null, av=null, avNew=null; const qc=(G.save&&G.save.qc)||{};
+  QUESTS.forEach(q=>{ const s=qst(q.id).st; if(s==="ready"&&!ready)ready=q; if(s==="active"&&!act)act=q; if(s==="avail"){ if(!av)av=q; if(!avNew&&!qc[q.id]&&q.id!=="q6")avNew=q; } });
+  return ready||act||avNew||av;
 }
 function progressText(){
   const q=tracked(); if(!q) return "在青岚镇四处走走吧。";
@@ -2207,7 +2224,7 @@ function progressText(){
 function questHint(){
   const q=tracked(); if(!q) return "";
   const e=qst(q.id);
-  if(e.st==="active" && q.type!=="talk") return "地点："+q.where+(q.lv>1?"　推荐 Lv."+q.lv:"");
+  if(e.st==="active" && q.type!=="talk"){ const rl=q.id==="q8"?bossLevel():q.lv; return "地点："+q.where+(rl>1?"　推荐 Lv."+rl:""); }
   return "";
 }
 // world point the minimap arrow should lead to
@@ -2266,7 +2283,7 @@ function acceptQuest(q){
 }
 function turnIn(q){
   const e=qst(q.id); if(e.st!=="ready") return;
-  e.st="done"; e.pr=q.count; G.save.gold+=q.gold;
+  e.st="done"; e.pr=q.count; G.save.gold+=q.gold; G.save.qc=G.save.qc||{}; G.save.qc[q.id]=(G.save.qc[q.id]||0)+1;
   const r=q.reward||{};
   if(r.pots){ G.save.pots.h+=r.pots[0]; G.save.pots.m+=r.pots[1]; }
   if(r.item && q.id!=="q3") addItem(genItem(Math.max(q.lv,G.save.level), Math.min(4, r.item.rar+((r.item.up&&Math.random()<r.item.up)?1:0)), r.item.slot||undefined));
@@ -2316,6 +2333,7 @@ function dlgButtons(){
   if(d.acceptId){ add("接受任务","next",advDlg); }
   else if(d.turnId){ add("完成任务","next",advDlg); }
   else add(d.shop?"好的":"再见","next",advDlg);
+  if(d.npc==="guard" && !d.turnId && G.save.level>=4) add("蚀雾试炼","opt",()=>{ closeDlg(); startTrial(); });
   if(d.shop && !d.turnId) add("购买药水","opt",()=>{ d.shopMode=true; $("dlgBody").textContent="药水都是今早新熬的，一瓶 25 金。（持有 "+G.save.gold+" 金）"; dlgButtons(); });
 }
 function buyPot(k){
@@ -2352,6 +2370,8 @@ const ZONES=[
   { id:"wood", name:"蚀雾林地", lv:"Lv.4-6", cx:-1, cz:48.5, r:9.5, spawns:[["wisp",3,4,5],["spike",2,4,5],["slime",1,4,5]] },
   { id:"altar", name:"蚀源祭坛", lv:"Lv.8", cx:ALTAR.x, cz:ALTAR.z, r:7, spawns:[] }
 ];
+function bossLevel(){ return (G.save&&G.save.storyDone)?Math.max(8,(G.save.level|0)+1):8; }
+function zoneLv(Z){ return Z.id==="altar"?"Lv."+bossLevel():Z.lv; }
 function zoneAt(x,z){ if(z<16.6) return ZONES[0]; if(z<39) return ZONES[1]; if(z<60) return ZONES[2]; return ZONES[3]; }
 function makeSpikeSlime(){
   const g=makeSlime(0xffa64a, "#7a2a00", 0.86, true);
@@ -2458,7 +2478,7 @@ function updateSpawners(dt){
   const q5=qst("q5").st, want=(q5==="active"||G.save.storyDone);
   const inAltar=Math.hypot(G.p.x-ALTAR.x,G.p.z-ALTAR.z)<ALTAR.r+3;
   if(want && inAltar && !G.boss && SPAWN.bossT<=0 && !G.p.dead){
-    const blv=G.save.storyDone?Math.max(8,G.save.level+1):8; const b=spawnEnemy("boss", ALTAR.x, ALTAR.z+2.5, blv, "altar"); b.state="intro"; b.t=1.6; b.y=9; b.vy=0; G.boss=b;
+    const blv=bossLevel(); const b=spawnEnemy("boss", ALTAR.x, ALTAR.z+2.5, blv, "altar"); b.state="intro"; b.t=1.6; b.y=9; b.vy=0; G.boss=b;
     banner("蚀雾史莱姆王", "蚀源的主人苏醒了！"); sfx("roar"); addShake(0.4); setMusicMood("boss");
     $("bossbar").style.display="block"; $("bossName").textContent="蚀雾史莱姆王  Lv."+blv;
   }
@@ -2838,8 +2858,8 @@ function updateZone(){
   if(Z.id!==_zoneId){
     const first=_zoneId==="", nowT=performance.now();
     if(!first){ if(updateZone._c!==Z.id){ updateZone._c=Z.id; updateZone._t=nowT; return; } if(nowT-updateZone._t<700) return; }
-    _zoneId=Z.id; updateZone._c=""; $("zoneName").textContent=Z.name+(Z.lv?"  "+Z.lv:"");
-    const tk=updateZone._tk||(updateZone._tk={}); if(!first && !(tk[Z.id] && nowT-tk[Z.id]<6000)) toast("进入「"+Z.name+"」"+(Z.lv?"　推荐 "+Z.lv:"")); tk[Z.id]=nowT;
+    _zoneId=Z.id; updateZone._c=""; const ZL=zoneLv(Z); $("zoneName").textContent=Z.name+(ZL?"  "+ZL:"");
+    const tk=updateZone._tk||(updateZone._tk={}); if(!first && !(tk[Z.id] && nowT-tk[Z.id]<6000)) toast("进入「"+Z.name+"」"+(ZL?"　推荐 "+ZL:"")); tk[Z.id]=nowT;
     if(!G.boss) setMusicMood(Z.id==="town"?"town":"field");
   } else updateZone._c="";
 }
@@ -3263,15 +3283,47 @@ function wfxBuild(rar){
     WFX.ring=new THREE.Mesh(rg, rm); WFX.ring.position.y=0.04; WFX.ring.renderOrder=2; pl.add(WFX.ring);
   }
 }
+/* armor tint + outline trim per armor rarity (materials cloned per player so the select lineup stays untouched) */
+const ARM_TINT=[0,0,0.26,0.4,0.5], ARM_EM=[0,0,0.05,0.09,0.14];
+const ARMFX={ s:null };
+function applyArmorLook(rar){
+  const pl=G.player;
+  if(ARMFX.s){ ARMFX.s.parent&&ARMFX.s.parent.remove(ARMFX.s); ARMFX.s.material.dispose(); ARMFX.s=null; }
+  if(!pl) return;
+  if(rar>=2){ const sm=new THREE.SpriteMaterial({ map:wfxTex(), color:RAR_HEX[rar], transparent:true, opacity:[0,0,0.3,0.42,0.42][rar], depthWrite:false, blending:THREE.AdditiveBlending });
+    ARMFX.s=new THREE.Sprite(sm); ARMFX.s.position.set(0,0.75,0); ARMFX.s.scale.set(1.9,2.1,1); ARMFX.s.renderOrder=1; ARMFX.s.userData.base=sm.opacity; pl.add(ARMFX.s); }
+  pl.traverse(o=>{
+    if(!o.isMesh||!o.material||Array.isArray(o.material)) return;
+    if(o.name==="outline"){ if(!o.userData.ownMat){ o.material=o.material.clone(); o.userData.ownMat=true; o.userData.baseCol=o.material.color.getHex(); }
+      if(rar>=2){ const c=new THREE.Color(RAR_HEX[rar]).multiplyScalar(rar>=4?1.0:0.85); o.material.color.copy(c); } else o.material.color.setHex(o.userData.baseCol); return; }
+    if(!o.material.isMeshToonMaterial) return;
+    if(!o.userData.ownMat){ o.material=o.material.clone(); o.userData.ownMat=true; o.userData.baseEm=o.material.emissiveIntensity||0; }
+    o.material.color.setRGB(1,1,1).lerp(new THREE.Color(RAR_HEX[rar]), ARM_TINT[rar]||0);
+    if(o.material.emissiveMap) o.material.emissiveIntensity=o.userData.baseEm+(ARM_EM[rar]||0);
+  });
+}
+/* weapon tier: enchant crystals (and rings for epic / legendary) circling the weapon hand */
+const WT={ g:null, parts:[], rar:-1 };
+function buildWeaponTier(rar){
+  if(WT.g){ scene.remove(WT.g); WT.g.traverse(o=>{ if(o.geometry) o.geometry.dispose(); if(o.material) o.material.dispose(); }); WT.g=null; } WT.parts=[]; WT.rar=rar;
+  if(rar<2) return;
+  const col=RAR_HEX[rar]; WT.g=new THREE.Group(); scene.add(WT.g);
+  const n=rar===2?1:rar===3?2:3;
+  for(let i=0;i<n;i++){ const m=new THREE.Mesh(new THREE.OctahedronGeometry(0.075,0), new THREE.MeshBasicMaterial({ color:col, transparent:true, opacity:0.95 })); m.scale.y=1.6; WT.g.add(m); WT.parts.push({ m, ph:i/n*Math.PI*2, ring:false }); }
+  if(rar>=3){ for(let i=0;i<(rar===4?2:1);i++){ const r=new THREE.Mesh(new THREE.TorusGeometry(0.2+i*0.05,0.012,6,28), new THREE.MeshBasicMaterial({ color:col, transparent:true, opacity:0.75, blending:THREE.AdditiveBlending, depthWrite:false })); WT.g.add(r); WT.parts.push({ m:r, ph:i*1.3, ring:true }); } }
+}
 function updateWeaponFx(dt){
   const w=G.save&&G.save.equip&&G.save.equip.weapon, rar=(w&&G.mode==="play")?w.rar:0;
-  const key=(G.player?G.player.uuid:"")+"|"+rar;
-  if(key!==WFX.key){ WFX.key=key; wfxBuild(rar); }
+  const ar=G.save&&G.save.equip&&G.save.equip.armor, arr=(ar&&G.mode==="play")?ar.rar:0;
+  const key=(G.player?G.player.uuid:"")+"|"+rar+"|"+arr;
+  if(key!==WFX.key){ WFX.key=key; wfxBuild(rar); buildWeaponTier(rar); applyArmorLook(arr); }
   if(!WFX.glow) return;
-  const vis=G.player.visible && !G.p.dead; WFX.glow.visible=vis; if(WFX.ring) WFX.ring.visible=vis;
+  const vis=G.player.visible && !G.p.dead; WFX.glow.visible=vis; if(WFX.ring) WFX.ring.visible=vis; if(WT.g) WT.g.visible=vis;
   if(!vis) return;
   const v=WFX._v; if(WFX.hand){ WFX.hand.getWorldPosition(v); } else v.set(G.p.x,(G.p.y||0)+0.9,G.p.z);
   WFX.glow.position.copy(v);
+  if(ARMFX.s){ ARMFX.s.material.opacity=ARMFX.s.userData.base*(0.8+0.2*Math.sin(FX.time*2.2)); }
+  if(WT.g){ WT.g.visible=true; WT.g.position.copy(v); const tt=FX.time; for(const p of WT.parts){ if(p.ring){ p.m.rotation.set(Math.PI/2+Math.sin(tt*1.7+p.ph)*0.5, tt*1.2+p.ph, 0); } else { const a=tt*2.6+p.ph; p.m.position.set(Math.cos(a)*0.32, 0.08+Math.sin(tt*3.1+p.ph)*0.08, Math.sin(a)*0.32); p.m.rotation.y=tt*4; } } }
   const t=FX.time, b=WFX.glow.userData.base*(1+0.18*Math.sin(t*5.2)); WFX.glow.scale.set(b,b,1);
   if(WFX.ring){ const s=1+0.08*Math.sin(t*2.6); WFX.ring.scale.set(s,1,s); WFX.ring.material.opacity=0.32+0.14*Math.sin(t*2.6); WFX.ring.rotation.y=t*0.6; }
   // sparkles
@@ -3320,6 +3372,84 @@ function musDuck(name){
   try{ const g=MUS.gain.gain, t=SFX.ctx.currentTime, base=0.22*SET.mus/100; g.cancelScheduledValues(t); g.setValueAtTime(Math.max(0.0001,g.value),t); g.linearRampToValueAtTime(base*k,t+0.05); g.setValueAtTime(base*k,t+0.35); g.linearRampToValueAtTime(base,t+1.3); }catch(e){}
 }
 
+/* ===================== 蚀雾试炼: 5-wave timed challenge on the slope ===================== */
+const TRIAL={ on:false, wave:0, t:0, gap:0, cx:0, cz:28.5, lv:3, start:0, hudLast:"" };
+const TRIAL_WAVES=[ [["slime",5]], [["slime",4],["spike",2]], [["spike",3],["wisp",3]], [["wisp",3],["spike",3],["slime",2]], [["elite",1],["spike",3]] ];
+const TRIAL_TIME=150;
+function trialDay(){ const d=new Date(); return d.getFullYear()+"-"+(d.getMonth()+1)+"-"+d.getDate(); }
+function trialInfo(){ const t=G.save.trial||(G.save.trial={ clears:0, best:0, day:"" }); return t; }
+function canStartTrial(){ return G.mode==="play" && !TRIAL.on && !(G.boss && !G.boss.dead) && !G.p.dead && G.save.level>=4; }
+function startTrial(){
+  if(!canStartTrial()){ toast(G.save.level<4?"试炼需要 Lv.4 以上":"现在无法开始试炼"); return; }
+  clearEnemies(); SPAWN.t=1e9;
+  TRIAL.on=true; TRIAL.wave=0; TRIAL.t=TRIAL_TIME; TRIAL.gap=1.6; TRIAL.lv=Math.max(3,G.save.level); TRIAL.start=FX.time;
+  G.p.x=TRIAL.cx; G.p.z=TRIAL.cz-5; G.p.yaw=0; camReset(0); updateCamera._init=false;
+  spawnDecal("shock", TRIAL.cx, TRIAL.cz, 0.6, 9, 0xb070ff, 0.5);
+  banner("蚀雾试炼", "在 "+TRIAL_TIME+" 秒内击退 5 波魔物！"); sfx("roar"); setMusicMood("boss");
+  $("trialHud").style.display="block"; TRIAL.hudLast="";
+}
+function trialSpawnWave(){
+  const W=TRIAL_WAVES[TRIAL.wave]; let k=0; const n=W.reduce((a,w)=>a+w[1],0);
+  W.forEach(([type,c])=>{ for(let i=0;i<c;i++){ const a=(k++/n)*Math.PI*2+Math.random()*0.3, r=type==="elite"?3.5:5.5+Math.random()*1.5;
+    const e=spawnEnemy(type, TRIAL.cx+Math.sin(a)*r, TRIAL.cz+Math.cos(a)*r, TRIAL.lv+(type==="elite"?1:0), "slope"); e.trial=true; e.aggro=true; e.hx=TRIAL.cx; e.hz=TRIAL.cz; e.cd=0.8+Math.random();
+    fxPuffRing(e.x,0.2,e.z,8,2,0xc0a0ff,0.5); } });
+  TRIAL.wave++;
+  banner("第 "+TRIAL.wave+" / 5 波", TRIAL.wave===5?"岩甲史莱姆来袭！":"击败所有魔物"); sfx("summon");
+}
+function endTrial(win){
+  if(!TRIAL.on) return; TRIAL.on=false; $("trialHud").style.display="none";
+  G.enemies.forEach(o=>{ if(o.trial && !o.dead){ if(o.tele){ releaseDecal(o.tele); o.tele=null; } if(o.label){ scene.remove(o.label); o.label=null; } disposeEnemy(o); o.dead=true; o.deadT=99; } });
+  G.enemies=G.enemies.filter(o=>!(o.trial&&o.deadT>=99));
+  SPAWN.t=2.5; if(!G.boss) setMusicMood("field");
+  if(!win){ if(G.mode==="play" && !G.p.dead) banner("试炼失败", "时间到了……再接再厉！"); return; }
+  const T=trialInfo(), used=Math.round(TRIAL_TIME-TRIAL.t), daily=T.day!==trialDay();
+  T.clears++; if(!T.best||used<T.best) T.best=used; T.day=trialDay();
+  const gold=Math.round((120+G.save.level*15)*(daily?2:1)); G.save.gold+=gold; G.save.pots.h+=2; G.save.pots.m+=1;
+  dropGear(G.p.x+1.2, G.p.z+1.2, genItem(G.save.level+1, Math.random()<0.2?4:3));
+  if(daily) dropGear(G.p.x-1.2, G.p.z+1.2, genItem(G.save.level+1, 3));
+  gainXP(150+G.save.level*20);
+  banner("试炼通过！", "用时 "+used+" 秒"+(daily?" · 每日首胜奖励翻倍":"")); sfx("lvl");
+  toast("+"+gold+" 金  生命药水×2  法力药水×1"); checkAchievements(); persist(G.save); refreshHUD();
+}
+function updateTrial(dt){
+  if(!TRIAL.on) return;
+  if(G.mode!=="play" || G.p.dead){ endTrial(false); return; }
+  TRIAL.t-=dt;
+  if(TRIAL.t<=0){ TRIAL.t=0; endTrial(false); return; }
+  const alive=G.enemies.some(e=>e.trial&&!e.dead);
+  if(!alive){
+    if(TRIAL.wave>=TRIAL_WAVES.length){ endTrial(true); return; }
+    TRIAL.gap-=dt; if(TRIAL.gap<=0){ TRIAL.gap=1.4; trialSpawnWave(); }
+  }
+  // keep the hero inside the arena
+  const dx=G.p.x-TRIAL.cx, dz=G.p.z-TRIAL.cz, d=Math.hypot(dx,dz); if(d>10){ G.p.x=TRIAL.cx+dx/d*10; G.p.z=TRIAL.cz+dz/d*10; }
+  const s=Math.ceil(TRIAL.t), txt="蚀雾试炼  第 "+Math.max(1,TRIAL.wave)+" / 5 波  ·  "+Math.floor(s/60)+":"+String(s%60).padStart(2,"0");
+  if(txt!==TRIAL.hudLast){ TRIAL.hudLast=txt; $("trialHud").textContent=txt; $("trialHud").classList.toggle("warn", s<=20); }
+}
+
+/* ===================== achievements ===================== */
+const ACH=[
+  { id:"k50",   n:"初出茅庐", d:"累计击败 50 只魔物",  ok:s=>(s.kills||0)>=50 },
+  { id:"k300",  n:"蚀雾清道夫", d:"累计击败 300 只魔物", ok:s=>(s.kills||0)>=300 },
+  { id:"lv10",  n:"小有名气", d:"达到 Lv.10",          ok:s=>s.level>=10 },
+  { id:"lv20",  n:"青岚英雄", d:"达到 Lv.20",          ok:s=>s.level>=20 },
+  { id:"story", n:"驱散蚀雾", d:"完成青岚篇主线",      ok:s=>!!s.storyDone },
+  { id:"boss3", n:"王的克星", d:"击败首领 3 次",        ok:s=>(s.bossKills||0)>=3 },
+  { id:"trial", n:"试炼者",   d:"通过一次蚀雾试炼",    ok:s=>!!(s.trial&&s.trial.clears) },
+  { id:"fast",  n:"疾风试炼", d:"90 秒内通过蚀雾试炼",  ok:s=>!!(s.trial&&s.trial.best&&s.trial.best<=90) },
+  { id:"leg",   n:"传说之证", d:"装备一件传说品质装备", ok:s=>["weapon","armor","acc"].some(k=>s.equip&&s.equip[k]&&s.equip[k].rar>=4) },
+];
+function checkAchievements(){
+  const s=G.save; if(!s) return; s.ach=s.ach||{}; let k=0;
+  for(const a of ACH){ if(!s.ach[a.id] && a.ok(s)){ s.ach[a.id]=Date.now(); s.gold+=50; later(0.4+1.3*(k++), ()=>{ toast("🏆 成就达成「"+a.n+"」 +50 金"); sfx("quest"); }); G.saveDirty=true; } }
+}
+function achHtml(){
+  const s=G.save, got=(s&&s.ach)||{}; let n=0;
+  const rows=ACH.map(a=>{ const ok=!!got[a.id]; if(ok) n++; return "<div class='ach"+(ok?" ok":"")+"'><b>"+(ok?"🏆 ":"🔒 ")+a.n+"</b><span>"+a.d+"</span></div>"; }).join("");
+  const T=(s&&s.trial)||{};
+  return "<div class='achHead'>成就 "+n+" / "+ACH.length+(T.clears?"　·　试炼通过 "+T.clears+" 次，最快 "+T.best+" 秒":"")+"</div>"+rows;
+}
+
 /* ===================== rewritten core loop pieces ===================== */
 function newSave(classId){
   return { ver:2, classId:classId||"swordsman", level:1, xp:0, gold:30, shards:0, kills:0, storyDone:false, hasSave:true, bossKills:0,
@@ -3352,6 +3482,7 @@ function startAdventure(classId, fresh){
   $("sk2").style.background="radial-gradient(circle at 35% 30%,rgba(255,255,255,.35),"+SKC[1]+" 70%)";
   const pth=charThumb(classId); $("portrait").innerHTML=pth?"<img src='"+pth+"' alt=''>":"";
   $("over").style.display="none"; $("bossbar").style.display="none";
+  TRIAL.on=false; $("trialHud").style.display="none";
   _zoneId=""; updateZone(); refreshHUD();
   toast(fresh?"欢迎来到青岚镇，"+c.name+"！去找镇长苏晚晴吧":"欢迎回来，"+c.name);
   if(fresh){ $("joy").classList.add("tut"); G.tutAt={x:G.p.x,z:G.p.z}; G.tutT=0; later(3.2, ()=>{ if(G.mode==="play"){ toast("左侧摇杆移动，右下按钮攻击与释放技能"); $("atk").classList.add("tut"); } }); later(6.8, ()=>{ if(G.mode==="play") toast("拖动屏幕旋转视角，「远/近」滑条可调整镜头"); }); later(10.4, ()=>{ if(G.mode==="play") toast("看到红色预警圈时，点「翻滚」无敌闪避！"); }); }
@@ -3527,7 +3658,7 @@ function update(dt){
   FX_update(stopped?dt*0.12:dt);
   musicTick();
   if(G.freezeCam || !inPlay){
-    if(!G.freezeCam) updateMenuCamera(dt); updateFade(dt); if(GUIDE.g) GUIDE.g.visible=false; if(G.tutT!=null){ G.tutT=null; G.tutAt=null; $("joy").classList.remove("tut"); $("atk").classList.remove("tut"); }
+    if(!G.freezeCam) updateMenuCamera(dt); updateFade(dt); if(GUIDE.g) GUIDE.g.visible=false; if(TRIAL.on) endTrial(false); if(G.tutT!=null){ G.tutT=null; G.tutAt=null; $("joy").classList.remove("tut"); $("atk").classList.remove("tut"); }
     if(G.player && G.player.visible) animBob(G.player, false, dt, G.p.atkT>0, G.p.spinT>0, G.p.dead);
     (G._cast||[]).forEach(ch=>animBob(ch,false,dt,false,false,false));
     (G._lineup||[]).forEach(ch=>animBob(ch,false,dt,false,false,false));
@@ -3620,7 +3751,8 @@ function update(dt){
     for(let j=i+1;j<G.enemies.length;j++){ const b=G.enemies[j]; if(b.dead) continue;
       const dx=b.x-a.x, dz=b.z-a.z, d=Math.hypot(dx,dz), m=(a.r+b.r)*0.9;
       if(d<m && d>0.0001){ const wa=a.boss?0.05:a.elite?0.25:0.5, wb=b.boss?0.05:b.elite?0.25:0.5, s=wa+wb, push=(m-d), nx=dx/d, nz=dz/d; a.x-=nx*push*wa/s; a.z-=nz*push*wa/s; b.x+=nx*push*wb/s; b.z+=nz*push*wb/s; } } }
-  updateSpawners(dt);
+  updateSpawners(dt); updateTrial(dt);
+  if((G.achT=(G.achT||0)+dt)>2){ G.achT=0; checkAchievements(); }
   G.near=null; let best=9;
   G.npcs.forEach(n=>{ const d=Math.hypot(n.x-P.x,n.z-P.z); if(d<2.6&&d<best){best=d;G.near=n;} });
   const tk=$("talk"), want=(G.near && !P.dead && !G.dlg)?"block":"none"; if(tk.style.display!==want) tk.style.display=want;
@@ -3660,6 +3792,8 @@ function bindInput(){
   $("btnSet").addEventListener("click", openSettings); $("setX").addEventListener("click", closeSettings);
   $("btnResume").addEventListener("click", closeSettings);
   $("btnQuit").addEventListener("click", ()=>{ closeSettings(); toTitle(); });
+  $("btnAch").addEventListener("click", ()=>{ $("achList").innerHTML=achHtml(); $("achM").classList.add("on"); sfx("ui"); });
+  $("achX").addEventListener("click", ()=>{ $("achM").classList.remove("on"); sfx("ui"); });
   $("btnTSet").addEventListener("click", openSettings);
   $("bag").addEventListener("click", e=>{ if(e.target.id==="bag") closeBag(); });
   $("settings").addEventListener("click", e=>{ if(e.target.id==="settings") closeSettings(); });
@@ -4260,7 +4394,7 @@ function init(){
   applyQuality();
   $("loadtip").textContent=TIPS[Math.floor(Math.random()*TIPS.length)];
   window.__mengyu={ G, GLB, TOWN, TOWN_CFG, CAM, groundAt, inTownBounds, startAdventure, tryAttack, trySkill, tryDodge, damagePlayer, hitEnemy, spawnSlime, spawnEnemy, FX, SFX, SHOTS, DROPS, LATER, camClamp,
-    ST, QUESTS, NPCS, ZONES, ALTAR, ELITE_SPOT, SPAWN, ESHOTS, LOOT, MUS, SET, gainXP, genItem, addItem, equipItem, recalcStats, usePotion, tryTalk, advDlg, closeDlg, openBag, closeBag, openSettings, closeSettings, showTitle, showSelect, selectClass, beginNew, toTitle, resurrect, xpNeed, qst, tracked, loadSave, persist, migrateSave, clearEnemies, populateField, killEnemy, refreshHUD, drawMinimap, charThumb, camera, scene, get camera(){ return camera; }, get renderer(){ return renderer; } };
+    ST, QUESTS, NPCS, ZONES, ALTAR, ELITE_SPOT, SPAWN, ESHOTS, LOOT, MUS, SET, gainXP, genItem, addItem, equipItem, recalcStats, usePotion, tryTalk, advDlg, closeDlg, openBag, closeBag, openSettings, closeSettings, showTitle, showSelect, selectClass, beginNew, toTitle, resurrect, xpNeed, qst, tracked, loadSave, persist, migrateSave, clearEnemies, populateField, killEnemy, refreshHUD, drawMinimap, charThumb, camera, scene, startTrial, endTrial, TRIAL, checkAchievements, achHtml, ACH, bossLevel, get camera(){ return camera; }, get renderer(){ return renderer; } };
   loadCharacterModels(()=>{ upgradeVisuals(); });
   window.addEventListener("resize", ()=>{
     camera.aspect=innerWidth/innerHeight; camera.updateProjectionMatrix();
