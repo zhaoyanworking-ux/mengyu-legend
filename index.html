@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover,interactive-widget=resizes-content">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -31,8 +31,8 @@
     touch-action:none;overscroll-behavior:none;user-select:none;-webkit-user-select:none;-webkit-text-size-adjust:100%;text-size-adjust:100%}
   body{position:fixed;inset:0}
   img{-webkit-user-drag:none;user-select:none;pointer-events:none}
-  #c{position:fixed;left:0;top:0;width:100%;height:100%;display:block;touch-action:none;outline:none}
-  #ui{position:fixed;left:0;top:0;width:100%;height:var(--app-h);pointer-events:none;color:#fff;overflow:hidden}
+  #c{position:fixed;left:var(--vv-x,0px);top:var(--vv-y,0px);width:var(--app-w,100%);height:var(--app-h,100%);display:block;touch-action:none;outline:none}
+  #ui{position:fixed;left:var(--vv-x,0px);top:var(--vv-y,0px);width:var(--app-w,100%);height:var(--app-h,100%);pointer-events:none;color:#fff;overflow:hidden}
   #ui button,.hit{pointer-events:auto}
   button{font-family:var(--fb);cursor:pointer;-webkit-appearance:none;appearance:none;touch-action:manipulation}
   .disp{font-family:var(--fd);font-weight:400;letter-spacing:.04em}
@@ -75,7 +75,7 @@
   #gold img{width:calc(var(--u)*18px);height:calc(var(--u)*18px)}
 
   /* ===== quest card ===== */
-  #quest{position:absolute;left:calc(var(--sl) + calc(var(--u)*8px));top:calc(var(--st) + calc(var(--u)*98px));width:calc(var(--u)*212px);font-size:calc(var(--u)*12px);line-height:1.45;pointer-events:auto;padding:calc(var(--u)*7px) calc(var(--u)*10px) calc(var(--u)*8px) calc(var(--u)*38px);
+  #quest{position:absolute;left:calc(var(--sl) + calc(var(--u)*8px));top:calc(var(--st) + calc(var(--u)*98px));width:calc(var(--u)*188px);min-height:44px;font-size:calc(var(--u)*12px);line-height:1.45;pointer-events:auto;padding:calc(var(--u)*7px) calc(var(--u)*10px) calc(var(--u)*8px) calc(var(--u)*34px);cursor:pointer}
     border-left:calc(var(--u)*3px) solid var(--gold);border-radius:calc(var(--u)*6px) calc(var(--u)*14px) calc(var(--u)*14px) calc(var(--u)*6px);background:linear-gradient(90deg,rgba(26,38,78,.78),rgba(26,38,78,.42));transition:transform .2s}
   #quest::before{content:"";position:absolute;left:calc(var(--u)*7px);top:calc(var(--u)*8px);width:calc(var(--u)*24px);height:calc(var(--u)*24px);background:var(--qic) center/contain no-repeat;filter:drop-shadow(0 1px 1px rgba(0,0,0,.4))}
   #quest b{display:block;color:var(--gold);margin-bottom:calc(var(--u)*1px);font-size:calc(var(--u)*13.5px);font-family:var(--fd);font-weight:400;letter-spacing:.04em;text-shadow:0 1px 0 rgba(0,0,0,.55)}
@@ -84,18 +84,23 @@
   #qprog{color:#f4f6ff;text-shadow:0 1px 0 rgba(0,0,0,.5)}
   #qhint{font-size:calc(var(--u)*10.5px);color:#bfe0ff;margin-top:calc(var(--u)*1px)}
   #qhint:empty{display:none}
+  #qtitle::after{content:"";display:inline-block;margin-left:calc(var(--u)*6px);border:calc(var(--u)*4px) solid transparent;border-top:calc(var(--u)*5px) solid var(--gold);vertical-align:calc(var(--u)*1px)}
+  #quest.fold #qprog,#quest.fold #qhint,#quest.fold.done::after{display:none}
+  #quest.fold{width:min(calc(var(--u)*168px),46vw);padding-bottom:calc(var(--u)*7px)}
+  #quest.fold #qtitle::after{border-top:0;border-bottom:calc(var(--u)*5px) solid var(--gold);vertical-align:calc(var(--u)*2px)}
 
   /* ===== minimap + menu ===== */
-  #mmwrap{position:absolute;right:calc(var(--sr) + calc(var(--u)*10px));top:calc(var(--st) + calc(var(--u)*8px));width:calc(var(--u)*108px);display:flex;flex-direction:column;align-items:center;pointer-events:none}
-  #mmring{position:relative;width:calc(var(--u)*108px);height:calc(var(--u)*108px);border-radius:50%;padding:calc(var(--u)*4px);
-    background:conic-gradient(from 0deg,#fff1c0,#e5a43c,#fff1c0,#c88a2a,#fff1c0,#e5a43c,#fff1c0,#c88a2a,#fff1c0);box-shadow:0 0 0 calc(var(--u)*2px) rgba(20,30,64,.6),0 calc(var(--u)*4px) calc(var(--u)*12px) rgba(8,16,44,.4)}
+  #mmwrap{position:absolute;right:calc(var(--sr) + calc(var(--u)*10px));top:calc(var(--st) + calc(var(--u)*8px));width:calc(var(--u)*84px);display:flex;flex-direction:column;align-items:center;pointer-events:none}
+  #mmring{position:relative;width:calc(var(--u)*84px);height:calc(var(--u)*84px);border-radius:50%;padding:calc(var(--u)*2px);
+    background:linear-gradient(#fff8e4,#e4c48a);box-shadow:0 0 0 1px rgba(20,30,64,.45),0 calc(var(--u)*2px) calc(var(--u)*8px) rgba(8,16,44,.28)}
   #minimap{width:100%;height:100%;border-radius:50%;display:block;background:#3a5a3a;box-shadow:inset 0 0 calc(var(--u)*10px) rgba(0,0,0,.45)}
   #mmring::after{content:"";position:absolute;inset:calc(var(--u)*4px);border-radius:50%;box-shadow:inset 0 0 0 1px rgba(255,255,255,.35),inset 0 calc(var(--u)*6px) calc(var(--u)*10px) rgba(255,255,255,.12);pointer-events:none}
   #zoneName{margin-top:calc(var(--u)*-8px);position:relative;z-index:2;padding:calc(var(--u)*2px) calc(var(--u)*12px);border-radius:99px;font-size:calc(var(--u)*11.5px);font-weight:800;white-space:nowrap;color:#fff6dc;
     background:linear-gradient(#36508c,#1e2e5c);border:1px solid var(--gline);box-shadow:0 calc(var(--u)*2px) calc(var(--u)*6px) rgba(0,0,0,.3);text-shadow:0 1px 0 rgba(0,0,0,.5)}
-  #menuRow{position:absolute;right:calc(var(--sr) + calc(var(--u)*10px));top:calc(var(--st) + calc(var(--u)*146px));display:flex;gap:calc(var(--u)*8px)}
+  #menuRow{position:absolute;right:calc(var(--sr) + calc(var(--u)*10px));top:calc(var(--st) + calc(var(--u)*108px));display:flex;gap:calc(var(--u)*8px)}
+  html.fight #btnBag,html.fight #btnAchH{display:none}
   .mbtn{width:calc(var(--u)*44px);height:calc(var(--u)*44px);min-width:44px;min-height:44px;border-radius:50%;padding:0;position:relative;pointer-events:auto;display:flex;align-items:center;justify-content:center;
-    border:calc(var(--u)*2px) solid rgba(255,232,180,.85);background:radial-gradient(circle at 50% 30%,rgba(90,120,190,.95),rgba(26,38,80,.92) 70%);
+    border:1.5px solid rgba(255,244,220,.72);background:radial-gradient(circle at 50% 30%,rgba(90,120,190,.95),rgba(26,38,80,.92) 70%);
     box-shadow:inset 0 calc(var(--u)*2px) 0 rgba(255,255,255,.3),0 calc(var(--u)*3px) calc(var(--u)*8px) rgba(8,16,44,.38);transition:transform .08s}
   .mbtn img{width:62%;height:62%}
   .mbtn:active{transform:scale(.9)}
@@ -104,14 +109,14 @@
   @keyframes dotP{50%{transform:scale(1.25)}}
 
   /* ===== boss bar + trial ===== */
-  #bossbar{position:absolute;left:50%;top:calc(var(--st) + calc(var(--u)*176px));transform:translateX(-50%);width:min(84vw,calc(var(--u)*400px));display:none;text-align:center;pointer-events:none}
+  #bossbar{position:absolute;left:50%;top:calc(var(--st) + calc(var(--u)*158px));transform:translateX(-50%);width:min(78vw,calc(var(--u)*360px));display:none;text-align:center;pointer-events:none}
   #bossbar .nm{display:inline-block;font-family:var(--fd);font-size:calc(var(--u)*15px);color:#fff0ff;letter-spacing:.12em;padding:calc(var(--u)*1px) calc(var(--u)*18px) calc(var(--u)*2px);margin-bottom:calc(var(--u)*3px);border-radius:99px;
     background:linear-gradient(90deg,rgba(80,20,110,0),rgba(80,20,110,.85) 20%,rgba(80,20,110,.85) 80%,rgba(80,20,110,0));text-shadow:0 1px 0 #3a0a4a,0 0 8px #c060ff}
   #bossbar .bar{height:calc(var(--u)*16px);box-shadow:inset 0 1px 2px rgba(0,0,0,.6),0 0 0 calc(var(--u)*1.5px) rgba(255,214,250,.8),0 0 calc(var(--u)*10px) rgba(180,80,255,.45)}
   #bossbar .bar>span{text-align:center;padding:0;line-height:calc(var(--u)*16px);font-size:calc(var(--u)*10.5px)}
   #bosslag{background:linear-gradient(#fff3c8,#ffd08a);transition:none} #bossfill{background:linear-gradient(#f2a8ff,#b048e8 55%,#7420c0)}
   #bossbar .bar>b{position:absolute;inset:0;z-index:3;background:repeating-linear-gradient(90deg,transparent 0 calc(10% - 1px),rgba(20,0,40,.45) calc(10% - 1px) 10%)}
-  #trialHud{position:absolute;left:50%;top:calc(var(--st) + calc(var(--u)*176px));transform:translateX(-50%);display:none;padding:calc(var(--u)*6px) calc(var(--u)*18px) calc(var(--u)*6px) calc(var(--u)*14px);border-radius:99px;
+  #trialHud{position:absolute;left:50%;top:calc(var(--st) + calc(var(--u)*158px));transform:translateX(-50%);display:none;padding:calc(var(--u)*6px) calc(var(--u)*18px) calc(var(--u)*6px) calc(var(--u)*14px);border-radius:99px;
     background:linear-gradient(rgba(84,46,150,.9),rgba(46,22,96,.88));border:1px solid rgba(230,200,255,.7);color:#fff3c0;font-size:calc(var(--u)*13.5px);font-weight:800;letter-spacing:.04em;white-space:nowrap;
     box-shadow:inset 0 1px 0 rgba(255,255,255,.3),0 calc(var(--u)*4px) calc(var(--u)*12px) rgba(30,10,60,.35);pointer-events:none;text-shadow:0 1px 0 rgba(0,0,0,.5)}
   #trialHud::before{content:"";display:inline-block;width:calc(var(--u)*14px);height:calc(var(--u)*14px);margin-right:calc(var(--u)*6px);vertical-align:-2px;border-radius:50%;border:2px solid #fff3c0;border-top-color:transparent;animation:spin 1.6s linear infinite}
@@ -120,7 +125,7 @@
   @keyframes tutp2{to{transform:translateX(-50%) scale(1.05)}}
 
   /* ===== toasts + banner ===== */
-  #toasts{position:absolute;left:50%;top:calc(var(--st) + calc(var(--u)*236px));transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:calc(var(--u)*6px);width:94vw;pointer-events:none}
+  #toasts{position:absolute;left:50%;top:calc(var(--st) + calc(var(--u)*168px));transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:calc(var(--u)*6px);width:min(92vw,calc(var(--u)*320px));pointer-events:none}
   .toast{position:relative;padding:calc(var(--u)*6px) calc(var(--u)*18px) calc(var(--u)*6px) calc(var(--u)*16px);border-radius:calc(var(--u)*12px);font-size:calc(var(--u)*13.5px);font-weight:700;max-width:90vw;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#fff8e6;
     background:linear-gradient(90deg,rgba(20,28,60,0),rgba(20,28,60,.86) 12%,rgba(20,28,60,.86) 88%,rgba(20,28,60,0));text-shadow:0 1px 0 rgba(0,0,0,.6);
     animation:tin .32s cubic-bezier(.2,1.3,.4,1);transition:opacity .3s,transform .3s}
@@ -161,7 +166,7 @@
   #atk img{position:absolute;left:50%;top:44%;width:52%;height:52%;transform:translate(-50%,-50%)}
   #atk .lb{position:absolute;left:0;right:0;bottom:calc(var(--u)*9px);font-size:calc(var(--u)*12px);text-shadow:0 1px 0 rgba(90,0,10,.8)}
   #atk:active,#atk.press{transform:scale(.92)}
-  .skb{width:calc(var(--u)*64px);height:calc(var(--u)*64px);border:calc(var(--u)*2.5px) solid rgba(255,244,214,.95);transition:transform .07s;
+  .skb{width:max(44px,calc(var(--u)*64px));height:max(44px,calc(var(--u)*64px));border:1.5px solid rgba(255,244,214,.8);transition:transform .07s;
     box-shadow:0 0 0 calc(var(--u)*1.5px) rgba(30,20,50,.35),0 calc(var(--u)*5px) calc(var(--u)*12px) rgba(10,20,50,.3),inset 0 calc(var(--u)*3px) 0 rgba(255,255,255,.35),inset 0 calc(var(--u)*-5px) calc(var(--u)*8px) rgba(0,0,40,.25)}
   .skb::before{content:"";position:absolute;inset:calc(var(--u)*-6px);border-radius:50%;pointer-events:none;z-index:0;
     background:conic-gradient(#ffe39a calc((1 - var(--p,0))*360deg),rgba(255,255,255,.14) 0);
@@ -198,7 +203,7 @@
   #expbar{position:absolute;left:0;right:0;bottom:0;height:calc(var(--sb) + calc(var(--u)*5px));background:linear-gradient(rgba(10,14,36,.72),rgba(10,14,36,.85));border-top:1px solid rgba(255,236,190,.35)}
   #expfill{position:absolute;left:0;top:0;height:calc(var(--u)*5px);width:0;background:linear-gradient(90deg,#7ee8ff,#b2f6ff 60%,#ffffff);box-shadow:0 0 8px #8ff7ff;transition:width .45s cubic-bezier(.2,.9,.3,1)}
   #exptxt{position:absolute;left:50%;bottom:calc(var(--sb) + calc(var(--u)*8px));transform:translateX(-50%);font-size:calc(var(--u)*10px);font-weight:700;opacity:.9;text-shadow:0 1px 0 #000,0 0 3px #000;white-space:nowrap;letter-spacing:.04em}
-  #zoom{position:absolute;left:calc(var(--sl) + calc(var(--u)*10px));bottom:calc(var(--sb) + calc(var(--u)*178px));width:calc(var(--u)*36px);height:calc(var(--u)*124px);pointer-events:auto;touch-action:none;border-radius:99px;
+  #zoom{position:absolute;left:calc(var(--sl) + calc(var(--u)*8px));bottom:calc(var(--sb) + calc(var(--u)*178px));width:max(44px,calc(var(--u)*44px));height:calc(var(--u)*124px);pointer-events:auto;touch-action:none;border-radius:99px;
     background:linear-gradient(rgba(26,38,80,.5),rgba(16,24,56,.4));border:1px solid rgba(255,236,190,.5);box-shadow:inset 0 1px 0 rgba(255,255,255,.25)}
   #zoom::before{content:"";position:absolute;top:0;bottom:0;left:calc(50% - 24px);right:calc(50% - 24px)}
   #zoom .ztrack{position:absolute;left:50%;top:30px;bottom:30px;width:calc(var(--u)*5px);margin-left:calc(var(--u)*-2.5px);border-radius:3px;background:rgba(255,255,255,.3)}
@@ -239,7 +244,7 @@
     background:linear-gradient(#ffd98a,#ffac4c 46%,#f08530);box-shadow:inset 0 calc(var(--u)*2px) 0 rgba(255,255,255,.65),inset 0 calc(var(--u)*-3px) 0 rgba(170,70,10,.3),0 calc(var(--u)*3px) 0 #bf5e1a,0 calc(var(--u)*6px) calc(var(--u)*12px) rgba(160,70,20,.28)}
   .bigbtn.alt,#dlg .opt,#title .tb button.alt{color:#fff;text-shadow:0 1px 0 #1d5aa0;background:linear-gradient(#a6dcff,#5aa8ee 50%,#3a84dc);box-shadow:inset 0 calc(var(--u)*2px) 0 rgba(255,255,255,.6),inset 0 calc(var(--u)*-3px) 0 rgba(20,60,140,.3),0 calc(var(--u)*3px) 0 #2a64b0,0 calc(var(--u)*6px) calc(var(--u)*12px) rgba(30,80,160,.25)}
   .bigbtn.gray,#title .tb button.gray,#btnBack,#goTitle,#itemTip .row button.s{color:var(--brown);text-shadow:none;background:linear-gradient(#fffdf6,#f4e6c8);box-shadow:inset 0 0 0 calc(var(--u)*1.5px) var(--goldl),inset 0 calc(var(--u)*2px) 0 #fff,0 calc(var(--u)*3px) 0 #d6b778,0 calc(var(--u)*6px) calc(var(--u)*12px) rgba(120,80,20,.18)}
-  .bigbtn:active,#dlg .next:active,#dlg .opt:active,#title .tb button:active,#startRow button:active,#over button:active,#itemTip .row button:active{transform:translateY(calc(var(--u)*2px)) scale(.98);filter:brightness(.96)}
+  .bigbtn:active,#dlg .next:active,#dlg .opt:active,#title .tb button:active,#startRow button:active,#over button:active,#itemTip .row button:active{transform:translateY(calc(var(--u)*2px));filter:brightness(.96)}
   .bigbtn{display:block;width:100%;border-radius:calc(var(--u)*16px);padding:calc(var(--u)*11px);min-height:46px;font-size:calc(var(--u)*17px);margin-top:calc(var(--u)*10px)}
   #dlg .next,#dlg .opt{border-radius:calc(var(--u)*14px)}
 
@@ -299,7 +304,7 @@
   #statBox .hd small{font-family:var(--fb);font-size:calc(var(--u)*11.5px);font-weight:800;color:#c0701a}
   #statBox .st{display:flex;justify-content:space-between;color:var(--ink2);font-weight:700}
   #statBox .st b{color:var(--ink);font-weight:900}
-  .slot{position:relative;width:calc(var(--u)*56px);height:calc(var(--u)*56px);border-radius:calc(var(--u)*12px);padding:0;display:flex;align-items:center;justify-content:center;border:calc(var(--u)*2px) solid #cbb894;
+  .slot{position:relative;width:calc(var(--u)*56px);height:calc(var(--u)*56px);min-width:44px;min-height:44px;border-radius:calc(var(--u)*12px);padding:0;display:flex;align-items:center;justify-content:center;border:calc(var(--u)*2px) solid #cbb894;
     background:linear-gradient(#f8efdc,#ecdcbc);box-shadow:inset 0 calc(var(--u)*2px) 0 rgba(255,255,255,.7),inset 0 calc(var(--u)*-3px) calc(var(--u)*6px) rgba(150,110,50,.15),0 calc(var(--u)*2px) calc(var(--u)*4px) rgba(120,80,20,.15);transition:transform .08s}
   .slot:active{transform:scale(.93)}
   .slot img{width:72%;height:72%;filter:drop-shadow(0 calc(var(--u)*2px) calc(var(--u)*1px) rgba(40,20,0,.25))}
@@ -338,6 +343,7 @@
 
   /* ===== achievements ===== */
   #achM{z-index:45}
+  #confirm{z-index:50}
   #achM .sheet{width:min(94vw,540px)}
   #achList{display:grid;grid-template-columns:1fr;gap:calc(var(--u)*8px);padding:calc(var(--u)*12px) calc(var(--u)*16px) calc(var(--u)*16px)}
   .achHead{grid-column:1/-1;display:flex;align-items:center;gap:calc(var(--u)*10px);padding:calc(var(--u)*8px) calc(var(--u)*12px);border-radius:calc(var(--u)*14px);background:linear-gradient(90deg,#fff2cf,#fffaf0);border:1px solid var(--goldl);color:var(--brown);font-weight:800;font-size:calc(var(--u)*12.5px)}
@@ -450,13 +456,13 @@
   .confirm .row button{flex:1}
 
   /* ===== landscape phones ===== */
-  html.land #quest{top:calc(var(--st) + calc(var(--u)*8px));left:calc(var(--sl) + calc(var(--u)*290px));width:min(calc(var(--u)*214px),calc(100% - var(--sl) - var(--sr) - calc(var(--u)*290px) - calc(var(--u)*128px) - calc(var(--u)*28px) - 3*max(44px,calc(var(--u)*44px))))}
-  html.land #menuRow{top:calc(var(--st) + calc(var(--u)*12px));right:calc(var(--sr) + calc(var(--u)*128px))}
-  html.land #mmwrap{width:calc(var(--u)*104px)} html.land #mmring{width:calc(var(--u)*104px);height:calc(var(--u)*104px)}
-  html.land #bossbar,html.land #trialHud{top:calc(var(--st) + calc(var(--u)*84px))}
-  html.land #bossbar{width:min(44vw,calc(var(--u)*380px))}
-  html.land #toasts{top:calc(var(--st) + calc(var(--u)*130px))}
-  html.land #zoom{left:calc(var(--sl) + calc(var(--u)*12px));bottom:auto;top:calc(var(--st) + calc(var(--u)*100px));height:min(calc(var(--u)*104px),calc(var(--app-h,100vh) - var(--st) - var(--sb) - calc(var(--u)*100px) - calc(var(--u)*36px) - calc(var(--u)*124px) - calc(var(--u)*10px)))}
+  html.land #quest{top:calc(var(--st) + calc(var(--u)*92px));left:calc(var(--sl) + calc(var(--u)*8px));width:min(calc(var(--u)*200px),42vw)}
+  html.land #menuRow{top:calc(var(--st) + calc(var(--u)*8px));right:calc(var(--sr) + calc(var(--u)*96px))}
+  html.land #mmwrap{width:calc(var(--u)*78px)} html.land #mmring{width:calc(var(--u)*78px);height:calc(var(--u)*78px)}
+  html.land #bossbar,html.land #trialHud{top:calc(var(--st) + calc(var(--u)*10px))}
+  html.land #bossbar{width:min(34vw,calc(var(--u)*220px))}
+  html.land #toasts{top:auto;bottom:calc(var(--sb) + calc(var(--u)*18px));left:calc(var(--sl) + calc(var(--u)*150px));right:calc(var(--sr) + calc(var(--u)*150px));width:auto;transform:none;align-items:center}
+  html.land #zoom{left:calc(var(--sl) + calc(var(--u)*12px));bottom:auto;top:calc(var(--st) + calc(var(--u)*164px));height:min(calc(var(--u)*88px),calc(var(--app-h,100vh) - var(--st) - var(--sb) - calc(var(--u)*164px) - calc(var(--u)*28px) - calc(var(--u)*124px) - calc(var(--u)*8px)))}
   html.land #talk{bottom:calc(var(--sb) + calc(var(--u)*132px))}
   html.land #banner{top:28%}
   html.land #title .logoWrap{margin-top:calc(var(--st) + 7vh)}
@@ -2265,8 +2271,17 @@ function _potion(c1,c2,hl){
 function icon(kind){ if(ICON[kind]) return ICON[kind]; const f=ICON_DEF[kind]||ICON_DEF.coin; return ICON[kind]=f(); }
 
 /* ---------- UI scale + viewport (dvh / visualViewport / safe areas) ---------- */
+function viewBox(){
+  const vv=window.visualViewport;
+  return {
+    w:Math.round(vv?vv.width:innerWidth),
+    h:Math.round(vv?vv.height:innerHeight),
+    x:Math.round(vv?vv.offsetLeft:0),
+    y:Math.round(vv?vv.offsetTop:0)
+  };
+}
 function uiLayout(){
-  const vv=window.visualViewport, w=Math.round(vv?vv.width:innerWidth), h=Math.round(vv?vv.height:innerHeight);
+  const vb=viewBox(), w=vb.w, h=vb.h;
   const port=w<h, tablet=Math.min(w,h)>=700;
   let u;
   if(tablet){
@@ -2276,15 +2291,26 @@ function uiLayout(){
     u=port?Math.min(w/390, h/800):Math.min(h/400, w/860);
     u=Math.max(port?0.84:0.8, Math.min(port?1.28:1.22, u));
   }
-  const r=document.documentElement.style; r.setProperty("--u", u.toFixed(3)); r.setProperty("--app-h", h+"px"); r.setProperty("--app-w", w+"px");
+  const r=document.documentElement.style;
+  r.setProperty("--u", u.toFixed(3));
+  r.setProperty("--app-h", h+"px"); r.setProperty("--app-w", w+"px");
+  r.setProperty("--vv-x", vb.x+"px"); r.setProperty("--vv-y", vb.y+"px");
   document.documentElement.classList.toggle("land", !port); document.documentElement.classList.toggle("port", port);
   document.documentElement.classList.toggle("tablet", tablet);
   document.documentElement.classList.toggle("short", port ? h<700 : h<380);
+  if(typeof renderer!=="undefined" && renderer && camera){
+    camera.aspect=w/Math.max(1,h);
+    if(G.mode==="play") setPlayFov();
+    else if(G.mode==="title"||G.mode==="select"){ camera.fov=G.mode==="title"?(port?52:42):(port?40:34); camera.updateProjectionMatrix(); }
+    else camera.updateProjectionMatrix();
+    renderer.setSize(w,h,false);
+    try{ syncZoomUI(); }catch(e){}
+  }
 }
 function initViewport(){
   uiLayout();
-  const on=()=>{ uiLayout(); clearTimeout(initViewport._t); initViewport._t=setTimeout(()=>{ uiLayout(); try{ window.dispatchEvent(new Event("resize")); }catch(e){} }, 220); };
-  if(window.visualViewport) visualViewport.addEventListener("resize", uiLayout);
+  const on=()=>{ uiLayout(); clearTimeout(initViewport._t); initViewport._t=setTimeout(uiLayout, 220); };
+  if(window.visualViewport){ visualViewport.addEventListener("resize", on); visualViewport.addEventListener("scroll", uiLayout); }
   window.addEventListener("orientationchange", on); window.addEventListener("resize", ()=>uiLayout());
   // no long-press menus, no image drag, no pinch/double-tap zoom, no pull-to-refresh
   document.addEventListener("contextmenu", e=>e.preventDefault());
@@ -2310,7 +2336,8 @@ function countUp(el, to, dur){
 function pressFx(root){
   root.addEventListener("pointerdown", e=>{ const b=e.target.closest&&e.target.closest("button"); if(!b || b.disabled) return; if(!b.closest("#atk,.skb")){ try{ sfx("ui"); }catch(_){} } }, true);
 }
-function modalOn(id){ const m=$(id); if(!m) return; clearTimeout(m._t); m.classList.remove("closing"); m.classList.add("on"); }
+let releasePointers=()=>{};
+function modalOn(id){ releasePointers(); const m=$(id); if(!m) return; clearTimeout(m._t); m.classList.remove("closing"); m.classList.add("on"); }
 function modalOff(id){ const m=$(id); if(!m||!m.classList.contains("on")) return; m.classList.add("closing"); clearTimeout(m._t); m._t=setTimeout(()=>{ m.classList.remove("on","closing"); },170); }
 function rangeFill(el){ if(!el) return; const f=(el.value-el.min)/(el.max-el.min)*100; el.style.setProperty("--fill", f+"%"); }
 function uiInit(){
@@ -2324,6 +2351,7 @@ function uiInit(){
   [...document.querySelectorAll("#bagTabs button")].forEach(b=>b.addEventListener("click", ()=>{ BAGTAB=b.dataset.t; [...document.querySelectorAll("#bagTabs button")].forEach(x=>x.classList.toggle("on",x===b)); bagSel=null; renderBag(); }));
   ["sVol","sMus","sSens"].forEach(id=>{ const e=$(id); if(e){ e.addEventListener("input", ()=>rangeFill(e)); rangeFill(e); } });
   const db=$("dlgBody"); if(db && window.MutationObserver){ new MutationObserver(()=>{ db.classList.remove("ln"); void db.offsetWidth; db.classList.add("ln"); }).observe(db,{ childList:true, characterData:true }); }
+  const qc=$("quest"); if(qc) qc.addEventListener("click", ()=>{ qc.classList.toggle("fold"); });
   pressFx($("ui"));
   // joystick active ring + attack press state (visual only)
   const joy=$("joy"); joy.addEventListener("pointerdown", ()=>joy.classList.add("on")); ["pointerup","pointercancel"].forEach(ev=>joy.addEventListener(ev, ()=>joy.classList.remove("on")));
@@ -2620,7 +2648,7 @@ function tryTalk(){
   }
   $("talk").style.display="none";
   G.dlg={ lines, i:0, acceptId, turnId, name:npc.name, npc:npc.id, shop:!!NPCS[npc.id].shop };
-  G.paused=true; G.joy.x=G.joy.y=0;
+  G.paused=true; releasePointers();
   $("dlg").style.display="block"; $("dlgName").textContent=npc.name; $("dlgBody").textContent=lines[0];
   dlgButtons();
   sfx("ui");
@@ -3235,15 +3263,16 @@ function renderBag(){
   let cmp="";
   if(!eqd && cur){
     const keys=[["atk","攻击"],["def","防御"],["hp","生命"],["mp","法力"],["crit","暴击"]]; const a=[];
-    keys.forEach(kk=>{ const dv=Math.round(((it[kk[0]]||0)-(cur[kk[0]]||0))*10)/10; if(dv) a.push("<span class='"+(dv>0?"up":"dn")+"'>"+kk[1]+(dv>0?" +":" ")+dv+"</span>"); });
-    cmp="<div class='cmp'>对比已装备："+(a.join("")||"无变化")+"</div>";
+    keys.forEach(kk=>{ const from=Math.round((cur[kk[0]]||0)*10)/10, to=Math.round((it[kk[0]]||0)*10)/10; if(from!==to) a.push("<span class='"+(to>from?"up":"dn")+"'>"+kk[1]+" "+from+" → "+to+"</span>"); });
+    cmp="<div class='cmp'>对比「"+cur.name+"」："+(a.join("")||"属性相同")+"</div>";
   }
   const wrong=it.slot==="weapon" && it.cls && it.cls!==G.classId;
   tip.innerHTML="<div class='th'><div class='slot ib r"+it.rar+"'><img src='"+itemIcon(it)+"' alt=''></div><div><div class='nm c"+it.rar+"'>"+it.name+"</div><div class='meta'>"+RAR[it.rar].n+" · "+SLOT_NAME[it.slot]+" · 物品等级 "+it.lv+(it.cls?" · "+CLASSES[it.cls].name+"专用":"")+"</div></div></div>"+
     "<div class='tb'><div class='stl'>"+lines+"</div>"+cmp+
     "<div class='row'>"+(eqd?"<button id='tUn' type='button' class='s'>卸下</button>":"<button id='tEq' type='button'"+(wrong?" disabled style='opacity:.5'":"")+">"+(wrong?"职业不符":"装备")+"</button><button id='tSell' type='button' class='s'>出售 +"+Math.round(it.price*0.6)+" 金</button>")+"</div></div>";
   if(eqd) $("tUn").addEventListener("click",()=>{ if(s.bag.length>=BAG_MAX){ toast("背包已满"); return; } s.bag.push(it); s.equip[it.slot]=null; recalcStats(); persist(s); bagSel=null; renderBag(); });
-  else { if(!wrong) $("tEq").addEventListener("click",()=>{ equipItem(it.uid); bagSel={eq:it.slot}; renderBag(); }); $("tSell").addEventListener("click",()=>{ sellItem(it.uid); bagSel=null; renderBag(); }); }
+  else { if(!wrong) $("tEq").addEventListener("click",()=>{ equipItem(it.uid); bagSel={eq:it.slot}; renderBag(); });
+    $("tSell").addEventListener("click",()=>{ const g=Math.round(it.price*0.6); askConfirm("出售「"+it.name+"」获得 "+g+" 金？卖出后不能撤回。", ()=>{ sellItem(it.uid); bagSel=null; renderBag(); }); }); }
 }
 function isUpgrade(it){
   if(it.slot==="weapon" && it.cls && it.cls!==G.classId) return false;
@@ -3277,6 +3306,7 @@ function applyQuality(){
   const sh=q!=="low"; if(renderer.shadowMap.enabled!==sh){ renderer.shadowMap.enabled=sh; scene.traverse(o=>{ if(o.material){ (Array.isArray(o.material)?o.material:[o.material]).forEach(m=>m.needsUpdate=true); } }); }
 }
 function askConfirm(text, yes){
+  if(G.mode==="play") releasePointers();
   $("cfText").textContent=text; modalOn("confirm");
   $("cfYes").onclick=()=>{ modalOff("confirm"); yes(); };
   $("cfNo").onclick=()=>{ modalOff("confirm"); };
@@ -4088,10 +4118,17 @@ function update(dt){
   updateBossBar(dt);
   if((MM.acc+=dt)>0.11){ MM.acc=0; drawMinimap(); updateZone(); }
   if((refreshHUD._acc=(refreshHUD._acc||0)+dt)>0.2){ refreshHUD._acc=0; refreshHUD(); }
+  if(G.mode==="play" && G.p){
+    let nearF=false;
+    if(TRIAL.on || (G.boss && !G.boss.dead)) nearF=true;
+    else for(let i=0;i<G.enemies.length;i++){ const e=G.enemies[i]; if(!e.dead && (e.x-G.p.x)*(e.x-G.p.x)+(e.z-G.p.z)*(e.z-G.p.z)<144){ nearF=true; break; } }
+    if(HUDC.fight!==nearF){ HUDC.fight=nearF; document.documentElement.classList.toggle("fight", nearF); }
+  }
   if(G.saveDirty && (G._saveAcc=(G._saveAcc||0)+dt)>2){ G._saveAcc=0; G.saveDirty=false; persist(G.save); }
 }
 function bindInput(){
   const joy=$("joy"), knob=$("knob");
+  let joyPid=null, atkPid=null;
   function setFrom(cx,cy,rect){
     let x=(cx-rect.left-rect.width/2)/(rect.width*0.5);
     let y=(cy-rect.top-rect.height/2)/(rect.height*0.5);
@@ -4099,19 +4136,29 @@ function bindInput(){
     G.joy.x=x; G.joy.y=-y; G.joy.on=true;
     const kr=rect.width*0.36; knob.style.transform="translate("+(x*kr).toFixed(1)+"px,"+(y*kr).toFixed(1)+"px)";
   }
-  function endJoy(){ G.joy.x=G.joy.y=0; G.joy.on=false; knob.style.transform=""; }
-  function pid(e){ return e.pointerId!=null?e.pointerId:1; }
-  joy.addEventListener("pointerdown", e=>{ try{ joy.setPointerCapture(pid(e)); }catch(_){} setFrom(e.clientX,e.clientY,joy.getBoundingClientRect()); e.preventDefault(); });
-  joy.addEventListener("pointermove", e=>{ if(G.joy.on) setFrom(e.clientX,e.clientY,joy.getBoundingClientRect()); });
+  function endJoy(e){ if(e && e.pointerId!=null && joyPid!=null && e.pointerId!==joyPid) return; joyPid=null; G.joy.x=G.joy.y=0; G.joy.on=false; knob.style.transform=""; }
+  joy.addEventListener("pointerdown", e=>{
+    if(joyPid!=null) return;
+    joyPid=e.pointerId; try{ joy.setPointerCapture(e.pointerId); }catch(_){}
+    setFrom(e.clientX,e.clientY,joy.getBoundingClientRect()); e.preventDefault(); e.stopPropagation();
+  });
+  joy.addEventListener("pointermove", e=>{ if(e.pointerId!==joyPid) return; setFrom(e.clientX,e.clientY,joy.getBoundingClientRect()); });
   joy.addEventListener("pointerup", endJoy);
   joy.addEventListener("pointercancel", endJoy);
   document.addEventListener("pointerdown", sfxInit, true);
   document.addEventListener("keydown", sfxInit, true);
-  const tap=(id,fn)=>$(id).addEventListener("pointerdown", e=>{ e.preventDefault(); e.stopPropagation(); fn(); });
-  $("atk").addEventListener("pointerdown", e=>{ e.preventDefault(); tryAttack(); G.atkHeld=true; });
-  ["pointerup","pointercancel","pointerleave"].forEach(ev=>$("atk").addEventListener(ev, ()=>G.atkHeld=false));
+  const tap=(id,fn)=>{ const el=$(id); el.addEventListener("pointerdown", e=>{ e.preventDefault(); e.stopPropagation(); try{ el.setPointerCapture(e.pointerId); }catch(_){} fn(); }); };
+  $("atk").addEventListener("pointerdown", e=>{
+    e.preventDefault(); e.stopPropagation(); atkPid=e.pointerId;
+    try{ $("atk").setPointerCapture(e.pointerId); }catch(_){}
+    tryAttack(); G.atkHeld=true;
+  });
+  const endAtk=e=>{ if(e.pointerId!==atkPid) return; atkPid=null; G.atkHeld=false; };
+  $("atk").addEventListener("pointerup", endAtk);
+  $("atk").addEventListener("pointercancel", endAtk);
   tap("sk1", ()=>trySkill(1)); tap("sk2", ()=>trySkill(2)); tap("dg", tryDodge);
   tap("potH", ()=>usePotion("h")); tap("potM", ()=>usePotion("m"));
+  releasePointers=()=>{ joyPid=null; atkPid=null; endJoy(); G.atkHeld=false; CAM.ptrs.clear(); CAM.dragging=false; CAM.pinch0=0; };
   $("talk").addEventListener("click", tryTalk);
   $("btnBag").addEventListener("click", openBag); $("bagX").addEventListener("click", closeBag);
   $("btnSet").addEventListener("click", openSettings); $("setX").addEventListener("click", closeSettings);
@@ -4602,7 +4649,7 @@ function camOcclusion(tx,ty,tz, px,py,pz){
 }
 function bindCameraInput(){
   const cv=$("c");
-  const active=()=>G.mode==="play" && !G.freezeCam;
+  const active=()=>G.mode==="play" && !G.freezeCam && !G.paused && !G.dlg && !document.querySelector(".modal.on");
   cv.addEventListener("pointerdown", e=>{
     if(!active()) return;
     try{ cv.setPointerCapture(e.pointerId); }catch(_){}
@@ -4638,10 +4685,10 @@ function bindCameraInput(){
     const f=Math.min(1,Math.max(0,(bot-cy)/(bot-top)));
     CAM.dist=CAM.minD+(CAM.maxD-CAM.minD)*f; camClamp(); CAM.lastUser=performance.now()/1000;
   }
-  let zon=false;
-  z.addEventListener("pointerdown", e=>{ e.preventDefault(); e.stopPropagation(); zon=true; try{ z.setPointerCapture(e.pointerId); }catch(_){} fromY(e.clientY); });
-  z.addEventListener("pointermove", e=>{ if(zon) fromY(e.clientY); });
-  const zend=()=>{ zon=false; };
+  let zon=false, zPid=null;
+  z.addEventListener("pointerdown", e=>{ e.preventDefault(); e.stopPropagation(); zon=true; zPid=e.pointerId; try{ z.setPointerCapture(e.pointerId); }catch(_){} fromY(e.clientY); });
+  z.addEventListener("pointermove", e=>{ if(zon && e.pointerId===zPid) fromY(e.clientY); });
+  const zend=e=>{ if(e && e.pointerId!=null && zPid!=null && e.pointerId!==zPid) return; zon=false; zPid=null; };
   z.addEventListener("pointerup", zend); z.addEventListener("pointercancel", zend);
   syncZoomUI();
 }
@@ -4723,11 +4770,7 @@ function init(){
   window.__mengyu={ G, GLB, TOWN, TOWN_CFG, CAM, groundAt, inTownBounds, startAdventure, tryAttack, trySkill, tryDodge, damagePlayer, hitEnemy, spawnSlime, spawnEnemy, FX, SFX, SHOTS, DROPS, LATER, camClamp,
     ST, QUESTS, NPCS, ZONES, ALTAR, ELITE_SPOT, SPAWN, ESHOTS, LOOT, MUS, SET, gainXP, genItem, addItem, equipItem, recalcStats, usePotion, tryTalk, advDlg, closeDlg, openBag, closeBag, openSettings, closeSettings, showTitle, showSelect, selectClass, beginNew, toTitle, resurrect, xpNeed, qst, tracked, loadSave, persist, migrateSave, clearEnemies, populateField, killEnemy, refreshHUD, drawMinimap, charThumb, camera, scene, startTrial, endTrial, TRIAL, checkAchievements, achHtml, ACH, bossLevel, get camera(){ return camera; }, get renderer(){ return renderer; } };
   loadCharacterModels(()=>{ upgradeVisuals(); });
-  window.addEventListener("resize", ()=>{
-    camera.aspect=innerWidth/innerHeight; camera.updateProjectionMatrix();
-    if(G.mode==="play") setPlayFov(); else if(G.mode==="title"||G.mode==="select"){ camera.fov=G.mode==="title"?(isPortrait()?52:42):(isPortrait()?40:34); camera.updateProjectionMatrix(); } syncZoomUI();
-    renderer.setSize(innerWidth, innerHeight, false);
-  });
+  window.addEventListener("resize", ()=>{ uiLayout(); });
 
   const whenLoaded=fn=>{ const t=setInterval(()=>{ if(LOADP.done){ clearInterval(t); fn(); } }, 50); };
   if(shot==="select"){ whenLoaded(()=>showSelect()); }
