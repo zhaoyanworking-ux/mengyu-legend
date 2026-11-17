@@ -218,6 +218,17 @@
   #dlg .body.ln{animation:lnIn .35s ease}
   @keyframes lnIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
   #dlg .row{display:flex;gap:calc(var(--u)*8px);justify-content:flex-end;flex-wrap:wrap;margin-top:calc(var(--u)*8px)}
+  #dlg .row.shop{flex-direction:column;align-items:stretch}
+  #dlg .shopRow{display:flex;align-items:center;gap:calc(var(--u)*10px);width:100%;min-height:52px;padding:calc(var(--u)*6px) calc(var(--u)*12px) calc(var(--u)*6px) calc(var(--u)*8px);border:calc(var(--u)*1.5px) solid var(--goldl);border-radius:calc(var(--u)*14px);text-align:left;color:var(--ink);background:linear-gradient(#fff,#fff8ee);box-shadow:inset 0 calc(var(--u)*2px) 0 #fff,0 calc(var(--u)*2px) calc(var(--u)*6px) rgba(120,80,20,.12)}
+  #dlg .shopRow:active{transform:translateY(calc(var(--u)*1px)) scale(.99)}
+  #dlg .shopRow .ic{width:calc(var(--u)*42px);height:calc(var(--u)*42px);flex:none;border-radius:calc(var(--u)*12px);background:#fff;box-shadow:inset 0 0 0 1px rgba(226,184,102,.7)}
+  #dlg .shopRow .tx{flex:1;min-width:0;display:flex;flex-direction:column;line-height:1.25}
+  #dlg .shopRow .tx b{font-family:var(--fd);font-weight:400;font-size:calc(var(--u)*16px);letter-spacing:.04em}
+  #dlg .shopRow .tx small{font-size:calc(var(--u)*11.5px);font-weight:700;color:var(--ink2)}
+  #dlg .shopRow .pr{display:flex;align-items:center;gap:calc(var(--u)*4px);flex:none;font-weight:900;font-size:calc(var(--u)*16px);color:#c0701a}
+  #dlg .shopRow .pr img{width:calc(var(--u)*20px);height:calc(var(--u)*20px)}
+  #dlg .shopRow .pr.poor{color:#c03a3a}
+  #dlg .row.shop .next{align-self:flex-end;min-width:calc(var(--u)*120px)}
   #dlg .next,#dlg .opt{min-height:44px;padding:calc(var(--u)*8px) calc(var(--u)*18px);font-size:calc(var(--u)*14.5px)}
   #dlg .next::after{content:"";display:inline-block;margin-left:calc(var(--u)*6px);border:calc(var(--u)*5px) solid transparent;border-left:calc(var(--u)*7px) solid #fff;border-right:0;vertical-align:middle;animation:nudge 1s ease-in-out infinite}
   @keyframes nudge{50%{transform:translateX(3px)}}
@@ -349,9 +360,9 @@
   #over h2{font-family:var(--fd);font-weight:400;font-size:calc(var(--u)*46px);margin:0 0 calc(var(--u)*8px);color:#ffd2d8;letter-spacing:.14em;text-shadow:0 calc(var(--u)*3px) 0 #7a1428,0 0 calc(var(--u)*24px) rgba(255,80,110,.6)}
   #over h2::before,#over h2::after{content:"";display:inline-block;width:calc(var(--u)*36px);height:1px;margin:0 calc(var(--u)*12px);vertical-align:middle;background:linear-gradient(90deg,transparent,#ffb0bc)}
   #over h2::after{background:linear-gradient(90deg,#ffb0bc,transparent)}
-  body:has(#over[style*="flex"]) :is(#joy,#atk,#sk1,#sk2,#dg,#potH,#potM,#zoom,#menuRow,#quest,#talk,#bossbar,#hint){opacity:0!important;pointer-events:none!important;transition:opacity .35s}
-  #over p{opacity:.92;margin:0 0 calc(var(--u)*8px);line-height:1.7;font-size:calc(var(--u)*14.5px)}
-  #over .tip{font-size:calc(var(--u)*12.5px);color:#ffe2a0;margin-bottom:calc(var(--u)*24px);padding:calc(var(--u)*6px) calc(var(--u)*14px);border-radius:calc(var(--u)*12px);background:rgba(255,220,150,.1);border:1px solid rgba(255,220,150,.25)}
+  body:has(#over[style*="flex"]) :is(#joy,#atk,#sk1,#sk2,#dg,#potH,#potM,#zoom,#menuRow,#quest,#talk,#bossbar,#hint,#toasts,#banner){opacity:0!important;pointer-events:none!important;transition:opacity .35s}
+  #over p{opacity:.92;margin:0 0 calc(var(--u)*18px);line-height:1.7;font-size:calc(var(--u)*14.5px)}
+  #over .tip{display:none !important}
   #over>div:last-child{display:flex;gap:calc(var(--u)*12px);flex-wrap:wrap;justify-content:center}
   #over button{min-width:calc(var(--u)*150px);min-height:48px;padding:calc(var(--u)*11px) calc(var(--u)*24px);border-radius:calc(var(--u)*18px);font-size:calc(var(--u)*17px)}
 
@@ -483,8 +494,14 @@
   html.land #setPlayBtns #btnResume{grid-column:auto}
   html.land #settings .shelp{grid-column:1/-1}
   html.land.short #settings .srow{min-height:calc(var(--u)*44px)}
-  /* tablets: keep HUD from floating in the middle of nowhere */
-  @media (min-width:700px) and (min-height:700px){ #dlg{width:min(80vw,680px)} }
+  /* tablets: larger sheets so the phone layout does not sit in a small island */
+  html.tablet #dlg{width:min(78vw,760px)}
+  html.tablet .sheet{width:min(88vw,740px)}
+  html.tablet.land #dlg{width:min(66vw,860px)}
+  html.tablet.land .sheet{width:min(90vw,960px)}
+  html.tablet.land #bag .sheet{width:min(94vw,1040px)}
+  html.tablet.land #settings .sheet{width:min(90vw,920px)}
+  html.tablet.land #achM .sheet{width:min(90vw,920px)}
 </style>
 </head>
 <body>
@@ -2250,10 +2267,18 @@ function icon(kind){ if(ICON[kind]) return ICON[kind]; const f=ICON_DEF[kind]||I
 /* ---------- UI scale + viewport (dvh / visualViewport / safe areas) ---------- */
 function uiLayout(){
   const vv=window.visualViewport, w=Math.round(vv?vv.width:innerWidth), h=Math.round(vv?vv.height:innerHeight);
-  const port=w<h; let u=port?Math.min(w/390, h/800):Math.min(h/400, w/860);
-  u=Math.max(port?0.84:0.8, Math.min(port?1.28:1.22, u));
+  const port=w<h, tablet=Math.min(w,h)>=700;
+  let u;
+  if(tablet){
+    u=port?Math.min(w/400, h/760):Math.min(h/470, w/820);
+    u=Math.max(port?1.15:1.12, Math.min(port?1.58:1.36, u));
+  } else {
+    u=port?Math.min(w/390, h/800):Math.min(h/400, w/860);
+    u=Math.max(port?0.84:0.8, Math.min(port?1.28:1.22, u));
+  }
   const r=document.documentElement.style; r.setProperty("--u", u.toFixed(3)); r.setProperty("--app-h", h+"px"); r.setProperty("--app-w", w+"px");
   document.documentElement.classList.toggle("land", !port); document.documentElement.classList.toggle("port", port);
+  document.documentElement.classList.toggle("tablet", tablet);
   document.documentElement.classList.toggle("short", port ? h<700 : h<380);
 }
 function initViewport(){
@@ -2600,25 +2625,40 @@ function tryTalk(){
   dlgButtons();
   sfx("ui");
 }
+const POT_PRICE=25;
 function dlgButtons(){
   const row=$("dlgRow"), d=G.dlg; row.innerHTML="";
+  row.classList.toggle("shop", !!d.shopMode);
   const last=d.i>=d.lines.length-1;
   const add=(txt,cls,fn)=>{ const b=document.createElement("button"); b.type="button"; b.className=cls; b.textContent=txt; b.addEventListener("click",e=>{ e.stopPropagation(); fn(); }); row.appendChild(b); };
   if(d.shopMode){
-    add("生命药水 25金","opt",()=>buyPot("h")); add("法力药水 25金","opt",()=>buyPot("m")); add("离开","next",closeDlg); return;
+    [{k:"h", name:"生命药水", ic:"potH"},{k:"m", name:"法力药水", ic:"potM"}].forEach(it=>{
+      const b=document.createElement("button"); b.type="button"; b.className="shopRow";
+      const ic=document.createElement("img"); ic.className="ic"; ic.alt=""; ic.src=icon(it.ic);
+      const tx=document.createElement("span"); tx.className="tx";
+      tx.innerHTML="<b>"+it.name+"</b><small>持有 ×"+G.save.pots[it.k]+"</small>";
+      const pr=document.createElement("span"); pr.className="pr"+(G.save.gold<POT_PRICE?" poor":"");
+      const coin=document.createElement("img"); coin.alt=""; coin.src=icon("coin");
+      pr.appendChild(coin); pr.appendChild(document.createTextNode(String(POT_PRICE)));
+      b.append(ic, tx, pr);
+      b.addEventListener("click", e=>{ e.stopPropagation(); buyPot(it.k); });
+      row.appendChild(b);
+    });
+    add("离开","next",closeDlg); return;
   }
   if(!last){ add("继续","next",advDlg); return; }
   if(d.acceptId){ add("接受任务","next",advDlg); }
   else if(d.turnId){ add("完成任务","next",advDlg); }
   else add(d.shop?"好的":"再见","next",advDlg);
   if(d.npc==="guard" && !d.turnId && G.save.level>=4) add("蚀雾试炼","opt",()=>{ closeDlg(); startTrial(); });
-  if(d.shop && !d.turnId) add("购买药水","opt",()=>{ d.shopMode=true; $("dlgBody").textContent="药水都是今早新熬的，一瓶 25 金。（持有 "+G.save.gold+" 金）"; dlgButtons(); });
+  if(d.shop && !d.turnId) add("购买药水","opt",()=>{ d.shopMode=true; $("dlgBody").textContent="药水都是今早新熬的。（持有 "+G.save.gold+" 金）"; dlgButtons(); });
 }
 function buyPot(k){
-  if(G.save.gold<25){ $("dlgBody").textContent="金币不够呢……去坡上转转再来吧。"; sfx("ui"); return; }
-  G.save.gold-=25; G.save.pots[k]++; persist(G.save); sfx("coin");
+  if(G.save.gold<POT_PRICE){ $("dlgBody").textContent="金币不够呢……去坡上转转再来吧。"; sfx("ui"); if(G.dlg&&G.dlg.shopMode) dlgButtons(); return; }
+  G.save.gold-=POT_PRICE; G.save.pots[k]++; persist(G.save); sfx("coin");
   $("dlgBody").textContent="给，"+(k==="h"?"生命":"法力")+"药水。（剩余 "+G.save.gold+" 金，生命药水 ×"+G.save.pots.h+"，法力药水 ×"+G.save.pots.m+"）";
   refreshHUD();
+  if(G.dlg&&G.dlg.shopMode) dlgButtons();
 }
 function advDlg(){
   if(!G.dlg) return;
@@ -3894,8 +3934,7 @@ function damagePlayer(amt, sx, sz){
   refreshHUD();
   if(P.hp<=0){
     P.dead=true; sfx("die"); timeSlow(0.35, 0.9);
-    const tips=["试着在红圈出现时翻滚躲开。","药师叶青出售药水，背包里也可能有更好的装备。","等级不够时，先在雾石坡多练几级吧。","首领狂暴后攻击更快，保持移动、找准空隙输出。"];
-    $("overTip").textContent="提示："+tips[Math.floor(Math.random()*tips.length)];
+    const tip=$("overTip"); if(tip) tip.textContent="";
     setTimeout(()=>{ if(G.p.dead) $("over").style.display="flex"; }, 1100);
   }
 }
