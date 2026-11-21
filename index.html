@@ -144,6 +144,22 @@
   #trialHud::before{content:"";display:inline-block;width:calc(var(--u)*14px);height:calc(var(--u)*14px);margin-right:calc(var(--u)*6px);vertical-align:-2px;border-radius:50%;border:2px solid #fff3c0;border-top-color:transparent;animation:spin 1.6s linear infinite}
   @keyframes spin{to{transform:rotate(360deg)}}
   #trialHud.warn{background:linear-gradient(rgba(220,60,70,.94),rgba(150,20,40,.92));border-color:#ffd0d0;animation:tutp2 .8s ease-in-out infinite alternate}
+  #dunHud{position:absolute;left:50%;top:calc(var(--st) + calc(var(--u)*188px));transform:translateX(-50%);display:none;flex-direction:column;align-items:center;gap:8px;width:min(92vw,320px);z-index:7;pointer-events:none}
+  #dunHud.on{display:flex}
+  #dunTxt{padding:8px 14px;border-radius:14px;background:linear-gradient(rgba(48,28,92,.92),rgba(28,16,58,.9));border:1px solid rgba(230,210,255,.7);color:#fff6d8;font-size:13px;font-weight:800;text-align:center;line-height:1.45}
+  #dunLeave{pointer-events:auto;min-height:44px;min-width:44px;padding:0 16px;border:0;border-radius:999px;font-weight:800;color:#fff;background:linear-gradient(#ffb4b0,#e25a62);box-shadow:inset 0 2px 0 rgba(255,255,255,.45),0 3px 0 #9a3040}
+  #qLog .sheet,#dunM .sheet{width:min(94vw,560px)}
+  #qList,#dunBody{padding:10px 14px 16px;display:flex;flex-direction:column;gap:8px}
+  .qcard{border-radius:14px;padding:10px 12px;background:rgba(255,255,255,.72);border:1px solid rgba(226,184,102,.7)}
+  .qcard b{display:block;font-size:15px}
+  .qcard .meta{color:#7a6248;font-size:12px;font-weight:800;margin-top:2px}
+  .qcard p{margin:6px 0 0;font-size:13px;line-height:1.55;overflow-wrap:anywhere}
+  .qcard .row,.dunActs{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+  .qcard button,#dunBody button,.pending button{min-height:44px;min-width:44px;border:0;border-radius:12px;padding:0 12px;font-weight:800}
+  .qcard button,.pending button,#dunBody .go{color:#fff;background:linear-gradient(#ffd98a,#f39a3c)}
+  .qcard button.alt,#dunBody .alt{color:#6a4a22;background:linear-gradient(#fffdf6,#f3e2bf);box-shadow:inset 0 0 0 1.5px #e7c98a}
+  .qcard button:disabled,#dunBody button:disabled{color:#8a6840;background:linear-gradient(#f7f1e4,#e7d7b8);box-shadow:inset 0 0 0 1.5px #e4d2ae}
+  .qsec{font-size:12px;font-weight:800;letter-spacing:.12em;color:#b07a30;margin:6px 2px 0}
   @keyframes tutp2{to{transform:translateX(-50%) scale(1.05)}}
 
   /* ===== toasts + banner ===== */
@@ -612,6 +628,7 @@
       <button id="btnSet" class="mbtn" type="button" aria-label="暂停"><img id="icSet" alt=""></button>
     </div>
     <div id="trialHud"></div>
+    <div id="dunHud"><div id="dunTxt"></div><button id="dunLeave" type="button">离开回廊</button></div>
     <div id="bossbar"><div class="nm" id="bossName">蚀雾史莱姆王</div><div class="bar"><i id="bosslag"></i><i id="bossfill"></i><b></b><span id="bosst"></span></div></div>
     <div id="toasts"></div><div id="toast"></div>
     <div id="banner"><div class="t" id="bnT">等级提升</div><br><div class="s" id="bnS"></div></div>
@@ -671,6 +688,8 @@
     </div>
   </div></div>
   <div id="achM" class="modal"><div class="sheet"><h2><span><img class="hic" id="hicAch" alt="">成就</span> <button class="xbtn" id="achX" type="button">×</button></h2><div id="achList"></div></div></div>
+  <div id="qLog" class="modal"><div class="sheet"><h2><span>任务</span> <button class="xbtn" id="qLogX" type="button">×</button></h2><div id="qList"></div></div></div>
+  <div id="dunM" class="modal"><div class="sheet"><h2><span>蚀雾回廊</span> <button class="xbtn" id="dunX" type="button">×</button></h2><div id="dunBody"></div></div></div>
   <div id="confirm" class="modal confirm"><div class="sheet"><h2>提示</h2><p id="cfText"></p>
     <div class="row"><button class="bigbtn gray" id="cfNo" type="button">取消</button><button class="bigbtn" id="cfYes" type="button">确定</button></div></div></div>
   <button id="mute" type="button" style="display:none">音效</button>
@@ -696,9 +715,9 @@ const SAVE_KEY = "MengYuLegend_Save_v1";
 const SAVE_BAK = "MengYuLegend_Save_v1.bak";
 const SAVE_BAD = "MengYuLegend_Save_v1.bad";
 const SAVE_NEWER = "MengYuLegend_Save_v1.newer";
-const SCHEMA = 4;
+const SCHEMA = 5;
 const SAVE_FORMAT = "mengyu-legend-save";
-const BUILD = { name:"RC-3", note:"本地存档，不是云存档" };
+const BUILD = { name:"RC-4", note:"本地存档，不是云存档" };
 const QST_ST = { locked:1, avail:1, active:1, ready:1, done:1 };
 
 const CLASSES = {
@@ -728,9 +747,16 @@ function storeGet(key){ try{ return localStorage.getItem(key); }catch(e){ return
 function storeSet(key, val){ localStorage.setItem(key, val); }
 function parseJSON(text){ if(!text) return null; try{ const v=JSON.parse(text); return v && typeof v==="object" ? v : null; }catch(e){ return null; } }
 function isNewerSave(raw){ return !!(raw && typeof raw.ver==="number" && raw.ver>SCHEMA); }
+function abandonStaleRun(s){
+  if(!s || !s.run) return false;
+  if(typeof DUN!=="undefined" && DUN.on && DUN.token && s.run.token===DUN.token) return false;
+  s.run=null;
+  return true;
+}
 function loadSave(){
   const found=readSaveState(true);
   if(typeof G!=="undefined" && G) G.saveNote=found.note||"";
+  if(found.save) abandonStaleRun(found.save);
   return found.save||null;
 }
 function readSaveState(repair){
@@ -802,6 +828,8 @@ function previewImport(text){
   }
   const gear=inspectGear(wrap.save);
   if(!gear.ok) return gear;
+  const run=inspectProgress(wrap.save);
+  if(!run.ok) return run;
   const save=migrateSave(JSON.parse(JSON.stringify(wrap.save)));
   if(!save || save._newer || !CLASSES[save.classId]) return { ok:false, reason:"这份备份无法在当前版本使用" };
   return { ok:true, save };
@@ -2598,7 +2626,7 @@ function uiInit(){
   [...document.querySelectorAll("#bagTabs button")].forEach(b=>b.addEventListener("click", ()=>{ BAGTAB=b.dataset.t; [...document.querySelectorAll("#bagTabs button")].forEach(x=>x.classList.toggle("on",x===b)); bagSel=null; renderBag(); }));
   ["sVol","sMus","sSens"].forEach(id=>{ const e=$(id); if(e){ e.addEventListener("input", ()=>rangeFill(e)); rangeFill(e); } });
   const db=$("dlgBody"); if(db && window.MutationObserver){ new MutationObserver(()=>{ db.classList.remove("ln"); void db.offsetWidth; db.classList.add("ln"); }).observe(db,{ childList:true, characterData:true }); }
-  const qc=$("quest"); if(qc) qc.addEventListener("click", ()=>{ qc.classList.toggle("fold"); });
+  const qc=$("quest"); if(qc) qc.addEventListener("click", ()=>{ if(G.mode==="play" && !G.dlg && !(G.p&&G.p.dead)) openQuestLog(); });
   pressFx($("ui"));
   // joystick active ring + attack press state (visual only)
   const joy=$("joy"); joy.addEventListener("pointerdown", ()=>joy.classList.add("on")); ["pointerup","pointercancel"].forEach(ev=>joy.addEventListener(ev, ()=>joy.classList.remove("on")));
@@ -2993,7 +3021,8 @@ function closeGrowth(){
 }
 function questEntry(q, raw){
   if(!raw || typeof raw!=="object" || !QST_ST[raw.st]) return null;
-  return { st:raw.st, pr:Math.max(0, Math.min(q.count||0, raw.pr|0)) };
+  const round=Math.max(0, Math.min(99, raw.round|0));
+  return { st:raw.st, pr:Math.max(0, Math.min(q.count||0, raw.pr|0)), round };
 }
 function migrateSave(s){
   if(!s || typeof s!=="object") return s;
@@ -3028,11 +3057,78 @@ function migrateSave(s){
     s.quests[q.id]=e || { st:"locked", pr:0 };
   });
   if(s.seen && typeof s.seen!=="object") delete s.seen;
+  if(!s.paid || typeof s.paid!=="object" || Array.isArray(s.paid)) s.paid={};
+  if(!s.paidAccept || typeof s.paidAccept!=="object" || Array.isArray(s.paidAccept)) s.paidAccept={};
+  if(!s.claimed || typeof s.claimed!=="object" || Array.isArray(s.claimed)) s.claimed={};
+  if(!s.qc || typeof s.qc!=="object" || Array.isArray(s.qc)) s.qc={};
+  if(!Array.isArray(s.pending)) s.pending=[];
+  s.pending=s.pending.map(p=>{
+    if(!p || typeof p!=="object") return null;
+    const it=tidyItem(p.item);
+    if(!it) return null;
+    return { id:String(p.id||it.uid), from:String(p.from||"quest").slice(0,24), item:it };
+  }).filter(Boolean).slice(0,10);
+  if(s.voucher!=null){
+    const v=sanitizeVoucher(s.voucher);
+    s.voucher=v;
+  }
+  if(s.run && (typeof s.run!=="object" || Array.isArray(s.run) || s.run.id!=="corridor")) s.run=null;
+  s.qc=s.qc||{};
+  QUESTS.forEach(q=>{
+    const e=s.quests[q.id];
+    if(!e.round) e.round=0;
+    if(!q.repeat && ((e.st==="done") || (s.qc[q.id]>0) || (q.id==="q5" && s.storyDone))) s.paid[q.id]=Math.max(1, s.paid[q.id]|0);
+    if(q.repeat && s.paid[q.id]==null){
+      const done=s.qc[q.id]|0;
+      s.paid[q.id]=done;
+      if((e.round|0)<done) e.round=done;
+    }
+  });
+  if(s.quests.q3 && s.quests.q3.st!=="locked" && s.quests.q3.st!=="avail") s.paidAccept.q3=1;
   delete s._newer;
   if(typeof unlockPostgame==="function") unlockPostgame(s);
+  if(typeof unlockDungeonQuest==="function") unlockDungeonQuest(s);
   return s;
 }
-function newQuestState(){ const o={}; QUESTS.forEach(q=>o[q.id]={ st:q.id==="q1"?"avail":"locked", pr:0 }); return o; }
+function sanitizeVoucher(v){
+  if(!v || typeof v!=="object") return null;
+  if(v.diff!=="normal" && v.diff!=="hard") return null;
+  if(v.taken===true) return null;
+  const gold=Math.round(+v.gold), xp=Math.round(+v.xp);
+  if(!Number.isFinite(gold)||gold<0||gold>2000||!Number.isFinite(xp)||xp<0||xp>2000) return null;
+  if(!v.id || typeof v.id!=="string") return null;
+  const pots=Array.isArray(v.pots)?v.pots:[0,0];
+  const item=v.item?tidyItem(v.item):null;
+  if(v.item && !item) return null;
+  return { id:v.id.slice(0,40), diff:v.diff, gold, xp, pots:[Math.max(0,pots[0]|0), Math.max(0,pots[1]|0)], item, from:"corridor" };
+}
+function inspectProgress(save){
+  if(save.paid!=null){
+    if(typeof save.paid!=="object" || Array.isArray(save.paid)) return {ok:false, reason:"领奖记录无效，已拒绝导入"};
+    for(const k of Object.keys(save.paid)){
+      if(!QUESTS.some(q=>q.id===k)) continue;
+      const n=+save.paid[k];
+      if(!Number.isInteger(n) || n<0 || n>99) return {ok:false, reason:"领奖记录无效，已拒绝导入"};
+    }
+  }
+  if(save.voucher!=null){
+    const v=save.voucher;
+    if(!v || typeof v!=="object" || (v.diff!=="normal"&&v.diff!=="hard") || v.taken===true) return {ok:false, reason:"副本领奖状态无效，已拒绝导入"};
+    if(!Number.isFinite(+v.gold)||v.gold<0||v.gold>2000||!Number.isFinite(+v.xp)||v.xp<0||v.xp>2000) return {ok:false, reason:"副本奖励数值无效，已拒绝导入"};
+  }
+  if(save.pending!=null){
+    if(!Array.isArray(save.pending) || save.pending.length>10) return {ok:false, reason:"待领取数据无效，已拒绝导入"};
+    for(const p of save.pending){
+      if(!p || !p.item) return {ok:false, reason:"待领取数据无效，已拒绝导入"};
+      const fake={bag:[p.item], equip:{}};
+      const g=inspectGear(fake);
+      if(!g.ok) return {ok:false, reason:"待领取的装备无效，已拒绝导入"};
+    }
+  }
+  if(save.run!=null && (typeof save.run!=="object" || Array.isArray(save.run))) return {ok:false, reason:"副本进度无效，已拒绝导入"};
+  return {ok:true};
+}
+function newQuestState(){ const o={}; QUESTS.forEach(q=>o[q.id]={ st:q.id==="q1"?"avail":"locked", pr:0, round:0 }); return o; }
 const BAG_MAX=30;
 function addItem(it, silent){
   const s=G.save; if(!s||!it) return false;
@@ -3185,7 +3281,13 @@ const QUESTS = [
   { id:"q8", title:"首领再临", giver:"mayor", turn:"mayor", type:"kill", target:["boss"], count:1, gold:400, xp:800, reward:{ item:{ slot:null, rar:3, up:0.25 } }, repeat:true, lv:8, where:"蚀源祭坛（最北）",
     tname:"击败蚀雾史莱姆王",
     greet:["祭坛那边的雾又浓了……它似乎会随着你的成长一起变强。"], accept:["再去祭坛看看吧。打退它，镇里的仓库任你挑。"],
-    progress:["它比上次更强了。药水带够，保持移动。"], turnIn:["你又一次把雾推回去了。收下这个，青岚镇欠你一份情。"] }
+    progress:["它比上次更强了。药水带够，保持移动。"], turnIn:["你又一次把雾推回去了。收下这个，青岚镇欠你一份情。"] },
+  { id:"q9", title:"回廊巡查", giver:"guard", turn:"guard", type:"dungeon", target:["corridor"], count:1, gold:40, xp:50, reward:{}, repeat:true, lv:6, where:"守卫石川 · 蚀雾回廊",
+    tname:"通关蚀雾回廊",
+    greet:["坡上那条回廊和外面的雾不是同一场。进去以后，外面的魔物不会跟进来。"],
+    accept:["通关一次就回来。普通或困难都行。失败或中途离开不算。"],
+    progress:["回廊的凭证领到了，再回来找我交差。"],
+    turnIn:["这一轮算你的。下一轮要重新进一次回廊。"] }
 ];
 const NPCS = {
   mayor:{ id:"mayor", name:"镇长 苏晚晴", x:-2.4, z:5.8, yaw:0.4, kind:"npcElder" },
@@ -3193,7 +3295,13 @@ const NPCS = {
   guard:{ id:"guard", name:"守卫 石川", x:2.2, z:13.4, yaw:Math.PI, kind:"npcGuard" }
 };
 const NPC_SHORT={ mayor:"苏晚晴", herb:"叶青", guard:"石川" };
-function qst(id){ return (G.save.quests[id]||(G.save.quests[id]={st:"locked",pr:0})); }
+function qst(id){ return (G.save.quests[id]||(G.save.quests[id]={st:"locked",pr:0,round:0})); }
+function unlockDungeonQuest(s){
+  if(!s||!s.quests) return;
+  if((s.level|0)<6 && !s.storyDone) return;
+  const e=s.quests.q9||(s.quests.q9={st:"locked",pr:0,round:0});
+  if(e.st==="locked") e.st="avail";
+}
 function unlockPostgame(s){ if(!s||!s.storyDone||!s.quests) return; ["q7","q8"].forEach(k=>{ const e=s.quests[k]||(s.quests[k]={st:"locked",pr:0}); if(e.st==="locked") e.st="avail"; }); }
 function tracked(){
   let ready=null, act=null, av=null, avNew=null; const qc=(G.save&&G.save.qc)||{};
@@ -3264,22 +3372,78 @@ function notifyCollect(){
   persist(G.save); refreshHUD();
 }
 function acceptQuest(q){
-  const e=qst(q.id); if(e.st!=="avail") return; e.st="active"; e.pr=0;
-  if(q.id==="q3" && q.reward && q.reward.item){ /* gift handed over on accept */ const it=genItem(Math.max(3,G.save.level),2,"armor"); if(!addItem(it)) dropGear(G.p.x, G.p.z, it); }
-  persist(G.save); toast("接受任务：「"+q.title+"」"); sfx("quest"); refreshHUD();
+  if(!q || !clickOnce("accept-"+q.id)) return false;
+  if(!spendFresh()) return false;
+  const s=G.save, e=qst(q.id); if(e.st!=="avail") return false;
+  const prev={ st:e.st, pr:e.pr, round:e.round|0 };
+  const paid=!!(s.paidAccept&&s.paidAccept.q3);
+  e.st="active"; e.pr=0;
+  let gifted=null;
+  if(q.id==="q3" && q.reward && q.reward.item && !paid){
+    s.paidAccept=s.paidAccept||{}; s.paidAccept.q3=1;
+    gifted=genItem(Math.max(3,s.level),2,"armor");
+    if(!addItem(gifted, true)){ s.pending=s.pending||[]; s.pending.push({ id:gifted.uid, from:"q3", item:gifted }); toast("背包已满，护甲记在待领取里。"); }
+    else toast("获得护甲");
+  }
+  if(!persist(s)){
+    e.st=prev.st; e.pr=prev.pr; e.round=prev.round;
+    if(gifted){
+      const i=s.bag.findIndex(x=>x.uid===gifted.uid); if(i>=0) s.bag.splice(i,1);
+      s.pending=(s.pending||[]).filter(p=>p.item&&p.item.uid!==gifted.uid);
+      if(s.paidAccept) s.paidAccept.q3=paid?1:0;
+    }
+    toast("存档没写成，任务没有接上。"); return false;
+  }
+  toast("接受任务：「"+q.title+"」"); sfx("quest"); refreshHUD(); return true;
 }
-function turnIn(q){
-  const e=qst(q.id); if(e.st!=="ready") return;
-  e.st="done"; e.pr=q.count; G.save.gold+=q.gold; G.save.qc=G.save.qc||{}; G.save.qc[q.id]=(G.save.qc[q.id]||0)+1;
+function claimQuest(q){
+  if(!q || !clickOnce("quest-"+q.id)) return false;
+  if(!spendFresh()) return false;
+  const s=G.save, e=qst(q.id);
+  if(e.st!=="ready"){ toast("这轮还不能提交"); return false; }
+  s.paid=s.paid||{}; s.qc=s.qc||{};
+  const round=e.round|0;
+  if(!q.repeat && (s.paid[q.id]|0)>0){ e.st="done"; e.pr=q.count; toast("这份主线奖励已经领过"); return false; }
+  if(q.repeat && (s.paid[q.id]|0)===round && (s.qc[q.id]|0)>round){ toast("这一轮已经领过"); return false; }
+  const snap={ gold:s.gold|0, xp:s.xp|0, level:s.level|0, hp:G.p?G.p.hp:0, mp:G.p?G.p.mp:0, pots:{h:s.pots.h|0,m:s.pots.m|0}, st:e.st, pr:e.pr|0, round, paid:s.paid[q.id]|0, qc:s.qc[q.id]|0, story:!!s.storyDone, bag:s.bag.length, pending:(s.pending||[]).length };
+  s.gold=snap.gold+q.gold;
+  const ups=grantXP(q.xp);
   const r=q.reward||{};
-  if(r.pots){ G.save.pots.h+=r.pots[0]; G.save.pots.m+=r.pots[1]; }
-  if(r.item && q.id!=="q3"){ const it=genItem(Math.max(q.lv,G.save.level), Math.min(4, r.item.rar+((r.item.up&&Math.random()<r.item.up)?1:0)), r.item.slot||undefined); if(!addItem(it)) dropGear(G.p.x, G.p.z, it); }
-  if(q.repeat){ e.st="avail"; e.pr=0; }
-  else if(q.next){ const n=qst(q.next); if(n.st==="locked") n.st="avail"; }
-  if(q.id==="q5"){ G.save.storyDone=true; unlockPostgame(G.save); later(1.2, ()=>banner("青岚篇 · 完", "感谢游玩！可继续巡逻、刷装备与挑战首领")); }
-  toast("完成「"+q.title+"」 +"+q.gold+" 金  +"+q.xp+" 经验"); sfx("quest");
-  gainXP(q.xp); persist(G.save); refreshHUD();
+  if(r.pots){ s.pots.h+=r.pots[0]|0; s.pots.m+=r.pots[1]|0; }
+  let item=null, parked=false;
+  if(r.item && q.id!=="q3"){
+    item=genItem(Math.max(q.lv,snap.level), Math.min(4, r.item.rar+((r.item.up&&Math.random()<r.item.up)?1:0)), r.item.slot||undefined);
+    if(s.bag.length>=BAG_MAX){ s.pending=s.pending||[]; s.pending.push({ id:item.uid, from:q.id, item }); parked=true; }
+    else s.bag.push(item);
+  }
+  s.qc[q.id]=snap.qc+1;
+  if(q.repeat){ s.paid[q.id]=round; e.round=round+1; e.st="avail"; e.pr=0; }
+  else { s.paid[q.id]=1; e.st="done"; e.pr=q.count; if(q.next){ const n=qst(q.next); if(n.st==="locked") n.st="avail"; } }
+  let storyNew=false;
+  if(q.id==="q5" && !snap.story){ s.storyDone=true; storyNew=true; unlockPostgame(s); }
+  if(!persist(s)){
+    s.gold=snap.gold; s.xp=snap.xp; s.level=snap.level; s.pots.h=snap.pots.h; s.pots.m=snap.pots.m; s.storyDone=snap.story;
+    e.st=snap.st; e.pr=snap.pr; e.round=snap.round; s.paid[q.id]=snap.paid; s.qc[q.id]=snap.qc;
+    if(item){ const i=s.bag.findIndex(x=>x.uid===item.uid); if(i>=0) s.bag.splice(i,1); if(parked) s.pending.pop(); }
+    if(G.p){ G.p.hp=Math.min(snap.hp, ST.hp); G.p.mp=Math.min(snap.mp, ST.mp); }
+    recalcStats();
+    toast("存档没写成，奖励已退回。"); return false;
+  }
+  toast("完成「"+q.title+"」 +"+q.gold+" 金  +"+q.xp+" 经验"+(parked?"。装备在待领取。":"")); sfx("quest");
+  if(ups) banner("等级提升", "Lv."+s.level);
+  if(storyNew) later(1.2, ()=>banner("青岚篇 · 完", "感谢游玩！可继续巡逻、刷装备与挑战首领"));
+  refreshHUD(); return true;
 }
+function grantXP(n){
+  const s=G.save; if(!s) return 0;
+  n=Math.round(n)||0; if(n<=0) return 0;
+  if(s.level>=MAXLV){ s.xp=0; return 0; }
+  s.xp+=n; let ups=0;
+  while(s.level<MAXLV && s.xp>=xpNeed(s.level)){ s.xp-=xpNeed(s.level); s.level++; ups++; }
+  if(ups){ recalcStats(); if(G.p){ G.p.hp=ST.hp; G.p.mp=ST.mp; } unlockDungeonQuest(s); }
+  return ups;
+}
+function turnIn(q){ return claimQuest(q); }
 function tryTalk(){
   if(G.mode!=="play"||!G.near||G.paused||G.p.dead) return;
   const npc=G.near;
@@ -3335,6 +3499,7 @@ function dlgButtons(){
   else if(d.turnId){ add("完成任务","next",advDlg); }
   else add(d.shop?"好的":"再见","next",advDlg);
   if(d.npc==="guard" && !d.turnId && G.save.level>=4) add("蚀雾试炼","opt",()=>{ closeDlg(); startTrial(); });
+  if(d.npc==="guard" && !d.turnId && G.save.level>=6) add("蚀雾回廊","opt",()=>{ closeDlg(); openDungeon(); });
   if(d.shop && !d.turnId) add("购买药水","opt",()=>{ d.shopMode=true; $("dlgBody").textContent="药水都是今早新熬的。（持有 "+G.save.gold+" 金）"; dlgButtons(); });
 }
 function buyPot(k){
@@ -3350,7 +3515,7 @@ function advDlg(){
   if(G.dlg.i<G.dlg.lines.length-1){ G.dlg.i++; $("dlgBody").textContent=G.dlg.lines[G.dlg.i]; dlgButtons(); sfx("ui"); return; }
   const d=G.dlg;
   if(d.acceptId) acceptQuest(QUESTS.find(q=>q.id===d.acceptId));
-  if(d.turnId) turnIn(QUESTS.find(q=>q.id===d.turnId));
+  if(d.turnId) claimQuest(QUESTS.find(q=>q.id===d.turnId));
   closeDlg();
 }
 function closeDlg(){ $("dlg").style.display="none"; G.dlg=null; G.paused=false; refreshHUD(); }
@@ -3474,6 +3639,7 @@ function clearEnemies(){
   G.boss=null; SPAWN.bossIntro=false;
 }
 function updateSpawners(dt){
+  if((typeof DUN!=="undefined" && DUN.on) || (typeof TRIAL!=="undefined" && TRIAL.on)) return;
   SPAWN.t-=dt; SPAWN.eliteT-=dt; SPAWN.bossT-=dt;
   if(SPAWN.t<=0){ SPAWN.t=3.5; populateField(false); }
   // boss: appears when the quest asks for it (or for rematches after the story) and the hero walks into the altar
@@ -4045,7 +4211,8 @@ function showTitle(){
   let note="存档只在这台浏览器里，不是云存档。";
   if(found.note==="newer") note="发现更高版本的存档。这一版不会读取，也不会改写它。";
   else if(found.note==="corrupt") note="存档损坏。原文还留在浏览器里，没有被清掉。可以用以前导出的备份导入。";
-  else if(found.note==="recovered") note="已从上一份完好的本地备份恢复。这不是云存档。";
+    else if(found.note==="recovered") note="已从上一份完好的本地备份恢复。这不是云存档。";
+    if(found.raw && found.raw.run) note="上次的蚀雾回廊中断了，没有发放奖励。";
   else if(LOADP.charFail||LOADP.townFail) note=(LOADP.townFail?"小镇模型":"角色模型")+"没能下载，已用备用造型。可以重新加载再试。";
   if($("saveNote")) $("saveNote").textContent=note;
   if($("buildTag")) $("buildTag").textContent=BUILD.name;
@@ -4484,13 +4651,234 @@ function musDuck(name){
   try{ const g=MUS.gain.gain, t=SFX.ctx.currentTime, base=0.22*SET.mus/100; g.cancelScheduledValues(t); g.setValueAtTime(Math.max(0.0001,g.value),t); g.linearRampToValueAtTime(base*k,t+0.05); g.setValueAtTime(base*k,t+0.35); g.linearRampToValueAtTime(base,t+1.3); }catch(e){}
 }
 
+/* ===================== 蚀雾回廊: one arena, two difficulties, separate from the field ===================== */
+const DUN_DIFF={
+  normal:{ name:"普通", lv:6, time:80, gold:90, xp:80, rar:1, pots:[1,0],
+    waves:[["slime",1,1],["spike",1,1],["captain",1,1]] },
+  hard:{ name:"困难", lv:10, time:70, gold:160, xp:140, rar:2, pots:[1,1],
+    waves:[["slime",2,2],["wisp",1,3],["captain",1,4]] }
+};
+const DUN={ on:false, diff:"", wave:0, t:0, gap:0.45, token:"", phase:"", reward:null, cx:0, cz:28.5 };
+function growthMul(s){
+  s=s||G.save; if(!s) return 1;
+  let ranks=0, talents=0, plus=0;
+  const g=s.growth;
+  if(g && g.skills) Object.keys(g.skills).forEach(id=>{ const row=g.skills[id]||{}; Object.keys(row).forEach(k=>{ ranks+=Math.max(0, row[k]|0); }); });
+  if(g && g.talents) Object.keys(g.talents).forEach(id=>{ talents+=(g.talents[id]||[]).length; });
+  if(s.equip) ["weapon","armor","acc"].forEach(k=>{ if(s.equip[k]) plus+=itemPlus(s.equip[k]); });
+  const m=1 + 0.02*Math.max(0,(s.level|0)-6) + 0.03*ranks + 0.05*talents + 0.02*plus;
+  return Math.round(Math.min(2.2, m)*100)/100;
+}
+function dunItem(diff, level){
+  const rar=diff==="hard"?2:1, lv=Math.max(1, level|0), m=(RAR[rar]||RAR[1]).m;
+  return tidyItem({ uid:"dun-"+diff+"-"+Math.random().toString(36).slice(2,8), slot:"acc", rar, lv,
+    atk:0, def:Math.round(2*m), hp:Math.round(8*m), mp:0, crit:0,
+    name:diff==="hard"?"回廊精良护符":"回廊优秀护符", price:Math.round((6+lv*3)*m*m), plus:0, locked:false, enhSpent:0 });
+}
+function previewDungeon(diff, s){
+  const d=DUN_DIFF[diff]; if(!d) return null;
+  s=s||G.save; const m=growthMul(s);
+  return { diff, name:d.name, need:d.lv, time:d.time, waves:d.waves.length, mul:m,
+    gold:Math.round(d.gold*m), xp:Math.round(d.xp*m), pots:d.pots.slice(),
+    itemName:diff==="hard"?"回廊精良护符":"回廊优秀护符", rar:d.rar };
+}
+function canStartDungeon(diff){
+  const d=DUN_DIFF[diff];
+  if(!d || G.mode!=="play" || DUN.on || TRIAL.on || (G.boss && !G.boss.dead) || !G.p || G.p.dead) return false;
+  if((G.save.level|0)<d.lv) return false;
+  if(G.save.voucher && !G.save.voucher.taken) return false;
+  return true;
+}
+function openDungeon(){
+  if(G.mode!=="play" || !G.p || G.p.dead) return;
+  G.paused=true; renderDungeon(); modalOn("dunM");
+}
+function closeDungeon(){ modalOff("dunM"); if(G.mode==="play" && !DUN.on) G.paused=false; refreshHUD(); }
+function renderDungeon(){
+  const s=G.save, box=$("dunBody"); if(!box||!s) return;
+  const rules="<p class='qcard'>目标：清完 3 波，最后一波是回廊看守。失败、离开、死亡或中途刷新都不发奖励。通关只记一张凭证，领取一次。背包满时护符留在待领取，不会卖掉，也不会掉在地上。野外和蚀雾试炼照旧。</p>";
+  const cards=["normal","hard"].map(id=>{
+    const p=previewDungeon(id,s), blocked=!!(s.voucher&&!s.voucher.taken), low=(s.level|0)<p.need, ok=!blocked && !low;
+    const label=ok?"进入"+p.name:(blocked?"先领取上一张凭证":"未达到 Lv."+p.need);
+    return "<div class='qcard'><b>"+p.name+" · 需要 Lv."+p.need+"</b><div class='meta'>"+p.waves+" 波 · "+p.time+" 秒 · 成长 ×"+p.mul+"</div><p>预计 "+p.gold+" 金、"+p.xp+" 经验、药水 "+p.pots[0]+"/"+p.pots[1]+"、"+p.itemName+"。按进入时的等级、技能、天赋和强化计算，打完不会因为换装变多。</p><button type='button' data-dun='"+id+"'"+(ok?"":" disabled")+">"+label+"</button></div>";
+  }).join("");
+  let claim="";
+  if(s.voucher && !s.voucher.taken){
+    const v=s.voucher;
+    claim="<div class='qcard'><b>待领取的通关凭证</b><p>"+(v.diff==="hard"?"困难":"普通")+" · "+v.gold+" 金 · "+v.xp+" 经验"+(v.item?" · "+v.item.name:"")+"</p><div class='row'><button type='button' id='dunClaim'>领取</button><button type='button' class='alt' id='dunDrop'>放弃这张凭证</button></div></div>";
+  }
+  const pending=(s.pending||[]).filter(p=>p.from==="corridor").map(p=>"<div class='qcard pending'><b>"+p.item.name+"</b><div class='meta'>背包有空位才能取出</div><button type='button' data-pend='"+p.id+"'>取出</button></div>").join("");
+  box.innerHTML=rules+claim+cards+pending;
+  box.querySelectorAll("[data-dun]").forEach(b=>b.addEventListener("click", ()=>startDungeon(b.dataset.dun)));
+  const c=$("dunClaim"); if(c) c.addEventListener("click", ()=>{ if(claimVoucher()) renderDungeon(); });
+  const d=$("dunDrop"); if(d) d.addEventListener("click", ()=>{
+    askConfirm("放弃这张通关凭证？奖励不会发放。", ()=>{
+      if(!G.save.voucher) return;
+      const keep=G.save.voucher; G.save.voucher=null;
+      if(!persist(G.save)){ G.save.voucher=keep; toast("存档没写成，凭证还在。"); return; }
+      renderDungeon();
+    });
+  });
+  box.querySelectorAll("[data-pend]").forEach(b=>b.addEventListener("click", ()=>{ if(takePending(b.dataset.pend)) renderDungeon(); }));
+}
+function startDungeon(diff){
+  const d=DUN_DIFF[diff];
+  if(!canStartDungeon(diff)){ toast(G.save.voucher?"先领取或放弃上一张通关凭证":(G.save.level<d.lv?"需要 Lv."+d.lv:"现在不能进入回廊")); return false; }
+  if(!spendFresh()) return false;
+  const s=G.save;
+  const reward=previewDungeon(diff,s);
+  reward.item=dunItem(diff, s.level);
+  const token="c"+Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+  const run={ id:"corridor", diff, token, reward };
+  s.run=run;
+  if(!persist(s)){ s.run=null; toast("存档没写成，没有进入回廊。"); return false; }
+  clearEnemies(); SPAWN.t=1e9;
+  DUN.on=true; DUN.diff=diff; DUN.wave=0; DUN.t=d.time; DUN.gap=0.45; DUN.token=token; DUN.phase="fight"; DUN.reward=reward;
+  G.p.x=DUN.cx; G.p.z=DUN.cz-3.15; G.p.yaw=0; G.p.vx=0; G.p.vz=0;
+  camReset(0); updateCamera._init=false;
+  closeDungeon(); G.paused=false;
+  dunSpawn();
+  $("dunHud").classList.add("on");
+  banner(d.name+"回廊", "清完 3 波。离开或失败没有奖励。");
+  sfx("roar"); setMusicMood("boss");
+  return true;
+}
+function dunSpawn(){
+  const spec=DUN_DIFF[DUN.diff].waves[DUN.wave]; if(!spec) return;
+  const kind=spec[0]==="captain"?"slime":spec[0], n=spec[1], lv=spec[2];
+  for(let i=0;i<n;i++){
+    const a=(i-(n-1)/2)*0.7;
+    const e=spawnEnemy(kind, DUN.cx+Math.sin(a)*0.45, DUN.cz-1.6, lv, "slope");
+    e.dun=true; e.aggro=true; e.hx=DUN.cx; e.hz=DUN.cz; e.spd=1.05; e.cd=1.4;
+    if(DUN.diff==="normal") e.dmg=Math.max(1, Math.round(e.dmg*0.35));
+    if(spec[0]==="captain"){ e.dunBoss=true; e.name="回廊看守"; e.max=e.hp=Math.round(e.max*(DUN.diff==="hard"?3.2:2.4)); }
+  }
+  DUN.wave++;
+  banner("第 "+DUN.wave+" / 3 波", spec[0]==="captain"?"回廊看守出现了":"击败这波魔物");
+  sfx("summon");
+}
+function clearDunEnemies(){
+  G.enemies.forEach(o=>{ if(o.dun && !o.dead){ if(o.tele){ releaseDecal(o.tele); o.tele=null; } if(o.label){ scene.remove(o.label); o.label=null; } disposeEnemy(o); o.dead=true; o.deadT=99; } });
+  G.enemies=G.enemies.filter(o=>!(o.dun&&o.deadT>=99));
+  ESHOTS.forEach(s=>s.on=false);
+}
+function endDungeon(why){
+  if(!DUN.on) return false;
+  DUN.on=false; DUN.phase=""; $("dunHud").classList.remove("on");
+  clearDunEnemies(); SPAWN.t=2.5;
+  const s=G.save;
+  if(s && s.run && s.run.token===DUN.token) s.run=null;
+  if(s && !persist(s)) toast("存档没写成。这次没有奖励。");
+  if(!G.boss) setMusicMood(G.p && G.p.z<16?"town":"field");
+  if(why==="time") banner("回廊失败", "时间到了，没有奖励。");
+  else if(why==="dead") toast("你在回廊里倒下了，没有奖励。");
+  else if(why==="leave"){ banner("已离开回廊", "这次没有奖励。"); G.p.x=2.2; G.p.z=11.5; camReset(0); }
+  return true;
+}
+function winDungeon(){
+  if(DUN.phase==="win") return;
+  DUN.phase="win"; DUN.on=false; $("dunHud").classList.remove("on");
+  clearDunEnemies(); SPAWN.t=2.5;
+  const s=G.save, reward=DUN.reward;
+  if(!reward || !s.run || s.run.token!==DUN.token){ toast("这局回廊对不上，没有发奖。"); s.run=null; persist(s); return; }
+  if(s.claimed && s.claimed[DUN.token]){ s.run=null; persist(s); toast("这张凭证已经领过。"); return; }
+  s.voucher={ id:DUN.token, diff:DUN.diff, gold:reward.gold, xp:reward.xp, pots:reward.pots.slice(), item:reward.item, taken:false };
+  s.run=null;
+  const q=qst("q9");
+  if(q.st==="active"){ q.pr=1; q.st="ready"; }
+  if(!persist(s)) toast("存档没写成。凭证还在这次打开里，请先导出。");
+  if(!G.boss) setMusicMood("town");
+  G.p.x=2.2; G.p.z=11.5; camReset(0);
+  banner("回廊通过", "先领取凭证。重复领取不会再发。");
+  openDungeon();
+}
+function claimVoucher(){
+  if(!clickOnce("voucher")) return false;
+  if(!spendFresh()) return false;
+  const s=G.save, v=s.voucher;
+  if(!v || v.taken){ toast("没有可领的通关凭证"); return false; }
+  s.claimed=s.claimed||{};
+  if(s.claimed[v.id]){ s.voucher=null; toast("这张凭证已经领过"); return false; }
+  const snap={ gold:s.gold|0, xp:s.xp|0, level:s.level|0, hp:G.p?G.p.hp:0, mp:G.p?G.p.mp:0, pots:{h:s.pots.h|0,m:s.pots.m|0}, pending:(s.pending||[]).slice(), bag:s.bag.length, clears:s.dun&&s.dun.clears||0 };
+  s.gold=snap.gold+v.gold;
+  const ups=grantXP(v.xp);
+  s.pots.h+=v.pots[0]|0; s.pots.m+=v.pots[1]|0;
+  let parked=false;
+  if(v.item){
+    if(s.bag.length>=BAG_MAX){ s.pending=s.pending||[]; s.pending.push({ id:v.id, from:"corridor", item:v.item }); parked=true; }
+    else s.bag.push(v.item);
+  }
+  s.claimed[v.id]=1; s.voucher=null; s.dun=s.dun||{}; s.dun.clears=snap.clears+1;
+  if(!persist(s)){
+    s.gold=snap.gold; s.xp=snap.xp; s.level=snap.level; s.pots.h=snap.pots.h; s.pots.m=snap.pots.m;
+    s.pending=snap.pending; if(v.item && !parked) s.bag.pop();
+    delete s.claimed[v.id]; s.voucher=v; if(s.dun) s.dun.clears=snap.clears;
+    recalcStats(); if(G.p){ G.p.hp=Math.min(snap.hp, ST.hp); G.p.mp=Math.min(snap.mp, ST.mp); }
+    toast("存档没写成，奖励已退回。"); return false;
+  }
+  toast("领取回廊奖励 +"+v.gold+" 金"+(parked?"。护符在待领取。":""));
+  if(ups) banner("等级提升", "Lv."+s.level);
+  sfx("coin"); refreshHUD(); return true;
+}
+function takePending(id){
+  if(!clickOnce("pend-"+id)) return false;
+  if(!spendFresh()) return false;
+  const s=G.save; s.pending=s.pending||[];
+  const i=s.pending.findIndex(p=>p.id===id);
+  if(i<0) return false;
+  if(s.bag.length>=BAG_MAX){ toast("背包已满，还不能取出。"); return false; }
+  const row=s.pending[i];
+  s.pending.splice(i,1); s.bag.push(row.item);
+  if(!persist(s)){ s.bag.pop(); s.pending.splice(i,0,row); toast("存档没写成，装备仍在待领取。"); return false; }
+  toast("取出 "+row.item.name); return true;
+}
+function updateDungeon(dt){
+  if(!DUN.on) return;
+  if(G.mode!=="play" || !G.p || G.p.dead){ endDungeon(G.p&&G.p.dead?"dead":"leave"); return; }
+  DUN.t-=dt;
+  if(DUN.t<=0){ DUN.t=0; endDungeon("time"); return; }
+  const alive=G.enemies.some(e=>e.dun&&!e.dead);
+  if(!alive){
+    if(DUN.wave>=DUN_DIFF[DUN.diff].waves.length){ winDungeon(); return; }
+    DUN.gap-=dt; if(DUN.gap<=0){ DUN.gap=0.45; dunSpawn(); }
+  }
+  const dx=G.p.x-DUN.cx, dz=G.p.z-DUN.cz, dist=Math.hypot(dx,dz);
+  if(dist>8.5){ G.p.x=DUN.cx+dx/dist*8.5; G.p.z=DUN.cz+dz/dist*8.5; }
+  const sec=Math.ceil(DUN.t);
+  const boss=G.enemies.some(e=>e.dunBoss&&!e.dead);
+  $("dunTxt").textContent="蚀雾回廊 · "+(DUN.diff==="hard"?"困难":"普通")+" · 第 "+Math.max(1,DUN.wave)+" / 3 波"+(boss?" · 看守":"")+" · "+sec+" 秒";
+}
+function openQuestLog(){
+  if(G.mode!=="play"||!G.save|| (G.p&&G.p.dead)) return;
+  G.paused=true; renderQuestLog(); modalOn("qLog");
+}
+function closeQuestLog(){ modalOff("qLog"); if(G.mode==="play" && !DUN.on) G.paused=false; refreshHUD(); }
+function renderQuestLog(){
+  const s=G.save, box=$("qList"); if(!box) return;
+  const main=QUESTS.filter(q=>!q.repeat), rep=QUESTS.filter(q=>q.repeat);
+  const card=q=>{
+    const e=qst(q.id), kind=q.repeat?"可重复":"主线";
+    const st={locked:"未开启",avail:"可接",active:"进行中",ready:"可提交",done:"已完成"}[e.st]||e.st;
+    const long=(q.greet&&q.greet[0])||q.progress&&q.progress[0]||"";
+    const reward=q.gold+" 金 · "+q.xp+" 经验"+(q.reward&&q.reward.pots?" · 药水 "+q.reward.pots.join("/"):"")+(q.reward&&q.reward.item?" · 装备":"");
+    const prog=q.type==="talk"?"交谈":(q.tname||"进度")+" "+(e.pr|0)+" / "+q.count;
+    const btn=e.st==="ready"?"<button type='button' data-turn='"+q.id+"'>提交</button>":(e.st==="avail"?"<button type='button' class='alt' data-acc='"+q.id+"'>接取</button>":"");
+    return "<div class='qcard'><b>"+q.title+"</b><div class='meta'>"+kind+" · "+st+" · 第 "+((e.round|0)+1)+" 轮 · "+q.where+"</div><p>"+long+"</p><div class='meta'>"+prog+"</div><div class='meta'>奖励 "+reward+( !q.repeat && (s.paid&&s.paid[q.id]) ?" · 主线已发过":"")+"</div>"+btn+"</div>";
+  };
+  const pend=(s.pending||[]).map(p=>"<div class='qcard pending'><b>"+p.item.name+"</b><div class='meta'>来自 "+p.from+"</div><button type='button' data-pend='"+p.id+"'>取出</button></div>").join("");
+  box.innerHTML="<div class='qsec'>主线</div>"+main.map(card).join("")+"<div class='qsec'>可重复</div>"+rep.map(card).join("")+(pend?"<div class='qsec'>待领取</div>"+pend:"");
+  box.querySelectorAll("[data-turn]").forEach(b=>b.addEventListener("click", ()=>{ claimQuest(QUESTS.find(q=>q.id===b.dataset.turn)); renderQuestLog(); }));
+  box.querySelectorAll("[data-acc]").forEach(b=>b.addEventListener("click", ()=>{ acceptQuest(QUESTS.find(q=>q.id===b.dataset.acc)); renderQuestLog(); }));
+  box.querySelectorAll("[data-pend]").forEach(b=>b.addEventListener("click", ()=>{ if(takePending(b.dataset.pend)) renderQuestLog(); }));
+}
+
 /* ===================== 蚀雾试炼: 5-wave timed challenge on the slope ===================== */
 const TRIAL={ on:false, wave:0, t:0, gap:0, cx:0, cz:28.5, lv:3, start:0, hudLast:"" };
 const TRIAL_WAVES=[ [["slime",5]], [["slime",4],["spike",2]], [["spike",3],["wisp",3]], [["wisp",3],["spike",3],["slime",2]], [["elite",1],["spike",3]] ];
 const TRIAL_TIME=150;
 function trialDay(){ const d=new Date(); return d.getFullYear()+"-"+(d.getMonth()+1)+"-"+d.getDate(); }
 function trialInfo(){ const t=G.save.trial||(G.save.trial={ clears:0, best:0, day:"" }); return t; }
-function canStartTrial(){ return G.mode==="play" && !TRIAL.on && !(G.boss && !G.boss.dead) && !G.p.dead && G.save.level>=4; }
+function canStartTrial(){ return G.mode==="play" && !TRIAL.on && !DUN.on && !(G.boss && !G.boss.dead) && !G.p.dead && G.save.level>=4; }
 function startTrial(){
   if(!canStartTrial()){ toast(G.save.level<4?"试炼需要 Lv.4 以上":"现在无法开始试炼"); return; }
   clearEnemies(); SPAWN.t=1e9;
@@ -4571,7 +4959,7 @@ function spawnBoss(){ if(G.boss && !G.boss.dead) return G.boss; G.boss=spawnEnem
 function startAdventure(classId, fresh){
   G.classId=classId;
   if(fresh || !G.save){ G.save=newSave(classId); persist(G.save, {replace:true}); }
-  else { migrateSave(G.save); G.save.classId=classId; persist(G.save); }
+  else { migrateSave(G.save); const abandoned=abandonStaleRun(G.save); G.save.classId=classId; persist(G.save); if(abandoned) toast("上次的蚀雾回廊中断了，没有发放奖励。"); }
   recalcStats();
   G.p={x:TOWN_CFG.spawnX,z:TOWN_CFG.spawnZ,y:0,yaw:0,vx:0,vz:0,hp:ST.hp,mp:ST.mp,dead:false,atkT:0,atkDur:0.3,spinT:0,spinTick:0,spinN:0,
     dodgeT:0,dodgeV:0,dodgeDX:0,dodgeDZ:1,dashT:0,dashV:0,dashDur:0.18,invT:0,hurtT:0,lungeT:0,lungeVX:0,lungeVZ:0};
@@ -4595,6 +4983,7 @@ function startAdventure(classId, fresh){
   const pth=charThumb(classId); $("portrait").innerHTML=pth?"<img src='"+pth+"' alt=''>":"";
   $("over").style.display="none"; $("bossbar").style.display="none";
   TRIAL.on=false; $("trialHud").style.display="none";
+  DUN.on=false; $("dunHud").classList.remove("on");
   _zoneId=""; updateZone(); refreshHUD();
   toast(fresh?"欢迎来到青岚镇，"+c.name+"！先跟着提示走两步。":"欢迎回来，"+c.name);
   if(fresh) startCoach();
@@ -4641,7 +5030,7 @@ function hitEnemy(e, dmg, nx, nz, knock, o){
   const amt=Math.max(1,Math.round(dmg*ST.mul*(crit?1.8:1)*roll));
   e.hp-=amt; e.flash=1; e.sq=Math.min(1,(o.power||0.6)+(crit?0.3:0));
   if(!e.aggro && e.state!=="intro"){ e.aggro=true; if(e.state==="return"||e.state==="idle") e.state="chase"; }
-  const kb=knock*(e.boss?0.12:e.elite?0.25:1)*(crit?1.25:1);
+  const kb=knock*(e.dun?0.05:e.boss?0.12:e.elite?0.25:1)*(crit?1.25:1);
   e.kx=nx*kb; e.kz=nz*kb;
   if(o.pop && !e.heavy) e.vy=Math.max(e.vy, o.pop*(crit?1.2:1));
   if(!e.heavy && e.state!=="intro"){ if(e.tele){ releaseDecal(e.tele); e.tele=null; } e.state="stun"; e.t=0.28+(crit?0.14:0)+(o.power||0.5)*0.12; }
@@ -4657,6 +5046,11 @@ function killEnemy(e, nx, nz){
   e.dead=true; e.deadT=0; e.flash=1; e.hp=0;
   if(e.tele){ releaseDecal(e.tele); e.tele=null; }
   if(e.label){ scene.remove(e.label); e.label.material.map.dispose(); e.label.material.dispose(); e.label=null; }
+  if(e.dun){
+    hitStop(e.dunBoss?0.12:0.06); addShake(e.dunBoss?0.7:0.28);
+    sfx(e.dunBoss?"boom":"pop");
+    return;
+  }
   notifyKill(e.type);
   const q3=qst("q3");
   if(q3.st==="active" && (e.type==="wisp"?Math.random()<0.6:(e.zone==="wood"&&Math.random()<0.15))) spawnShard(e.x, e.z);
@@ -4754,11 +5148,13 @@ function damagePlayer(amt, sx, sz){
   refreshHUD();
   if(P.hp<=0){
     P.dead=true; sfx("die"); timeSlow(0.35, 0.9);
+    if(DUN.on) endDungeon("dead");
     const tip=$("overTip"); if(tip) tip.textContent="";
     setTimeout(()=>{ if(G.p.dead) $("over").style.display="flex"; }, 1100);
   }
 }
 function resurrect(){
+  if(DUN.on) endDungeon("dead");
   const P=G.p;
   recalcStats(); P.hp=ST.hp; P.mp=ST.mp; P.dead=false; P.x=TOWN_CFG.spawnX; P.z=TOWN_CFG.spawnZ; P.yaw=0;
   P.invT=1.5; P.dodgeT=0; P.dashT=0; P.spinT=0; P.atkT=0; P.hurtT=0; LATER.length=0;
@@ -4769,6 +5165,7 @@ function resurrect(){
   $("over").style.display="none"; persist(G.save); refreshHUD(); toast("你在古井广场醒了过来"); setMusicMood("town");
 }
 function toTitle(){
+  if(DUN.on) endDungeon("leave");
   if(G.save) persist(G.save);
   $("over").style.display="none"; $("dlg").style.display="none"; G.dlg=null;
   ["bag","settings","confirm"].forEach(id=>$(id).classList.remove("on"));
@@ -4803,7 +5200,7 @@ function update(dt){
   FX_update(stopped?dt*0.12:dt);
   musicTick();
   if(G.freezeCam || !inPlay){
-    if(!G.freezeCam) updateMenuCamera(dt); updateFade(dt); if(GUIDE.g) GUIDE.g.visible=false; if(TRIAL.on) endTrial(false); if(G.tutT!=null){ G.tutT=null; G.tutAt=null; $("joy").classList.remove("tut"); $("atk").classList.remove("tut"); }
+    if(!G.freezeCam) updateMenuCamera(dt); updateFade(dt); if(GUIDE.g) GUIDE.g.visible=false; if(TRIAL.on) endTrial(false); if(DUN.on) endDungeon("leave"); if(G.tutT!=null){ G.tutT=null; G.tutAt=null; $("joy").classList.remove("tut"); $("atk").classList.remove("tut"); }
     if(G.player && G.player.visible) animBob(G.player, false, dt, G.p.atkT>0, G.p.spinT>0, G.p.dead);
     (G._cast||[]).forEach(ch=>animBob(ch,false,dt,false,false,false));
     (G._lineup||[]).forEach(ch=>animBob(ch,false,dt,false,false,false));
@@ -4897,7 +5294,7 @@ function update(dt){
     for(let j=i+1;j<G.enemies.length;j++){ const b=G.enemies[j]; if(b.dead) continue;
       const dx=b.x-a.x, dz=b.z-a.z, d=Math.hypot(dx,dz), m=(a.r+b.r)*0.9;
       if(d<m && d>0.0001){ const wa=a.boss?0.05:a.elite?0.25:0.5, wb=b.boss?0.05:b.elite?0.25:0.5, s=wa+wb, push=(m-d), nx=dx/d, nz=dz/d; a.x-=nx*push*wa/s; a.z-=nz*push*wa/s; b.x+=nx*push*wb/s; b.z+=nz*push*wb/s; } } }
-  updateSpawners(dt); updateTrial(dt);
+  updateSpawners(dt); updateTrial(dt); updateDungeon(dt);
   if((G.achT=(G.achT||0)+dt)>2){ G.achT=0; checkAchievements(); }
   G.near=null; let best=9;
   G.npcs.forEach(n=>{ const d=Math.hypot(n.x-P.x,n.z-P.z); if(d<2.6&&d<best){best=d;G.near=n;} });
@@ -4997,6 +5394,12 @@ function bindInput(){
     });
   });
   $("btnBulk").addEventListener("click", askBulk);
+  $("qLogX").addEventListener("click", closeQuestLog);
+  $("dunX").addEventListener("click", closeDungeon);
+  $("dunLeave").addEventListener("click", ()=>{
+    if(!DUN.on) return;
+    askConfirm("离开蚀雾回廊？这次战斗不会发奖励。", ()=>{ endDungeon("leave"); });
+  });
   $("coachSkip").addEventListener("click", e=>{ e.stopPropagation(); finishCoach(); });
   $("btnBack").addEventListener("click", ()=>showTitle());
   $("btnGo").addEventListener("click", beginNew);
@@ -5010,7 +5413,7 @@ function bindInput(){
     G.keys[e.code]=true;
     if(e.repeat) return;
     if(G.dlg && (e.code==="Space"||e.code==="KeyE"||e.code==="Enter"||e.code==="KeyF")){ const b=$("dlgRow").querySelector(".next"); if(b) b.click(); return; }
-    if(e.code==="Escape"){ if($("achM").classList.contains("on")) $("achX").click(); else if($("bag").classList.contains("on")) closeBag(); else if($("settings").classList.contains("on")) closeSettings(); else if(G.mode==="play") openSettings(); return; }
+    if(e.code==="Escape"){ if($("confirm").classList.contains("on")) $("cfNo").click(); else if($("qLog").classList.contains("on")) closeQuestLog(); else if($("dunM").classList.contains("on")) closeDungeon(); else if($("achM").classList.contains("on")) $("achX").click(); else if($("bag").classList.contains("on")) closeBag(); else if($("settings").classList.contains("on")) closeSettings(); else if(G.mode==="play") openSettings(); return; }
     if(e.code==="KeyB"){ if($("bag").classList.contains("on")) closeBag(); else openBag(); return; }
     if(e.code==="Space"||e.code==="KeyJ"){ tryAttack(); G.atkHeld=true; }
     if(e.code==="KeyK"||e.code==="KeyQ") trySkill(1);
@@ -5589,7 +5992,7 @@ function init(){
   uiInit();
   $("loadtip").textContent=TIPS[Math.floor(Math.random()*TIPS.length)];
   window.__mengyu={ G, GLB, TOWN, TOWN_CFG, CAM, groundAt, inTownBounds, startAdventure, tryAttack, trySkill, tryDodge, damagePlayer, hitEnemy, spawnSlime, spawnEnemy, FX, SFX, SHOTS, DROPS, LATER, camClamp,
-    ST, QUESTS, NPCS, ZONES, ALTAR, ELITE_SPOT, SPAWN, ESHOTS, LOOT, MUS, SET, gainXP, genItem, addItem, equipItem, recalcStats, usePotion, tryTalk, advDlg, closeDlg, openBag, closeBag, openSettings, closeSettings, showTitle, showSelect, selectClass, beginNew, toTitle, resurrect, xpNeed, qst, tracked, loadSave, persist, migrateSave, readSaveState, previewImport, exportSaveText, requestImport, exportCurrent, BUILD, SCHEMA, SAVE_KEY, SAVE_BAK, SAVE_BAD, clearEnemies, populateField, killEnemy, refreshHUD, drawMinimap, charThumb, camera, scene, startTrial, endTrial, TRIAL, checkAchievements, achHtml, ACH, bossLevel, tickCoach, finishCoach, upgradeSkill, takeTalent, confirmRespec, askRespec, openGrowth, closeGrowth, renderGrowth, outgoing, cdScale, combatMods, skillRank, talentBudget, respecCost, inspectGrowth, inspectGear, enhanceItem, toggleLock, sellItem, equipItem, addItem, bulkQuote, confirmBulk, effStat, sellValue, enhanceCost, get camera(){ return camera; }, get renderer(){ return renderer; } };
+    ST, QUESTS, NPCS, ZONES, ALTAR, ELITE_SPOT, SPAWN, ESHOTS, LOOT, MUS, SET, gainXP, grantXP, genItem, addItem, equipItem, recalcStats, usePotion, tryTalk, advDlg, closeDlg, openBag, closeBag, openSettings, closeSettings, showTitle, showSelect, selectClass, beginNew, toTitle, resurrect, xpNeed, qst, tracked, loadSave, persist, migrateSave, readSaveState, previewImport, exportSaveText, requestImport, exportCurrent, BUILD, SCHEMA, SAVE_KEY, SAVE_BAK, SAVE_BAD, SAVE_NEWER, clearEnemies, populateField, killEnemy, refreshHUD, drawMinimap, charThumb, camera, scene, startTrial, endTrial, TRIAL, DUN, DUN_DIFF, openDungeon, closeDungeon, startDungeon, endDungeon, claimVoucher, takePending, previewDungeon, growthMul, openQuestLog, closeQuestLog, claimQuest, acceptQuest, checkAchievements, achHtml, ACH, bossLevel, tickCoach, finishCoach, upgradeSkill, takeTalent, confirmRespec, askRespec, openGrowth, closeGrowth, renderGrowth, outgoing, cdScale, combatMods, skillRank, talentBudget, respecCost, inspectGrowth, inspectGear, enhanceItem, toggleLock, sellItem, equipItem, addItem, bulkQuote, confirmBulk, effStat, sellValue, enhanceCost, get camera(){ return camera; }, get renderer(){ return renderer; } };
   loadCharacterModels(()=>{ upgradeVisuals(); });
   window.addEventListener("resize", ()=>{ uiLayout(); });
 
