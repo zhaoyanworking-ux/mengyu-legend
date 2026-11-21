@@ -146,7 +146,7 @@ const grow=await ev(`(async()=>{
   const stale=m.persist(m.G.save);
   const disk2=JSON.parse(localStorage.getItem(m.SAVE_KEY));
   const newer=JSON.stringify(disk2);
-  disk2.ver=4; localStorage.setItem(m.SAVE_KEY, JSON.stringify(disk2));
+  disk2.ver=5; localStorage.setItem(m.SAVE_KEY, JSON.stringify(disk2));
   const loaded=m.loadSave();
   const untouched=localStorage.getItem(m.SAVE_KEY)===JSON.stringify(disk2);
   const badRank=m.previewImport(JSON.stringify({format:"mengyu-legend-save",schema:3,save:{ver:3,classId:"swordsman",level:12,hasSave:true,growth:{skills:{swordsman:{atk:9}},talents:{}}}}));

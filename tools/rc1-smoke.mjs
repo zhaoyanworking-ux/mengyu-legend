@@ -93,15 +93,15 @@ const save = await ev(`(()=>{
   localStorage.setItem(m.SAVE_KEY, raw);
   return out;
 })()`);
-check("ver2 keeps level gold story and migrates to schema 3", save.keep.level===12 && save.keep.gold===777 && save.keep.story===true && save.keep.q5==="done" && save.keep.ver===3 && save.rawVer===3, JSON.stringify(save.keep));
+check("ver2 keeps level gold story and migrates to schema 4", save.keep.level===12 && save.keep.gold===777 && save.keep.story===true && save.keep.q5==="done" && save.keep.ver===4 && save.rawVer===4, JSON.stringify(save.keep));
 check("backup rotates previous good save", save.bakIsOld===true);
 check("corrupt primary restores backup and keeps the bad text", save.recovered===true && save.badKept===true);
 check("double corrupt does not invent or delete the raw", save.corruptNull===true && save.corruptKept===true);
 check("newer schema is not loaded or rewritten", save.newerNull===true && save.newerUntouched===true);
 check("quota failure does not replace the save", save.quotaFalse===true && save.quotaKept===true);
 check("import rejects junk, newer schema and oversized bag", save.import.bad===false && save.import.newer===true && save.import.bag===false && save.import.ok===true);
-check("export text says it is not a cloud save", save.exportNote===true && save.build==="RC-2");
-check("legacy save keeps story and quest instead of wiping", save.legacy.story===true && save.legacy.q4==="active" && save.legacy.ver===3);
+check("export text says it is not a cloud save", save.exportNote===true && save.build==="RC-3");
+check("legacy save keeps story and quest instead of wiping", save.legacy.story===true && save.legacy.q4==="active" && save.legacy.ver===4);
 
 const ui = await ev(`(async()=>{
   const m=window.__mengyu;
@@ -134,7 +134,7 @@ const ui = await ev(`(async()=>{
   return {cont, note, ver, exp, imp, contB, open, afterNo, importedLv:imported&&imported.level, importedClass:imported&&imported.classId, cloud:note.includes("不是云存档")};
 })()`);
 check("continue uses the saved level", ui.cont===9, "level "+ui.cont);
-check("title names RC-2 and local save", ui.ver==="RC-2" && ui.cloud===true, ui.note);
+check("title names RC-3 and local save", ui.ver==="RC-3" && ui.cloud===true, ui.note);
 check("export and import targets are at least 44px", ui.exp.h>=44 && ui.exp.w>=44 && ui.imp.h>=44 && ui.contB.h>=44, JSON.stringify({exp:ui.exp.h,imp:ui.imp.h,cont:ui.contB.h}));
 check("import confirm cancel keeps the save and accept writes it", ui.open===true && ui.afterNo===true && ui.importedLv===4 && ui.importedClass==="mage");
 

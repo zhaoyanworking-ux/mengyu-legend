@@ -74,9 +74,10 @@
   #mpfill{background:linear-gradient(#a8dcff,#4a94f0 55%,#2c64cc)}
   #bars.shake{animation:hpShake .34s linear}
   @keyframes hpShake{0%{transform:translateX(0)}15%{transform:translateX(-6px)}35%{transform:translateX(5px)}55%{transform:translateX(-3px)}75%{transform:translateX(2px)}100%{transform:none}}
-  #gold{position:absolute;left:calc(var(--sl) + var(--edge) + calc(var(--u)*72px));top:calc(var(--st) + var(--edge) + calc(var(--u)*54px));height:calc(var(--u)*22px);padding:0 calc(var(--u)*10px) 0 calc(var(--u)*3px);border-radius:99px;display:flex;align-items:center;gap:calc(var(--u)*4px);
+  #gold{position:absolute;left:calc(var(--sl) + var(--edge) + calc(var(--u)*72px));top:calc(var(--st) + var(--edge) + calc(var(--u)*54px));height:calc(var(--u)*22px);max-width:min(42vw,calc(var(--u)*132px));padding:0 calc(var(--u)*10px) 0 calc(var(--u)*3px);border-radius:99px;display:flex;align-items:center;gap:calc(var(--u)*4px);
     background:linear-gradient(rgba(30,40,80,.62),rgba(20,26,56,.55));border:1px solid rgba(255,222,150,.45);font-size:calc(var(--u)*12.5px);font-weight:800;color:#ffe9a8;text-shadow:0 1px 0 rgba(0,0,0,.6)}
-  #gold img{width:calc(var(--u)*18px);height:calc(var(--u)*18px)}
+  #gold img{width:calc(var(--u)*18px);height:calc(var(--u)*18px);flex:none}
+  #gold{overflow:hidden} #goldv{min-width:0;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 
   /* ===== quest card ===== */
   #quest{position:absolute;left:calc(var(--sl) + var(--edge));top:calc(var(--st) + var(--edge) + calc(var(--u)*78px));width:min(calc(var(--u)*188px),62vw);min-height:44px;font-size:calc(var(--u)*12px);line-height:1.45;pointer-events:auto;padding:calc(var(--u)*7px) calc(var(--u)*10px) calc(var(--u)*8px) calc(var(--u)*34px);cursor:pointer;
@@ -276,11 +277,12 @@
     background:radial-gradient(ellipse at center,rgba(20,30,64,.38),rgba(10,14,34,.66));
     padding:calc(var(--st) + calc(var(--u)*12px)) calc(var(--sr) + calc(var(--u)*10px)) calc(var(--sb) + calc(var(--u)*12px)) calc(var(--sl) + calc(var(--u)*10px))}
   .modal.on{display:flex;animation:fadeIn .2s ease}
+  .modal.on:not(.closing), .modal.on:not(.closing) .sheet{opacity:1 !important}
   .modal.on .sheet{animation:sheetIn .3s cubic-bezier(.2,1.25,.4,1)}
   .modal.closing{animation:fadeOut .18s ease forwards} .modal.closing .sheet{animation:sheetOut .18s ease forwards}
-  @keyframes fadeIn{from{opacity:0}} @keyframes fadeOut{to{opacity:0}}
-  @keyframes sheetIn{from{opacity:0;transform:translateY(16px) scale(.94)}to{opacity:1;transform:none}}
-  @keyframes sheetOut{to{opacity:0;transform:translateY(10px) scale(.96)}}
+  @keyframes fadeIn{from{opacity:.01}to{opacity:1}} @keyframes fadeOut{to{opacity:0}}
+  @keyframes sheetIn{from{transform:translateY(16px)}to{transform:none}}
+  @keyframes sheetOut{to{opacity:0;transform:translateY(10px)}}
   .sheet{position:relative;width:min(96vw,560px);max-height:100%;overflow:auto;overscroll-behavior:contain;touch-action:pan-y;-webkit-overflow-scrolling:touch;color:var(--ink);
     border-radius:calc(var(--u)*22px);background:linear-gradient(#fffdf7,#f7ecd6);border:calc(var(--u)*2px) solid var(--goldl);
     box-shadow:0 0 0 calc(var(--u)*4px) rgba(255,250,236,.5),0 calc(var(--u)*18px) calc(var(--u)*40px) rgba(10,18,50,.5),inset 0 0 0 calc(var(--u)*5px) rgba(242,207,134,.16)}
@@ -293,7 +295,7 @@
   .xbtn{flex:none;width:44px;height:44px;border-radius:50%;padding:0;border:calc(var(--u)*2px) solid #fff3d0;background:radial-gradient(circle at 40% 30%,#fffef8,#f4e2bc) ;box-shadow:0 calc(var(--u)*2px) calc(var(--u)*6px) rgba(20,40,90,.35),inset 0 -2px 0 rgba(180,130,60,.25);
     font-size:0;display:flex;align-items:center;justify-content:center;transition:transform .07s}
   .xbtn::before{content:"";width:46%;height:46%;background:var(--xic) center/contain no-repeat}
-  .xbtn:active{transform:scale(.9)}
+  .xbtn:active{filter:brightness(.94)}
   .sec{padding:calc(var(--u)*6px) calc(var(--u)*18px) calc(var(--u)*14px)}
   .sec h3{display:flex;align-items:center;gap:calc(var(--u)*8px);font-size:calc(var(--u)*13px);color:#b07a30;margin:calc(var(--u)*12px) 0 calc(var(--u)*2px);font-weight:800;letter-spacing:.1em}
   .sec h3::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,var(--goldl),transparent)}
@@ -315,7 +317,7 @@
   /* ===== bag ===== */
   #bag .sheet{width:min(96vw,560px)}
   #bagTabs{display:flex;gap:calc(var(--u)*4px);padding:calc(var(--u)*10px) calc(var(--u)*14px) calc(var(--u)*2px)}
-  #bagTabs button{flex:1;min-height:40px;border:0;border-radius:calc(var(--u)*12px) calc(var(--u)*12px) calc(var(--u)*4px) calc(var(--u)*4px);font-family:var(--fd);font-size:calc(var(--u)*14px);letter-spacing:.08em;color:#a77a3e;background:linear-gradient(#f6ead0,#ecdcba);box-shadow:inset 0 -2px 0 rgba(180,130,60,.2)}
+  #bagTabs button{flex:1;min-height:44px;border:0;border-radius:calc(var(--u)*12px) calc(var(--u)*12px) calc(var(--u)*4px) calc(var(--u)*4px);font-family:var(--fd);font-size:calc(var(--u)*14px);letter-spacing:.08em;color:#a77a3e;background:linear-gradient(#f6ead0,#ecdcba);box-shadow:inset 0 -2px 0 rgba(180,130,60,.2)}
   #bagTabs button.on{color:#fff;text-shadow:0 1px 0 #1d5aa0;background:linear-gradient(#8fd0fa,#4a98e6);box-shadow:inset 0 calc(var(--u)*2px) 0 rgba(255,255,255,.5),0 calc(var(--u)*2px) calc(var(--u)*6px) rgba(30,80,160,.3)}
   #bagTop{display:flex;gap:calc(var(--u)*10px);padding:calc(var(--u)*8px) calc(var(--u)*14px) calc(var(--u)*6px);align-items:stretch}
   #eqSlots{display:flex;flex-direction:column;gap:calc(var(--u)*6px)}
@@ -325,11 +327,12 @@
   #statBox{flex:1;display:grid;grid-template-columns:1fr 1fr;gap:calc(var(--u)*4px) calc(var(--u)*8px);align-content:start;background:rgba(255,255,255,.62);border-radius:calc(var(--u)*14px);padding:calc(var(--u)*8px) calc(var(--u)*10px);font-size:calc(var(--u)*12.5px);border:1px solid rgba(226,184,102,.55)}
   #statBox .hd{grid-column:1/-1;display:flex;justify-content:space-between;align-items:baseline;font-family:var(--fd);font-size:calc(var(--u)*16px);color:var(--brown);border-bottom:1px dashed rgba(200,150,70,.4);padding-bottom:calc(var(--u)*3px);margin-bottom:calc(var(--u)*2px)}
   #statBox .hd small{font-family:var(--fb);font-size:calc(var(--u)*11.5px);font-weight:800;color:#c0701a}
-  #statBox .st{display:flex;justify-content:space-between;color:var(--ink2);font-weight:700}
-  #statBox .st b{color:var(--ink);font-weight:900}
+  #statBox .st{display:flex;justify-content:space-between;gap:6px;min-width:0;color:var(--ink2);font-weight:700}
+  #statBox .st.wide{grid-column:1/-1}
+  #statBox .st b{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--ink);font-weight:900}
   .slot{position:relative;width:calc(var(--u)*56px);height:calc(var(--u)*56px);min-width:44px;min-height:44px;border-radius:calc(var(--u)*12px);padding:0;display:flex;align-items:center;justify-content:center;border:calc(var(--u)*2px) solid #cbb894;
     background:linear-gradient(#f8efdc,#ecdcbc);box-shadow:inset 0 calc(var(--u)*2px) 0 rgba(255,255,255,.7),inset 0 calc(var(--u)*-3px) calc(var(--u)*6px) rgba(150,110,50,.15),0 calc(var(--u)*2px) calc(var(--u)*4px) rgba(120,80,20,.15);transition:transform .08s}
-  .slot:active{transform:scale(.93)}
+  .slot:active{filter:brightness(.96)}
   .slot img{width:72%;height:72%;filter:drop-shadow(0 calc(var(--u)*2px) calc(var(--u)*1px) rgba(40,20,0,.25))}
   .slot .tag{position:absolute;left:0;right:0;bottom:calc(var(--u)*2px);font-size:calc(var(--u)*9.5px);color:#9a7a4a;text-align:center;font-weight:800}
   .slot .lv{position:absolute;right:calc(var(--u)*3px);top:calc(var(--u)*1px);font-size:calc(var(--u)*9.5px);font-weight:900;color:#4a3010;text-shadow:0 0 2px #fff,0 0 2px #fff}
@@ -345,12 +348,21 @@
   .r3::before,.r4::before{content:"";position:absolute;inset:0;border-radius:inherit;background:linear-gradient(115deg,transparent 35%,rgba(255,255,255,.65) 50%,transparent 65%) -100% 0/250% 100% no-repeat;animation:slotShine 3.2s ease-in-out infinite;pointer-events:none}
   @keyframes slotShine{0%,60%{background-position:-100% 0}100%{background-position:200% 0}}
   .c0{color:#8a8070}.c1{color:#2a9a40}.c2{color:#2a6ad0}.c3{color:#8a3ad8}.c4{color:#e07010}
+  #bagTools{display:flex;flex-direction:column;gap:8px;padding:8px 14px 0}
+  #rarRow,#sortRow{display:flex;flex-wrap:wrap;gap:6px}
+  #rarRow button,#sortRow button,#btnBulk{min-height:44px;min-width:44px;border:0;border-radius:999px;padding:0 12px;font-weight:800;color:#6a4a22;background:linear-gradient(#fffdf6,#f3e2bf);box-shadow:inset 0 0 0 1.5px #e7c98a,0 2px 0 #d6b778}
+  #rarRow button.on,#sortRow button.on{color:#fff;text-shadow:0 1px 0 #8a4a10;background:linear-gradient(#ffd27a,#f0a03a)}
+  #btnBulk{align-self:stretch;white-space:normal;line-height:1.25;padding:8px 14px}
+  #itemTip .sub{color:#7a6248;font-size:calc(var(--u)*12px);font-weight:700;margin-top:2px}
+  #itemTip .row button:disabled{opacity:1;filter:none;color:#8a6840;background:linear-gradient(#f7f1e4,#e7d7b8);box-shadow:inset 0 0 0 1.5px #e4d2ae;cursor:default}
+  .slot .lock{position:absolute;left:2px;bottom:2px;font-size:10px;font-weight:900;color:#fff;background:#2a3f86;border-radius:99px;padding:0 4px;line-height:14px}
   #bagGrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(calc(var(--u)*56px),1fr));gap:calc(var(--u)*7px);padding:calc(var(--u)*4px) calc(var(--u)*14px) calc(var(--u)*14px)}
   #bagGrid .slot{width:auto;aspect-ratio:1/1;height:auto}
   #itemTip{margin:calc(var(--u)*2px) calc(var(--u)*14px) calc(var(--u)*10px);border-radius:calc(var(--u)*16px);overflow:hidden;font-size:calc(var(--u)*13px);line-height:1.6;display:none;background:#fff;border:calc(var(--u)*2px) solid var(--tc,#e2b866);box-shadow:0 calc(var(--u)*6px) calc(var(--u)*16px) rgba(80,50,10,.2);animation:sheetIn .22s ease}
-  #itemTip .th{display:flex;align-items:center;gap:calc(var(--u)*10px);padding:calc(var(--u)*8px) calc(var(--u)*12px);background:linear-gradient(90deg,var(--tb,#f6ead0),rgba(255,255,255,0))}
+  #itemTip .th{display:flex;align-items:center;gap:calc(var(--u)*10px);padding:calc(var(--u)*8px) calc(var(--u)*12px);background:linear-gradient(90deg,var(--tb,#f6ead0),rgba(255,255,255,0));min-width:0}
+  #itemTip .th>div{min-width:0;flex:1}
   #itemTip .th .ib{width:calc(var(--u)*44px);height:calc(var(--u)*44px);flex:none}
-  #itemTip .nm{font-family:var(--fd);font-size:calc(var(--u)*17px);letter-spacing:.04em}
+  #itemTip .nm{font-family:var(--fd);font-size:calc(var(--u)*17px);letter-spacing:.04em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%}
   #itemTip .meta{font-size:calc(var(--u)*11.5px);color:var(--ink2);font-weight:700}
   #itemTip .tb{padding:calc(var(--u)*4px) calc(var(--u)*12px) calc(var(--u)*10px)}
   #itemTip .stl{display:flex;flex-wrap:wrap;gap:calc(var(--u)*4px) calc(var(--u)*14px);font-weight:800;color:var(--ink)}
@@ -484,7 +496,7 @@
   #playHud{display:none}
   .confirm .sheet{width:min(86vw,380px);text-align:center;padding-bottom:calc(var(--u)*16px)}
   .confirm .sheet h2{justify-content:center}
-  .confirm p{padding:calc(var(--u)*4px) calc(var(--u)*20px);font-size:calc(var(--u)*14.5px);line-height:1.7}
+  .confirm p{padding:calc(var(--u)*4px) calc(var(--u)*20px);font-size:calc(var(--u)*14.5px);line-height:1.7;overflow-wrap:anywhere}
   .confirm .row{display:flex;gap:calc(var(--u)*10px);padding:0 calc(var(--u)*18px)}
   .confirm .row button{flex:1}
 
@@ -522,10 +534,11 @@
   html.land #dlg{width:min(62vw,600px)}
   html.land #achList{grid-template-columns:1fr 1fr}
   html.land #achM .sheet{width:min(92vw,760px)}
-  html.land #bag .sheet{width:min(94vw,860px);display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);grid-template-rows:auto auto auto 1fr;align-items:start}
+  html.land #bag .sheet{width:min(94vw,860px);display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);grid-template-rows:auto auto minmax(0,1fr) auto;align-items:start}
   html.land #bag h2{grid-column:1/-1}
-  html.land #bagTop{grid-column:1;grid-row:2} html.land .potrow{grid-column:1;grid-row:3} html.land #itemTip{grid-column:1;grid-row:4}
-  html.land #bagTabs{grid-column:2;grid-row:2} html.land #bagGrid{grid-column:2;grid-row:3/5;grid-template-columns:repeat(6,1fr)}
+  html.land #bagTop{grid-column:1;grid-row:2;min-width:0} html.land .potrow{grid-column:1;grid-row:3;min-width:0} html.land #itemTip{grid-column:1;grid-row:4;min-width:0}
+  html.land #bagTabs{grid-column:2;grid-row:2;min-width:0} html.land #bagTools{grid-column:2;grid-row:4;min-width:0}
+  html.land #bagGrid{grid-column:2;grid-row:3;min-width:0;min-height:0;overflow:auto;align-self:stretch;grid-template-columns:repeat(6,1fr)}
   html.land #settings .sheet{width:min(92vw,780px)}
   html.land #settings .sec{display:grid;grid-template-columns:1fr 1fr;column-gap:calc(var(--u)*26px)}
   html.land #settings .sec h3{grid-column:auto}
@@ -566,8 +579,9 @@
         <button id="btnReload" type="button" class="gray" style="display:none">重新加载</button>
       </div>
       <p id="saveNote">存档只在这台浏览器里，不是云存档。</p>
+      <button id="btnRestore" type="button" class="gray" style="display:none">恢复被挪走的存档</button>
     </div>
-    <div class="copy">萌域传说 · 青岚篇</div><div class="ver" id="buildTag">RC-2</div>
+    <div class="copy">萌域传说 · 青岚篇</div><div class="ver" id="buildTag">RC-3</div>
   </div>
   <div id="select">
     <div class="selTop"><h1>选择职业</h1></div>
@@ -623,6 +637,11 @@
     <div class="potrow" id="potRow"></div>
     <div id="itemTip"></div>
     <div id="bagTabs"><button type="button" data-t="all" class="on">全部</button><button type="button" data-t="weapon">武器</button><button type="button" data-t="armor">护甲</button><button type="button" data-t="acc">饰品</button></div>
+    <div id="bagTools">
+      <div id="rarRow"></div>
+      <div id="sortRow"></div>
+      <button id="btnBulk" type="button">批量出售</button>
+    </div>
     <div id="bagGrid"></div>
   </div></div>
   <div id="growth" class="modal"><div class="sheet">
@@ -677,9 +696,9 @@ const SAVE_KEY = "MengYuLegend_Save_v1";
 const SAVE_BAK = "MengYuLegend_Save_v1.bak";
 const SAVE_BAD = "MengYuLegend_Save_v1.bad";
 const SAVE_NEWER = "MengYuLegend_Save_v1.newer";
-const SCHEMA = 3;
+const SCHEMA = 4;
 const SAVE_FORMAT = "mengyu-legend-save";
-const BUILD = { name:"RC-2", note:"本地存档，不是云存档" };
+const BUILD = { name:"RC-3", note:"本地存档，不是云存档" };
 const QST_ST = { locked:1, avail:1, active:1, ready:1, done:1 };
 
 const CLASSES = {
@@ -718,9 +737,9 @@ function readSaveState(repair){
   const primaryText=storeGet(SAVE_KEY);
   const primary=parseJSON(primaryText);
   if(isNewerSave(primary)) return { save:null, note:"newer", raw:primaryText };
-  if(primary && (primary.ver===2 || primary.ver===SCHEMA || primary.level || primary.quests || primary.hasSave)) return { save:migrateSave(primary), note:"", raw:primaryText };
+  if(primary && ((typeof primary.ver==="number" && primary.ver>=2 && primary.ver<=SCHEMA) || primary.level || primary.quests || primary.hasSave)) return { save:migrateSave(primary), note:"", raw:primaryText };
   const bak=parseJSON(storeGet(SAVE_BAK));
-  if(bak && !isNewerSave(bak) && (bak.ver===2 || bak.ver===SCHEMA || bak.level || bak.quests || bak.hasSave)){
+  if(bak && !isNewerSave(bak) && ((typeof bak.ver==="number" && bak.ver>=2 && bak.ver<=SCHEMA) || bak.level || bak.quests || bak.hasSave)){
     const save=migrateSave(bak);
     if(repair){
       try{ if(primaryText && !primary) storeSet(SAVE_BAD, primaryText); }catch(e){}
@@ -781,6 +800,8 @@ function previewImport(text){
     const bad=inspectGrowth(wrap.save.growth, wrap.save.level|0||1);
     if(!bad.ok) return bad;
   }
+  const gear=inspectGear(wrap.save);
+  if(!gear.ok) return gear;
   const save=migrateSave(JSON.parse(JSON.stringify(wrap.save)));
   if(!save || save._newer || !CLASSES[save.classId]) return { ok:false, reason:"这份备份无法在当前版本使用" };
   return { ok:true, save };
@@ -2546,19 +2567,25 @@ function initViewport(){
   });
 }
 /* ---------- motion helpers ---------- */
+function fmtGold(n){
+  n=Math.round(+n||0); const sign=n<0?"-":"", a=Math.abs(n);
+  if(a<100000) return sign+String(a);
+  if(a<100000000){ const w=a/10000; return sign+(w>=100?String(Math.round(w)):String(Math.round(w*10)/10))+"万"; }
+  const y=a/100000000; return sign+(y>=100?String(Math.round(y)):String(Math.round(y*100)/100))+"亿";
+}
 function countUp(el, to, dur){
-  if(!el) return; const from=+(el.dataset.v||0); el.dataset.v=to;
-  if(from===to){ el.textContent=to; return; }
+  if(!el) return; const from=+(el.dataset.v||0); el.dataset.v=to; el.title=String(Math.round(+to||0));
+  if(from===to){ el.textContent=fmtGold(to); return; }
   const t0=performance.now(); dur=dur||450;
-  const step=n=>{ const k=Math.min(1,(n-t0)/dur), e=1-Math.pow(1-k,3); el.textContent=Math.round(from+(to-from)*e); if(k<1) requestAnimationFrame(step); };
+  const step=n=>{ const k=Math.min(1,(n-t0)/dur), e=1-Math.pow(1-k,3); el.textContent=fmtGold(from+(to-from)*e); if(k<1) requestAnimationFrame(step); };
   requestAnimationFrame(step);
 }
 function pressFx(root){
   root.addEventListener("pointerdown", e=>{ const b=e.target.closest&&e.target.closest("button"); if(!b || b.disabled) return; if(!b.closest("#atk,.skb")){ try{ sfx("ui"); }catch(_){} } }, true);
 }
 let releasePointers=()=>{};
-function modalOn(id){ releasePointers(); const m=$(id); if(!m) return; clearTimeout(m._t); m.classList.remove("closing"); m.classList.add("on"); }
-function modalOff(id){ const m=$(id); if(!m||!m.classList.contains("on")) return; m.classList.add("closing"); clearTimeout(m._t); m._t=setTimeout(()=>{ m.classList.remove("on","closing"); },170); }
+function modalOn(id){ releasePointers(); const m=$(id); if(!m) return; clearTimeout(m._t); m.classList.remove("closing","on"); m.style.opacity=""; const sh=m.querySelector(".sheet"); if(sh) sh.style.opacity=""; void m.offsetWidth; m.classList.add("on"); if(typeof renderCoach==="function") renderCoach(); }
+function modalOff(id){ const m=$(id); if(!m||!m.classList.contains("on")) return; m.classList.add("closing"); clearTimeout(m._t); m._t=setTimeout(()=>{ m.classList.remove("on","closing"); if(typeof renderCoach==="function") renderCoach(); },170); }
 function rangeFill(el){ if(!el) return; const f=(el.value-el.min)/(el.max-el.min)*100; el.style.setProperty("--fill", f+"%"); }
 function uiInit(){
   initViewport();
@@ -2621,7 +2648,47 @@ function genItem(lv, rar, slot, cls){
     else it.crit=Math.round((it.crit+1.5)*10)/10;
   }
   it.price=Math.round((6+lv*3)*m*m);
+  it.plus=0; it.locked=false; it.enhSpent=0;
   return it;
+}
+const PLUS_MAX=5, PLUS_RATE=0.06;
+function tidyItem(it){
+  if(!it || typeof it!=="object") return null;
+  if(it.slot!=="weapon" && it.slot!=="armor" && it.slot!=="acc") return null;
+  if(!it.uid) it.uid="kept-"+Math.random().toString(36).slice(2,8);
+  it.plus=Math.max(0, Math.min(PLUS_MAX, it.plus|0));
+  it.locked=it.locked===true;
+  const spent=+it.enhSpent;
+  it.enhSpent=(Number.isFinite(spent)&&spent>0)?Math.min(1000000000, Math.round(spent)):0;
+  return it;
+}
+function inspectGear(save){
+  const list=[...(Array.isArray(save.bag)?save.bag:[]), ...((save.equip&&[save.equip.weapon,save.equip.armor,save.equip.acc])||[])];
+  for(const it of list){
+    if(!it) continue;
+    if(it.plus!=null){ const n=+it.plus; if(!Number.isFinite(n)||n<0||n>PLUS_MAX||Math.floor(n)!==n) return {ok:false, reason:"强化等级必须是 0 到 5 的整数，已拒绝导入"}; }
+    if(it.locked!=null && typeof it.locked!=="boolean") return {ok:false, reason:"锁定标记无效，已拒绝导入"};
+    if(it.enhSpent!=null && (!Number.isFinite(+it.enhSpent) || it.enhSpent<0)) return {ok:false, reason:"强化花费无效，已拒绝导入"};
+  }
+  return {ok:true};
+}
+function itemPlus(it){ const n=it&&it.plus|0; return Math.max(0, Math.min(PLUS_MAX, Number.isFinite(n)?n:0)); }
+function effStat(it, key){
+  const base=+(it&&it[key]||0); if(!Number.isFinite(base)) return 0;
+  return Math.round(base*(1+PLUS_RATE*itemPlus(it))*10)/10;
+}
+function itemCounts(it){ return it && it.slot==="weapon" && it.cls && it.cls!==G.classId ? false : true; }
+function enhanceCost(it){
+  const p=itemPlus(it); if(p>=PLUS_MAX) return 0;
+  const rar=Math.max(0, Math.min(4, it.rar|0));
+  return Math.round((20+(it.lv|0)*8)*(p+1)*(RAR[rar]?RAR[rar].m:1));
+}
+function enhanceNeed(it){ return (it.lv|0)+itemPlus(it); }
+function sellValue(it){ return Math.round((it.price||0)*0.6)+Math.round((it.enhSpent||0)*0.3); }
+function wornSlot(it){
+  if(!it||!G.save||!G.save.equip) return "";
+  const k=it.slot; const cur=G.save.equip[k];
+  return cur&&cur.uid===it.uid ? k : "";
 }
 function itemIcon(it){ return icon("i_"+(it.slot==="weapon"?SKILL_ICONS[it.cls||"swordsman"][0]:it.slot)); }
 function itemStatsText(it){
@@ -2632,7 +2699,10 @@ const ST={ hp:160, mp:50, atk:18, def:1, crit:10, mul:1, power:0 };
 function recalcStats(){
   const c=CLASSES[G.classId]||CLASSES.swordsman, s=G.save, L=s&&s.level?s.level:1;
   let hp=c.hp*(1+0.12*(L-1)), mp=c.mp*(1+0.06*(L-1)), atk=c.atk*(1+0.09*(L-1)), def=L, crit=10;
-  if(s && s.equip) ["weapon","armor","acc"].forEach(k=>{ const it=s.equip[k]; if(!it) return; hp+=it.hp||0; mp+=it.mp||0; atk+=it.atk||0; def+=it.def||0; crit+=it.crit||0; });
+  if(s && s.equip) ["weapon","armor","acc"].forEach(k=>{
+    const it=s.equip[k]; if(!it || !itemCounts(it)) return;
+    hp+=effStat(it,"hp"); mp+=effStat(it,"mp"); atk+=effStat(it,"atk"); def+=effStat(it,"def"); crit+=effStat(it,"crit");
+  });
   const gm=combatMods(G.classId);
   hp*=gm.hp; mp*=gm.mp;
   ST.hp=Math.round(hp); ST.mp=Math.round(mp); ST.atk=Math.round(atk); ST.def=Math.round(def); ST.crit=Math.min(60,Math.round(crit*10)/10); ST.mul=ST.atk/c.atk;
@@ -2949,9 +3019,9 @@ function migrateSave(s){
   s.pots=s.pots&&typeof s.pots==="object"?s.pots:{h:0,m:0};
   s.pots.h=Math.max(0, Math.min(999, s.pots.h|0)); s.pots.m=Math.max(0, Math.min(999, s.pots.m|0));
   if(!Array.isArray(s.bag)) s.bag=[];
-  s.bag=s.bag.filter(it=>it && typeof it==="object" && it.slot).map(it=>{ if(!it.uid) it.uid="kept-"+Math.random().toString(36).slice(2,8); return it; });
+  s.bag=s.bag.map(tidyItem).filter(Boolean);
   s.equip=s.equip&&typeof s.equip==="object"?s.equip:{weapon:null,armor:null,acc:null};
-  ["weapon","armor","acc"].forEach(k=>{ if(s.equip[k] && typeof s.equip[k]!=="object") s.equip[k]=null; });
+  ["weapon","armor","acc"].forEach(k=>{ s.equip[k]=tidyItem(s.equip[k]); });
   if(!s.quests || typeof s.quests!=="object") s.quests=newQuestState();
   QUESTS.forEach(q=>{
     const e=questEntry(q, s.quests[q.id]);
@@ -2965,22 +3035,99 @@ function migrateSave(s){
 function newQuestState(){ const o={}; QUESTS.forEach(q=>o[q.id]={ st:q.id==="q1"?"avail":"locked", pr:0 }); return o; }
 const BAG_MAX=30;
 function addItem(it, silent){
-  const s=G.save;
-  if(s.bag.length>=BAG_MAX){ const g=Math.round(it.price*0.6); s.gold+=g; if(!silent) toast("背包已满，"+it.name+" 自动出售 +"+g+" 金"); return false; }
+  const s=G.save; if(!s||!it) return false;
+  if(s.bag.length>=BAG_MAX){ if(!silent) toast("背包已满（"+BAG_MAX+"）。这件没有卖掉，也没有换成金币。"); return false; }
   s.bag.push(it); G.saveDirty=true; G.bagNew=true;
   if(!silent){ const up=(typeof isUpgrade==="function")&&isUpgrade(it); toast("获得 <span class='c"+it.rar+"'>["+RAR[it.rar].n+"] "+it.name+"</span>"+(up?" <b style='color:#8dff9a'>▲更强</b>":""), true); }
   return true;
 }
 function equipItem(uid){
-  const s=G.save, i=s.bag.findIndex(x=>x.uid===uid); if(i<0) return;
-  const it=s.bag[i]; if(it.slot==="weapon" && it.cls && it.cls!==G.classId){ toast("职业不符，无法装备"); return; }
-  const old=s.equip[it.slot]; s.bag.splice(i,1); if(old) s.bag.splice(i,0,old);
-  s.equip[it.slot]=it; const hpF=G.p.hp/ST.hp; recalcStats(); G.p.hp=Math.max(1,Math.round(ST.hp*hpF));
-  persist(s); sfx("equip"); refreshHUD();
+  const s=G.save; if(!s||!spendFresh()) return false;
+  const i=s.bag.findIndex(x=>x.uid===uid); if(i<0){ toast("这件装备已经不在背包里"); return false; }
+  const it=s.bag[i]; if(it.slot==="weapon" && it.cls && it.cls!==G.classId){ toast("职业不符，无法装备"); return false; }
+  const old=s.equip[it.slot];
+  if(old && s.bag.length>=BAG_MAX){ toast("背包已满，不能把当前装备换下来。"); return false; }
+  s.bag.splice(i,1); if(old) s.bag.splice(i,0,old);
+  s.equip[it.slot]=it; const hpF=G.p&&ST.hp?G.p.hp/ST.hp:1; recalcStats(); if(G.p) G.p.hp=Math.max(1,Math.round(ST.hp*hpF));
+  if(!persist(s)){ s.equip[it.slot]=old||null; s.bag.splice(i,1); s.bag.splice(i,0,it); recalcStats(); toast("存档没写成，装备已放回。"); return false; }
+  sfx("equip"); refreshHUD(); return true;
 }
-function sellItem(uid){
-  const s=G.save, i=s.bag.findIndex(x=>x.uid===uid); if(i<0) return;
-  const it=s.bag[i]; s.bag.splice(i,1); const g=Math.round(it.price*0.6); s.gold+=g; persist(s); sfx("coin"); toast("出售 "+it.name+" +"+g+" 金");
+function sellBlocked(it){
+  if(!it) return "这件装备已经不在背包里";
+  if(it.locked) return "锁定的装备不能出售";
+  if(wornSlot(it)) return "正在穿的装备不能出售";
+  return "";
+}
+function sellItem(uid, expectGold){
+  if(!spendFresh()) return false;
+  const s=G.save, i=s.bag.findIndex(x=>x.uid===uid); if(i<0){ toast("这件装备已经不在背包里"); return false; }
+  const it=s.bag[i], why=sellBlocked(it); if(why){ toast(why); return false; }
+  const g=sellValue(it);
+  if(expectGold!=null && g!==expectGold){ toast("价格已经变了，没有出售"); return false; }
+  const gold=s.gold|0;
+  s.bag.splice(i,1); s.gold=gold+g;
+  if(!persist(s)){ s.bag.splice(i,0,it); s.gold=gold; toast("存档没写成，装备和金币都已放回。"); return false; }
+  sfx("coin"); toast("出售 "+it.name+" +"+g+" 金"); return true;
+}
+function enhanceItem(uid){
+  if(!clickOnce("enh-"+uid)) return false;
+  if(!spendFresh()) return false;
+  const s=G.save;
+  const pool=[...s.bag, s.equip.weapon, s.equip.armor, s.equip.acc].filter(Boolean);
+  const it=pool.find(x=>x.uid===uid); if(!it){ toast("找不到这件装备"); return false; }
+  const p=itemPlus(it); if(p>=PLUS_MAX){ toast("已到 +"+PLUS_MAX); return false; }
+  const need=enhanceNeed(it), cost=enhanceCost(it);
+  if((s.level|0)<need){ toast("需要 Lv."+need); return false; }
+  if((s.gold|0)<cost){ toast("金币不足"); return false; }
+  const gold=s.gold|0, spent=it.enhSpent|0;
+  s.gold=gold-cost; it.plus=p+1; it.enhSpent=spent+cost;
+  recalcStats();
+  if(!persist(s)){ s.gold=gold; it.plus=p; it.enhSpent=spent; recalcStats(); toast("存档没写成，强化费用已退回。"); return false; }
+  refreshHUD(); toast(it.name+" 强化到 +"+(p+1)); return true;
+}
+function toggleLock(uid){
+  if(!clickOnce("lock-"+uid)) return false;
+  if(!spendFresh()) return false;
+  const s=G.save;
+  const pool=[...s.bag, s.equip.weapon, s.equip.armor, s.equip.acc].filter(Boolean);
+  const it=pool.find(x=>x.uid===uid); if(!it) return false;
+  const prev=!!it.locked; it.locked=!prev;
+  if(!persist(s)){ it.locked=prev; toast("存档没写成，锁定状态已恢复。"); return false; }
+  toast(it.locked?"已锁定，出售路径都会跳过它":"已解除锁定"); return true;
+}
+function bulkCandidates(){
+  const s=G.save; if(!s) return [];
+  return s.bag.filter(it=>!sellBlocked(it));
+}
+function bulkQuote(){
+  const rows=bulkCandidates();
+  return { n:rows.length, gold:rows.reduce((a,it)=>a+sellValue(it),0), uids:rows.map(it=>it.uid), prices:rows.map(sellValue) };
+}
+function confirmBulk(snapshot){
+  if(!spendFresh()) return false;
+  const now=bulkQuote();
+  if(!snapshot || now.n!==snapshot.n || now.gold!==snapshot.gold || now.uids.join("|")!==snapshot.uids.join("|")){
+    toast("背包已经变了，这次没有出售"); return false;
+  }
+  const s=G.save, gold=s.gold|0, removed=[];
+  for(const uid of snapshot.uids){
+    const i=s.bag.findIndex(x=>x.uid===uid);
+    const it=i>=0?s.bag[i]:null;
+    if(!it || sellBlocked(it) || sellValue(it)!==snapshot.prices[removed.length]){
+      s.bag.push(...removed); s.gold=gold; toast("有一件装备对不上，整批都没有出售"); return false;
+    }
+    s.bag.splice(i,1); removed.push(it);
+  }
+  s.gold=gold+snapshot.gold;
+  if(!persist(s)){ s.bag.push(...removed); s.gold=gold; toast("存档没写成，这批装备和金币都已放回。"); return false; }
+  sfx("coin"); toast("出售 "+snapshot.n+" 件，+"+snapshot.gold+" 金"); return true;
+}
+function askBulk(){
+  if(!clickOnce("bulk")) return;
+  const q=bulkQuote();
+  if(!q.n){ toast("没有可出售的未锁定背包装备"); return; }
+  const snap={ n:q.n, gold:q.gold, uids:q.uids.slice(), prices:q.prices.slice() };
+  askConfirm("出售 "+snap.n+" 件，共 "+snap.gold+" 金。不含锁定和穿戴中的装备。强化花费只退三成。", ()=>confirmBulk(snap));
 }
 function usePotion(kind){
   if(!canAct()) return;
@@ -3118,7 +3265,7 @@ function notifyCollect(){
 }
 function acceptQuest(q){
   const e=qst(q.id); if(e.st!=="avail") return; e.st="active"; e.pr=0;
-  if(q.id==="q3" && q.reward && q.reward.item){ /* gift handed over on accept */ const it=genItem(Math.max(3,G.save.level),2,"armor"); addItem(it); }
+  if(q.id==="q3" && q.reward && q.reward.item){ /* gift handed over on accept */ const it=genItem(Math.max(3,G.save.level),2,"armor"); if(!addItem(it)) dropGear(G.p.x, G.p.z, it); }
   persist(G.save); toast("接受任务：「"+q.title+"」"); sfx("quest"); refreshHUD();
 }
 function turnIn(q){
@@ -3126,7 +3273,7 @@ function turnIn(q){
   e.st="done"; e.pr=q.count; G.save.gold+=q.gold; G.save.qc=G.save.qc||{}; G.save.qc[q.id]=(G.save.qc[q.id]||0)+1;
   const r=q.reward||{};
   if(r.pots){ G.save.pots.h+=r.pots[0]; G.save.pots.m+=r.pots[1]; }
-  if(r.item && q.id!=="q3") addItem(genItem(Math.max(q.lv,G.save.level), Math.min(4, r.item.rar+((r.item.up&&Math.random()<r.item.up)?1:0)), r.item.slot||undefined));
+  if(r.item && q.id!=="q3"){ const it=genItem(Math.max(q.lv,G.save.level), Math.min(4, r.item.rar+((r.item.up&&Math.random()<r.item.up)?1:0)), r.item.slot||undefined); if(!addItem(it)) dropGear(G.p.x, G.p.z, it); }
   if(q.repeat){ e.st="avail"; e.pr=0; }
   else if(q.next){ const n=qst(q.next); if(n.st==="locked") n.st="avail"; }
   if(q.id==="q5"){ G.save.storyDone=true; unlockPostgame(G.save); later(1.2, ()=>banner("青岚篇 · 完", "感谢游玩！可继续巡逻、刷装备与挑战首领")); }
@@ -3549,7 +3696,7 @@ function initLoot(){
   }
 }
 function dropGear(x,z,item){
-  let L=LOOT.find(l=>!l.on); if(!L){ addItem(item); return; }
+  let L=LOOT.find(l=>!l.on); if(!L){ if(!addItem(item)) toast("背包和地上都满了，「"+item.name+"」没能收下，也没有换成金币。"); return; }
   const a=Math.random()*6.2832, r=0.6+Math.random()*1.2;
   L.on=true; L.item=item; L.x=Math.max(FIELD.minX,Math.min(FIELD.maxX,x+Math.sin(a)*r)); L.z=Math.max(FIELD.minZ,Math.min(FIELD.maxZ,z+Math.cos(a)*r)); L.t=0;
   L.g.position.set(L.x,0,L.z); L.g.visible=true;
@@ -3564,8 +3711,9 @@ function updateLoot(dt){
     L.t+=dt; L.gem.rotation.y+=dt*2.4; L.gem.position.y=0.55+Math.sin(L.t*3)*0.1;
     L.bm.opacity=0.22+0.1*Math.sin(L.t*4);
     if(L.t>0.5 && !P.dead && (L.x-P.x)**2+(L.z-P.z)**2<1.4){
-      addItem(L.item); L.on=false; L.g.visible=false; sfx("loot");
-      FX.add.emit(P.x,(P.y||0)+1,P.z,0,1,0,0.3,0.2,0.8,RAR_HEX[L.item.rar],1,0,0,0);
+      if(G.save && G.save.bag.length>=BAG_MAX){ if(!L.fullTold){ L.fullTold=true; toast("背包已满，"+L.item.name+" 还在地上，没有换成金币。"); } }
+      else if(addItem(L.item)){ L.on=false; L.g.visible=false; sfx("loot");
+        FX.add.emit(P.x,(P.y||0)+1,P.z,0,1,0,0.3,0.2,0.8,RAR_HEX[L.item.rar],1,0,0,0); }
     }
     if(L.t>120){ L.on=false; L.g.visible=false; }
   }
@@ -3608,7 +3756,7 @@ function refreshHUD(){
   setW("hpfill", P.hp/ST.hp); setW("mpfill", P.mp/ST.mp);
   setTxt("hpt", Math.ceil(P.hp)+" / "+ST.hp); setTxt("mpt", Math.ceil(P.mp)+" / "+ST.mp);
   setTxt("lvb", String(s.level)); setTxt("pnm", c.name); setTxt("patk", "战力 "+ST.power);
-  if(HUDC.goldN!==s.gold){ const first=HUDC.goldN===undefined, up=!first&&s.gold>HUDC.goldN; HUDC.goldN=s.gold; const gv=$("goldv"); if(first||G.paused){ gv.dataset.v=s.gold; gv.textContent=s.gold; } else { countUp(gv,s.gold,420); if(up){ const g=$("gold"); g.classList.remove("pop"); void g.offsetWidth; g.classList.add("pop"); } } }
+  if(HUDC.goldN!==s.gold){ const first=HUDC.goldN===undefined, up=!first&&s.gold>HUDC.goldN; HUDC.goldN=s.gold; const gv=$("goldv"); if(first||G.paused){ gv.dataset.v=s.gold; gv.title=String(s.gold); gv.textContent=fmtGold(s.gold); } else { countUp(gv,s.gold,420); if(up){ const g=$("gold"); g.classList.remove("pop"); void g.offsetWidth; g.classList.add("pop"); } } }
   if(HUDC.lvN!==s.level){ const was=HUDC.lvN; HUDC.lvN=s.level; if(was!==undefined&&s.level>was){ const f=$("pframe"); f.classList.remove("lvup"); void f.offsetWidth; f.classList.add("lvup"); const b=$("lvb"); b.classList.remove("lvup"); void b.offsetWidth; b.classList.add("lvup"); } }
   const need=xpNeed(s.level); setW("expfill", s.level>=MAXLV?1:s.xp/need); setTxt("exptxt", s.level>=MAXLV?"Lv.MAX":"Lv."+s.level+"　经验 "+s.xp+" / "+need);
   const tq=tracked();
@@ -3735,8 +3883,28 @@ function openBag(){
   G.paused=true; G.bagNew=false; bagSel=null; modalOn("bag"); renderBag();
 }
 function closeBag(){ modalOff("bag"); G.paused=false; refreshHUD(); }
+let BAGRAR="all", BAGSORT="rar";
 function renderBag(){
   const s=G.save;
+  const rarRow=$("rarRow"), sortRow=$("sortRow");
+  if(rarRow && !rarRow.childElementCount){
+    [["all","全部"],["0","普通"],["1","优秀"],["2","精良"],["3","史诗"],["4","传说"]].forEach(pair=>{
+      const b=document.createElement("button"); b.type="button"; b.dataset.rar=pair[0]; b.textContent=pair[1];
+      b.addEventListener("click",()=>{ BAGRAR=pair[0]; renderBag(); });
+      rarRow.appendChild(b);
+    });
+  }
+  if(sortRow && !sortRow.childElementCount){
+    [["rar","品质"],["lv","等级"],["plus","强化"]].forEach(pair=>{
+      const b=document.createElement("button"); b.type="button"; b.dataset.sort=pair[0]; b.textContent=pair[1];
+      b.addEventListener("click",()=>{ BAGSORT=pair[0]; renderBag(); });
+      sortRow.appendChild(b);
+    });
+  }
+  if(rarRow) [...rarRow.children].forEach(b=>b.classList.toggle("on", b.dataset.rar===BAGRAR));
+  if(sortRow) [...sortRow.children].forEach(b=>b.classList.toggle("on", b.dataset.sort===BAGSORT));
+  const quote=bulkQuote();
+  if($("btnBulk")) $("btnBulk").textContent=quote.n?"批量出售 "+quote.n+" 件 · "+quote.gold+" 金":"没有可批量出售的装备";
   const eq=$("eqSlots"); eq.innerHTML="";
   ["weapon","armor","acc"].forEach(k=>{
     const it=s.equip[k], b=document.createElement("button"); b.type="button";
@@ -3747,14 +3915,16 @@ function renderBag(){
   });
   const th=charThumb(G.classId);
   $("eqStage").innerHTML=(th?"<img src='"+th+"' alt=''>":"")+"<div class='pw'>战力 "+ST.power+"</div>";
-  const stl=[["生命",ST.hp],["法力",ST.mp],["攻击",ST.atk],["防御",ST.def],["暴击",ST.crit+"%"],["金币",s.gold]];
-  $("statBox").innerHTML="<div class='hd'>"+CLASSES[G.classId].name+"<small>Lv."+s.level+"</small></div>"+stl.map(x=>"<div class='st'>"+x[0]+"<b>"+x[1]+"</b></div>").join("");
+  const stl=[["生命",ST.hp],["法力",ST.mp],["攻击",ST.atk],["防御",ST.def],["暴击",ST.crit+"%"],["金币",fmtGold(s.gold)]];
+  $("statBox").innerHTML="<div class='hd'>"+CLASSES[G.classId].name+"<small>Lv."+s.level+"</small></div>"+stl.map(x=>"<div class='st"+(x[0]==="金币"?" wide":"")+"'>"+x[0]+"<b"+(x[0]==="金币"?" title='"+s.gold+"'":"")+">"+x[1]+"</b></div>").join("");
   $("potRow").innerHTML="<div class='pi'><img src='"+icon("potH")+"' alt=''>生命药水 ×"+s.pots.h+"</div><div class='pi'><img src='"+icon("potM")+"' alt=''>法力药水 ×"+s.pots.m+"</div><div class='cap'>"+s.bag.length+" / "+BAG_MAX+"</div>";
   const grid=$("bagGrid"); grid.innerHTML="";
-  const list=s.bag.filter(it=>BAGTAB==="all"||it.slot===BAGTAB);
+  let list=s.bag.filter(it=>(BAGTAB==="all"||it.slot===BAGTAB) && (BAGRAR==="all"||String(it.rar)===BAGRAR));
+  const rank=it=>BAGSORT==="lv"?it.lv|0:BAGSORT==="plus"?itemPlus(it):(it.rar|0)*100+(it.lv|0);
+  list=list.slice().sort((a,b)=>rank(b)-rank(a)||String(a.name).localeCompare(String(b.name),"zh"));
   list.forEach(it=>{
     const b=document.createElement("button"); b.type="button"; b.className="slot r"+it.rar+(bagSel && bagSel.uid===it.uid?" sel":"");
-    b.innerHTML="<img src='"+itemIcon(it)+"' alt=''><span class='lv'>"+it.lv+"</span>"+(isUpgrade(it)?"<i class='up'></i>":"");
+    b.innerHTML="<img src='"+itemIcon(it)+"' alt=''><span class='lv'>"+(itemPlus(it)?"+"+itemPlus(it):it.lv)+"</span>"+(it.locked?"<span class='lock'>锁</span>":"")+(isUpgrade(it)?"<i class='up'></i>":"");
     b.addEventListener("click",()=>{ bagSel={uid:it.uid}; renderBag(); });
     grid.appendChild(b);
   });
@@ -3767,21 +3937,42 @@ function renderBag(){
   tip.style.display="block";
   const RC=["#b6ae9f","#56c46a","#4a9cff","#b06cff","#ffa13d"], RB=["#f2ece0","#e2f6e0","#e2eeff","#f0e4ff","#fff0d8"];
   tip.style.setProperty("--tc",RC[it.rar]); tip.style.setProperty("--tb",RB[it.rar]);
-  const cur=s.equip[it.slot];
-  const lines=itemStatsText(it).map(t=>"<span>"+t+"</span>").join("");
+  const cur=eqd?null:s.equip[it.slot];
+  const lines=["atk","def","hp","mp","crit"].filter(k=>effStat(it,k)).map(k=>{
+    const name={atk:"攻击",def:"防御",hp:"生命",mp:"法力",crit:"暴击"}[k];
+    const base=it[k]||0, now=effStat(it,k);
+    return "<span>"+name+" "+now+(itemPlus(it)&&now!==base?"（基础 "+base+"）":"")+"</span>";
+  }).join("");
   let cmp="";
-  if(!eqd && cur){
+  if(!eqd && cur && itemCounts(cur)){
     const keys=[["atk","攻击"],["def","防御"],["hp","生命"],["mp","法力"],["crit","暴击"]]; const a=[];
-    keys.forEach(kk=>{ const from=Math.round((cur[kk[0]]||0)*10)/10, to=Math.round((it[kk[0]]||0)*10)/10; if(from!==to) a.push("<span class='"+(to>from?"up":"dn")+"'>"+kk[1]+" "+from+" → "+to+"</span>"); });
-    cmp="<div class='cmp'>对比「"+cur.name+"」："+(a.join("")||"属性相同")+"</div>";
-  }
+    keys.forEach(kk=>{ const from=effStat(cur,kk[0]), to=effStat(it,kk[0]); if(from!==to) a.push("<span class='"+(to>from?"up":"dn")+"'>"+kk[1]+" "+from+" → "+to+"</span>"); });
+    cmp="<div class='cmp'>对比穿戴「"+cur.name+"」"+(cur.plus?" +"+itemPlus(cur):"")+"："+(a.join("")||"实际属性相同")+"</div>";
+  } else if(!eqd && !cur) cmp="<div class='cmp'>这个部位还空着。</div>";
+  else if(eqd && it.slot==="weapon" && !itemCounts(it)) cmp="<div class='cmp'>这把武器和当前职业不符，属性没有计入。</div>";
   const wrong=it.slot==="weapon" && it.cls && it.cls!==G.classId;
-  tip.innerHTML="<div class='th'><div class='slot ib r"+it.rar+"'><img src='"+itemIcon(it)+"' alt=''></div><div><div class='nm c"+it.rar+"'>"+it.name+"</div><div class='meta'>"+RAR[it.rar].n+" · "+SLOT_NAME[it.slot]+" · 物品等级 "+it.lv+(it.cls?" · "+CLASSES[it.cls].name+"专用":"")+"</div></div></div>"+
-    "<div class='tb'><div class='stl'>"+lines+"</div>"+cmp+
-    "<div class='row'>"+(eqd?"<button id='tUn' type='button' class='s'>卸下</button>":"<button id='tEq' type='button'"+(wrong?" disabled style='opacity:.5'":"")+">"+(wrong?"职业不符":"装备")+"</button><button id='tSell' type='button' class='s'>出售 +"+Math.round(it.price*0.6)+" 金</button>")+"</div></div>";
-  if(eqd) $("tUn").addEventListener("click",()=>{ if(s.bag.length>=BAG_MAX){ toast("背包已满"); return; } s.bag.push(it); s.equip[it.slot]=null; recalcStats(); persist(s); bagSel=null; renderBag(); });
-  else { if(!wrong) $("tEq").addEventListener("click",()=>{ equipItem(it.uid); bagSel={eq:it.slot}; renderBag(); });
-    $("tSell").addEventListener("click",()=>{ const g=Math.round(it.price*0.6); askConfirm("出售「"+it.name+"」获得 "+g+" 金？卖出后不能撤回。", ()=>{ sellItem(it.uid); bagSel=null; renderBag(); }); }); }
+  const p=itemPlus(it), cost=enhanceCost(it), need=enhanceNeed(it);
+  const nextPlus=p>=PLUS_MAX?"":"<div class='sub'>下一级 +"+(p+1)+"（+"+Math.round(PLUS_RATE*(p+1)*100)+"%）· "+cost+" 金 · 需要 Lv."+need+"</div>";
+  const enh=p>=PLUS_MAX?"<button type='button' id='tEnh' disabled>已满 +" + PLUS_MAX + "</button>":"<button type='button' id='tEnh'"+((s.level|0)<need||(s.gold|0)<cost?" disabled":"")+">强化到 +"+(p+1)+" · "+cost+" 金</button>";
+  tip.innerHTML="<div class='th'><div class='slot ib r"+it.rar+"'><img src='"+itemIcon(it)+"' alt=''></div><div><div class='nm c"+it.rar+"'>"+it.name+(p?" +"+p:"")+(it.locked?" · 锁定":"")+"</div><div class='meta'>"+RAR[it.rar].n+" · "+SLOT_NAME[it.slot]+" · 物品等级 "+it.lv+(it.cls?" · "+CLASSES[it.cls].name+"专用":"")+"</div></div></div>"+
+    "<div class='tb'><div class='stl'>"+(lines||"<span>没有额外属性</span>")+"</div><div class='sub'>当前强化 +"+p+" / "+PLUS_MAX+"，属性按基础值 +"+(PLUS_RATE*100)+"% × 强化等级</div>"+nextPlus+cmp+
+    "<div class='row'>"+enh+"<button type='button' id='tLock'>"+(it.locked?"解锁":"锁定")+"</button></div>"+
+    "<div class='row'>"+(eqd?"<button id='tUn' type='button' class='s'>卸下</button>":"<button id='tEq' type='button'"+(wrong?" disabled":"")+">"+(wrong?"职业不符":"装备")+"</button><button id='tSell' type='button' class='s'"+(it.locked?" disabled":"")+">"+(it.locked?"锁定中":"出售 +"+sellValue(it)+" 金")+"</button>")+"</div></div>";
+  $("tEnh").addEventListener("click",()=>{ if(enhanceItem(it.uid)) renderBag(); });
+  $("tLock").addEventListener("click",()=>{ if(toggleLock(it.uid)) renderBag(); });
+  if(eqd) $("tUn").addEventListener("click",()=>{
+    if(!spendFresh()) return;
+    if(s.bag.length>=BAG_MAX){ toast("背包已满，不能卸下。"); return; }
+    const gold=s.gold;
+    s.bag.push(it); s.equip[it.slot]=null; recalcStats();
+    if(!persist(s)){ s.bag.pop(); s.equip[it.slot]=it; s.gold=gold; recalcStats(); toast("存档没写成，装备仍穿在身上。"); return; }
+    bagSel=null; renderBag();
+  });
+  else { if(!wrong) $("tEq").addEventListener("click",()=>{ if(equipItem(it.uid)){ bagSel={eq:it.slot}; renderBag(); } });
+    if(!it.locked) $("tSell").addEventListener("click",()=>{
+      const g=sellValue(it), uid=it.uid;
+      askConfirm("出售「"+it.name+"」获得 "+g+" 金？锁定和正在穿的不能卖。强化只退回三成。", ()=>{ if(sellItem(uid, g)){ bagSel=null; renderBag(); } });
+    }); }
 }
 function isUpgrade(it){
   if(it.slot==="weapon" && it.cls && it.cls!==G.classId) return false;
@@ -3859,6 +4050,7 @@ function showTitle(){
   if($("saveNote")) $("saveNote").textContent=note;
   if($("buildTag")) $("buildTag").textContent=BUILD.name;
   if($("btnReload")) $("btnReload").style.display=(LOADP.charFail||LOADP.townFail)?"inline-flex":"none";
+  if($("btnRestore")) $("btnRestore").style.display=storeGet(SAVE_NEWER)?"inline-flex":"none";
   if(G.player){ G.player.visible=false; }
   SELV.show(null);
   camera.fov=isPortrait()?52:42; camera.updateProjectionMatrix();
@@ -4411,7 +4603,7 @@ function startAdventure(classId, fresh){
 function renderCoach(){
   const box=$("coach"); if(!box) return;
   ["joy","atk","dg"].forEach(id=>{ const el=$(id); if(el) el.classList.remove("tut"); });
-  if(G.coach==null){ box.style.display="none"; return; }
+  if(G.coach==null || document.querySelector(".modal.on")){ box.style.display="none"; return; }
   const steps=[
     ["拖动左下角摇杆，让角色走出两步。","joy"],
     ["点右下角的攻击按钮，挥出一剑。","atk"],
@@ -4794,6 +4986,17 @@ function bindInput(){
   $("btnExport2").addEventListener("click", exportCurrent);
   $("btnImport2").addEventListener("click", pickImport);
   $("btnReload").addEventListener("click", ()=>location.reload());
+  $("btnRestore").addEventListener("click", ()=>{
+    const raw=storeGet(SAVE_NEWER); const obj=parseJSON(raw);
+    if(!obj){ toast("没有可恢复的存档"); return; }
+    askConfirm("把旧版本挪走的存档放回来？当前这个浏览器里的新档会先做成备份。", ()=>{
+      const save=migrateSave(JSON.parse(raw));
+      if(!persist(save, {replace:true})) return;
+      try{ localStorage.removeItem(SAVE_NEWER); }catch(e){}
+      G.save=save; showTitle(); toast("已恢复被挪走的存档");
+    });
+  });
+  $("btnBulk").addEventListener("click", askBulk);
   $("coachSkip").addEventListener("click", e=>{ e.stopPropagation(); finishCoach(); });
   $("btnBack").addEventListener("click", ()=>showTitle());
   $("btnGo").addEventListener("click", beginNew);
@@ -5386,7 +5589,7 @@ function init(){
   uiInit();
   $("loadtip").textContent=TIPS[Math.floor(Math.random()*TIPS.length)];
   window.__mengyu={ G, GLB, TOWN, TOWN_CFG, CAM, groundAt, inTownBounds, startAdventure, tryAttack, trySkill, tryDodge, damagePlayer, hitEnemy, spawnSlime, spawnEnemy, FX, SFX, SHOTS, DROPS, LATER, camClamp,
-    ST, QUESTS, NPCS, ZONES, ALTAR, ELITE_SPOT, SPAWN, ESHOTS, LOOT, MUS, SET, gainXP, genItem, addItem, equipItem, recalcStats, usePotion, tryTalk, advDlg, closeDlg, openBag, closeBag, openSettings, closeSettings, showTitle, showSelect, selectClass, beginNew, toTitle, resurrect, xpNeed, qst, tracked, loadSave, persist, migrateSave, readSaveState, previewImport, exportSaveText, requestImport, exportCurrent, BUILD, SCHEMA, SAVE_KEY, SAVE_BAK, SAVE_BAD, clearEnemies, populateField, killEnemy, refreshHUD, drawMinimap, charThumb, camera, scene, startTrial, endTrial, TRIAL, checkAchievements, achHtml, ACH, bossLevel, tickCoach, finishCoach, upgradeSkill, takeTalent, confirmRespec, askRespec, openGrowth, closeGrowth, renderGrowth, outgoing, cdScale, combatMods, skillRank, talentBudget, respecCost, inspectGrowth, get camera(){ return camera; }, get renderer(){ return renderer; } };
+    ST, QUESTS, NPCS, ZONES, ALTAR, ELITE_SPOT, SPAWN, ESHOTS, LOOT, MUS, SET, gainXP, genItem, addItem, equipItem, recalcStats, usePotion, tryTalk, advDlg, closeDlg, openBag, closeBag, openSettings, closeSettings, showTitle, showSelect, selectClass, beginNew, toTitle, resurrect, xpNeed, qst, tracked, loadSave, persist, migrateSave, readSaveState, previewImport, exportSaveText, requestImport, exportCurrent, BUILD, SCHEMA, SAVE_KEY, SAVE_BAK, SAVE_BAD, clearEnemies, populateField, killEnemy, refreshHUD, drawMinimap, charThumb, camera, scene, startTrial, endTrial, TRIAL, checkAchievements, achHtml, ACH, bossLevel, tickCoach, finishCoach, upgradeSkill, takeTalent, confirmRespec, askRespec, openGrowth, closeGrowth, renderGrowth, outgoing, cdScale, combatMods, skillRank, talentBudget, respecCost, inspectGrowth, inspectGear, enhanceItem, toggleLock, sellItem, equipItem, addItem, bulkQuote, confirmBulk, effStat, sellValue, enhanceCost, get camera(){ return camera; }, get renderer(){ return renderer; } };
   loadCharacterModels(()=>{ upgradeVisuals(); });
   window.addEventListener("resize", ()=>{ uiLayout(); });
 
