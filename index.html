@@ -782,6 +782,72 @@ function cutClip(clip, t0, t1, name){
   });
   c.duration=Math.max(0.05, t1-t0); return c;
 }
+// Warrior slash pitches Hips about -40° and Spine/Spine1/Spine2 another -15° to -23°
+// past the idle pose, so the head drops to waist height and never stands back up.
+// Root rotation is not involved. Keep a fraction of that local X (the swing still
+// leans in) and put the removed hip pitch back on the thighs, which is what kept
+// the feet planted. Neck and arms stay on the original tracks.
+function softenAttackBend(attack, idle){
+  if(!attack || !idle) return;
+  const keep={ Hips:0.40, Spine:0.28, Spine1:0.28, Spine2:0.28 };
+  const torso=["Hips","Spine","Spine1","Spine2"];
+  const q=new THREE.Quaternion(), q2=new THREE.Quaternion(), e=new THREE.Euler();
+  function track(clip, bone){
+    const a="mixamorig"+bone+".quaternion", b="mixamorig:"+bone+".quaternion";
+    for(let i=0;i<clip.tracks.length;i++){ const n=clip.tracks[i].name; if(n===a||n===b) return clip.tracks[i]; }
+    return null;
+  }
+  function sample(tr, time){
+    const ts=tr.times, v=tr.values, n=ts.length;
+    if(!n) return null;
+    if(time<=ts[0]) return q.set(v[0],v[1],v[2],v[3]);
+    if(time>=ts[n-1]){ const i=(n-1)*4; return q.set(v[i],v[i+1],v[i+2],v[i+3]); }
+    let i=0; while(i<n-2 && ts[i+1]<time) i++;
+    const span=ts[i+1]-ts[i] || 1, f=(time-ts[i])/span;
+    q2.set(v[(i+1)*4], v[(i+1)*4+1], v[(i+1)*4+2], v[(i+1)*4+3]);
+    return q.set(v[i*4], v[i*4+1], v[i*4+2], v[i*4+3]).slerp(q2, f);
+  }
+  const refT=Math.min(0.5, Math.max(0, (idle.duration||0)*0.5));
+  const refX={};
+  for(let i=0;i<torso.length;i++){
+    const tr=track(idle, torso[i]); if(!tr) return;
+    const qq=sample(tr, refT); if(!qq) return;
+    e.setFromQuaternion(qq, "XYZ"); refX[torso[i]]=e.x;
+  }
+  const hip=track(attack, "Hips"); if(!hip) return;
+  const removed=new Float32Array(hip.times.length);
+  for(let i=0;i<hip.times.length;i++){
+    q.fromArray(hip.values, i*4); e.setFromQuaternion(q, "XYZ");
+    const old=e.x, neu=refX.Hips+(old-refX.Hips)*keep.Hips;
+    e.x=neu; q.setFromEuler(e); q.toArray(hip.values, i*4);
+    removed[i]=old-neu;
+  }
+  for(let b=1;b<torso.length;b++){
+    const name=torso[b], tr=track(attack, name); if(!tr) continue;
+    const k=keep[name];
+    for(let i=0;i<tr.times.length;i++){
+      q.fromArray(tr.values, i*4); e.setFromQuaternion(q, "XYZ");
+      e.x=refX[name]+(e.x-refX[name])*k;
+      q.setFromEuler(e); q.toArray(tr.values, i*4);
+    }
+  }
+  function removedAt(time){
+    const ts=hip.times, n=ts.length;
+    if(time<=ts[0]) return removed[0];
+    if(time>=ts[n-1]) return removed[n-1];
+    let i=0; while(i<n-2 && ts[i+1]<time) i++;
+    const span=ts[i+1]-ts[i] || 1, f=(time-ts[i])/span;
+    return removed[i]*(1-f)+removed[i+1]*f;
+  }
+  ["LeftUpLeg","RightUpLeg"].forEach(name=>{
+    const tr=track(attack, name); if(!tr) return;
+    for(let i=0;i<tr.times.length;i++){
+      q.fromArray(tr.values, i*4); e.setFromQuaternion(q, "XYZ");
+      e.x+=removedAt(tr.times[i]);
+      q.setFromEuler(e); q.toArray(tr.values, i*4);
+    }
+  });
+}
 function outlineMat(w){
   const m=new THREE.MeshBasicMaterial({ color:0x5a3a30, side:THREE.BackSide });
   m.onBeforeCompile=sh=>{
@@ -836,6 +902,7 @@ function prepGlb(id, gltf){
   gltf.animations.forEach(c=>{ stripRootMotion(c); clips[c.name]=c; });
   const a=GLB_ATTACK[id], src=clips[a.clip];
   if(!clips.attack && src) clips.attack=cutClip(src, a.t0, Math.min(a.t1, src.duration), "attack");
+  if(id==="swordsman") softenAttackBend(clips.attack, clips.idle);
   GLB.data[id]={ scene:root, clips, srcH:h, minY:box.min.y };
 }
 function makeGlbChar(id){
