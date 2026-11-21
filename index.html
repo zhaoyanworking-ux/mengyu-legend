@@ -2799,7 +2799,8 @@ function outgoing(base, key, heavy){
 }
 function cdScale(base, slot){
   const m=combatMods();
-  const f=slot==="atk"?m.cdAtk:slot==="dg"?m.cdDg:m.cdSkill;
+  let f=slot==="atk"?m.cdAtk:slot==="dg"?m.cdDg:m.cdSkill;
+  if(slot==="atk"||slot==="sk1"||slot==="sk2") f*=Math.max(0.7, 1-0.05*skillRank(G.classId, slot));
   return Math.round(base*f*1000)/1000;
 }
 function spendFresh(){
@@ -5090,7 +5091,7 @@ function meleeHit(step){
 function trySkill(n){
   n=n===2?2:1;
   if(!canAct()||busyPlayer()) return;
-  const P=G.p, c=CLASSES[G.classId], key=n===1?"sk1":"sk2", cost=n===1?c.skillMp:c.sk2Mp, cdv=cdScale(n===1?c.skillCd:c.sk2Cd,"skill");
+  const P=G.p, c=CLASSES[G.classId], key=n===1?"sk1":"sk2", cost=n===1?c.skillMp:c.sk2Mp, cdv=cdScale(n===1?c.skillCd:c.sk2Cd, key);
   if(G.cd[key]>0) return;
   if(P.mp<cost){ spawnNum(P.x,(P.y||0)+2.0,P.z,"法力不足",3); return; }
   P.mp-=cost; G.cd[key]=cdv; G.cdMax[key]=cdv;
