@@ -104,7 +104,22 @@
   #zoneName{margin-top:calc(var(--u)*-8px);position:relative;z-index:2;padding:calc(var(--u)*2px) calc(var(--u)*12px);border-radius:99px;font-size:calc(var(--u)*11.5px);font-weight:800;white-space:nowrap;color:#fff6dc;
     background:linear-gradient(#36508c,#1e2e5c);border:1px solid var(--gline);box-shadow:0 calc(var(--u)*2px) calc(var(--u)*6px) rgba(0,0,0,.3);text-shadow:0 1px 0 rgba(0,0,0,.5)}
   #menuRow{position:absolute;right:calc(var(--sr) + var(--edge));top:calc(var(--st) + var(--edge) + calc(var(--u)*88px));display:flex;gap:var(--pad)}
-  html.fight #btnBag,html.fight #btnAchH{display:none}
+  html.fight #btnBag,html.fight #btnAchH,html.fight #btnGrow{display:none}
+  #growth .sheet{max-height:min(78vh,680px);overflow:auto;touch-action:pan-y;overscroll-behavior:contain}
+  #growBody{padding:0 calc(var(--u)*14px) calc(var(--u)*16px)}
+  #growBody h3{margin:calc(var(--u)*8px) 0 calc(var(--u)*6px);font-size:calc(var(--u)*14px)}
+  .growMeta{font-size:calc(var(--u)*12.5px);font-weight:700;line-height:1.45;color:#5a4a3a}
+  .growGrid{display:flex;flex-direction:column;gap:8px}
+  .growCard{background:#fff;border:1px solid #ead9b4;border-radius:14px;padding:8px 10px;font-size:13px;line-height:1.4}
+  .growCard b{display:block;font-size:15px}
+  .growCard .sub{color:#7a6248;margin:2px 0 6px}
+  .growCard button,#growBody #growRespec,.talentGrid button{min-height:44px;min-width:44px}
+  .growCard button,.talentGrid button{width:100%;border-radius:12px;padding:6px 8px;text-align:left}
+  .talentGrid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .talentGrid button{display:flex;flex-direction:column;justify-content:center;background:#fff;border:1px solid #ead9b4}
+  .talentGrid button[disabled]{opacity:.55}
+  .talentGrid small,.talentGrid em{font-style:normal;font-size:12px;font-weight:700;color:#7a6248}
+  #growRespec{width:100%;margin-top:10px}
   .mbtn{width:calc(var(--u)*44px);height:calc(var(--u)*44px);min-width:44px;min-height:44px;border-radius:50%;padding:0;position:relative;pointer-events:auto;display:flex;align-items:center;justify-content:center;
     border:1.5px solid rgba(255,244,220,.72);background:radial-gradient(circle at 50% 30%,rgba(90,120,190,.95),rgba(26,38,80,.92) 70%);
     box-shadow:inset 0 calc(var(--u)*2px) 0 rgba(255,255,255,.3),0 calc(var(--u)*3px) calc(var(--u)*8px) rgba(8,16,44,.38);transition:transform .08s}
@@ -552,7 +567,7 @@
       </div>
       <p id="saveNote">存档只在这台浏览器里，不是云存档。</p>
     </div>
-    <div class="copy">萌域传说 · 青岚篇</div><div class="ver" id="buildTag">RC-1</div>
+    <div class="copy">萌域传说 · 青岚篇</div><div class="ver" id="buildTag">RC-2</div>
   </div>
   <div id="select">
     <div class="selTop"><h1>选择职业</h1></div>
@@ -579,6 +594,7 @@
     <div id="menuRow">
       <button id="btnBag" class="mbtn" type="button" aria-label="背包"><img id="icBag" alt=""><i class="dot"></i></button>
       <button id="btnAchH" class="mbtn" type="button" aria-label="成就"><img id="icAch" alt=""></button>
+      <button id="btnGrow" class="mbtn" type="button" aria-label="技艺">技</button>
       <button id="btnSet" class="mbtn" type="button" aria-label="暂停"><img id="icSet" alt=""></button>
     </div>
     <div id="trialHud"></div>
@@ -609,6 +625,10 @@
     <div id="bagTabs"><button type="button" data-t="all" class="on">全部</button><button type="button" data-t="weapon">武器</button><button type="button" data-t="armor">护甲</button><button type="button" data-t="acc">饰品</button></div>
     <div id="bagGrid"></div>
   </div></div>
+  <div id="growth" class="modal"><div class="sheet">
+    <h2><span>技艺</span> <button class="xbtn" id="growX" type="button">×</button></h2>
+    <div id="growBody"></div>
+  </div></div>
   <div id="settings" class="modal"><div class="sheet">
     <h2><span><img class="hic" id="hicSet" alt=""><span id="setTitle">暂停</span></span> <button class="xbtn" id="setX" type="button">×</button></h2>
     <div class="sec">
@@ -624,6 +644,7 @@
       <p class="shelp">导出的是这台浏览器里的存档文件，不是云存档。导入前会再确认，不会静默覆盖。</p>
       <div id="setPlayBtns">
         <button class="bigbtn" id="btnResume" type="button">继续游戏</button>
+        <button class="bigbtn" id="btnGrow2" type="button">技艺</button>
         <button class="bigbtn gray" id="btnAch" type="button">成就</button>
         <button class="bigbtn gray" id="btnQuit" type="button">保存并返回标题</button>
       </div>
@@ -656,9 +677,9 @@ const SAVE_KEY = "MengYuLegend_Save_v1";
 const SAVE_BAK = "MengYuLegend_Save_v1.bak";
 const SAVE_BAD = "MengYuLegend_Save_v1.bad";
 const SAVE_NEWER = "MengYuLegend_Save_v1.newer";
-const SCHEMA = 2;
+const SCHEMA = 3;
 const SAVE_FORMAT = "mengyu-legend-save";
-const BUILD = { name:"RC-1", note:"本地存档，不是云存档" };
+const BUILD = { name:"RC-2", note:"本地存档，不是云存档" };
 const QST_ST = { locked:1, avail:1, active:1, ready:1, done:1 };
 
 const CLASSES = {
@@ -697,9 +718,9 @@ function readSaveState(repair){
   const primaryText=storeGet(SAVE_KEY);
   const primary=parseJSON(primaryText);
   if(isNewerSave(primary)) return { save:null, note:"newer", raw:primaryText };
-  if(primary && (primary.ver===2 || primary.level || primary.quests || primary.hasSave)) return { save:migrateSave(primary), note:"", raw:primaryText };
+  if(primary && (primary.ver===2 || primary.ver===SCHEMA || primary.level || primary.quests || primary.hasSave)) return { save:migrateSave(primary), note:"", raw:primaryText };
   const bak=parseJSON(storeGet(SAVE_BAK));
-  if(bak && !isNewerSave(bak) && (bak.ver===2 || bak.level || bak.quests || bak.hasSave)){
+  if(bak && !isNewerSave(bak) && (bak.ver===2 || bak.ver===SCHEMA || bak.level || bak.quests || bak.hasSave)){
     const save=migrateSave(bak);
     if(repair){
       try{ if(primaryText && !primary) storeSet(SAVE_BAD, primaryText); }catch(e){}
@@ -710,24 +731,26 @@ function readSaveState(repair){
   if(primaryText && !primary) return { save:null, note:"corrupt", raw:primaryText };
   return { save:null, note:"", raw:primaryText };
 }
-function persist(s){
+function persist(s, opt){
   if(!s || s._newer) return false;
+  const replace=!!(opt && opt.replace);
   migrateSave(s);
-  let text;
-  try{ text=JSON.stringify(s); }catch(e){ return false; }
   try{
     const prev=storeGet(SAVE_KEY);
-    if(prev && prev!==text){
-      const old=parseJSON(prev);
-      if(isNewerSave(old)){
-        if(typeof G!=="undefined" && G) G.saveNote="newer";
-        noteSaveFail("浏览器里有更高版本的存档，已取消写入，原文未改。");
-        return false;
-      }
-      if(old) storeSet(SAVE_BAK, prev);
-      else storeSet(SAVE_BAD, prev);
+    const old=parseJSON(prev);
+    if(isNewerSave(old)){
+      if(typeof G!=="undefined" && G) G.saveNote="newer";
+      noteSaveFail("浏览器里有更高版本的存档，已取消写入，原文未改。");
+      return false;
     }
-    storeSet(SAVE_KEY, text);
+    if(old && (old.rev|0) > (s.rev|0) && !replace){
+      if(typeof G!=="undefined" && G) G.saveNote="stale";
+      noteSaveFail("另一个页面写过更新的存档，本页已停止覆盖，避免把金币或技能退回去。");
+      return false;
+    }
+    if(prev){ if(old) storeSet(SAVE_BAK, prev); else storeSet(SAVE_BAD, prev); }
+    s.rev=(old ? (old.rev|0) : (s.rev|0))+1;
+    storeSet(SAVE_KEY, JSON.stringify(s));
     if(typeof G!=="undefined" && G){ G.saveOk=true; G.saveErr=""; }
     return true;
   }catch(e){
@@ -754,6 +777,10 @@ function previewImport(text){
   if(wrap.save.classId && !CLASSES[wrap.save.classId]) return { ok:false, reason:"职业无效，已拒绝导入" };
   if(wrap.save.quests && typeof wrap.save.quests!=="object") return { ok:false, reason:"任务数据无效，已拒绝导入" };
   if(isNewerSave(wrap.save)) return { ok:false, newer:true, reason:"存档版本更高，已拒绝。当前存档未改动。" };
+  if(wrap.save.growth){
+    const bad=inspectGrowth(wrap.save.growth, wrap.save.level|0||1);
+    if(!bad.ok) return bad;
+  }
   const save=migrateSave(JSON.parse(JSON.stringify(wrap.save)));
   if(!save || save._newer || !CLASSES[save.classId]) return { ok:false, reason:"这份备份无法在当前版本使用" };
   return { ok:true, save };
@@ -2606,6 +2633,8 @@ function recalcStats(){
   const c=CLASSES[G.classId]||CLASSES.swordsman, s=G.save, L=s&&s.level?s.level:1;
   let hp=c.hp*(1+0.12*(L-1)), mp=c.mp*(1+0.06*(L-1)), atk=c.atk*(1+0.09*(L-1)), def=L, crit=10;
   if(s && s.equip) ["weapon","armor","acc"].forEach(k=>{ const it=s.equip[k]; if(!it) return; hp+=it.hp||0; mp+=it.mp||0; atk+=it.atk||0; def+=it.def||0; crit+=it.crit||0; });
+  const gm=combatMods(G.classId);
+  hp*=gm.hp; mp*=gm.mp;
   ST.hp=Math.round(hp); ST.mp=Math.round(mp); ST.atk=Math.round(atk); ST.def=Math.round(def); ST.crit=Math.min(60,Math.round(crit*10)/10); ST.mul=ST.atk/c.atk;
   ST.power=Math.round(ST.atk*5+ST.def*4+ST.hp*0.6+ST.mp*0.2+ST.crit*6);
   if(G.p){ G.p.hp=Math.min(G.p.hp, ST.hp); G.p.mp=Math.min(G.p.mp, ST.mp); }
@@ -2631,6 +2660,266 @@ function onLevelUp(){
 function newEquipSave(classId){
   return { weapon:Object.assign(genItem(1,0,"weapon",classId),{ name:"见习"+WNAMES[classId][0] }), armor:null, acc:null };
 }
+const SKILL_COST=[40,80,140,220,320];
+const SKILL_LV=[2,4,6,9,12];
+const SKILL_KEYS=["atk","sk1","sk2"];
+const TALENTS={
+  swordsman:[
+    {id:"s_edge", name:"锋芒", req:null, text:"近战伤害 +10%"},
+    {id:"s_break", name:"破势", req:"s_edge", text:"近战再 +8%，第三击再 +12%"},
+    {id:"s_haste", name:"迅斩", req:null, text:"普攻冷却 -12%"},
+    {id:"s_flow", name:"连势", req:"s_haste", text:"技能冷却 -12%"},
+    {id:"s_guard", name:"守心", req:null, text:"最大生命 +12%"},
+    {id:"s_breath", name:"回气", req:"s_guard", text:"受到的伤害 -8%"}
+  ],
+  mage:[
+    {id:"m_focus", name:"聚能", req:null, text:"法术伤害 +10%"},
+    {id:"m_ash", name:"余烬", req:"m_focus", text:"法术再 +8%"},
+    {id:"m_chant", name:"咏唱", req:null, text:"技能冷却 -12%"},
+    {id:"m_quick", name:"灵动", req:"m_chant", text:"普攻冷却 -15%"},
+    {id:"m_robe", name:"法衣", req:null, text:"最大法力 +15%，生命 +6%"},
+    {id:"m_ward", name:"护持", req:"m_robe", text:"受到的伤害 -8%"}
+  ],
+  archer:[
+    {id:"a_aim", name:"瞄准", req:null, text:"远程伤害 +10%"},
+    {id:"a_pierce", name:"贯穿", req:"a_aim", text:"远程再 +8%"},
+    {id:"a_rapid", name:"速射", req:null, text:"普攻冷却 -12%"},
+    {id:"a_quiver", name:"余矢", req:"a_rapid", text:"技能冷却 -12%"},
+    {id:"a_light", name:"轻身", req:null, text:"翻滚冷却 -18%"},
+    {id:"a_steady", name:"稳心", req:"a_light", text:"最大生命 +10%"}
+  ]
+};
+const TALENT_FX={
+  s_edge:{melee:0.10}, s_break:{melee:0.08,heavy:0.12}, s_haste:{cdAtk:-0.12}, s_flow:{cdSkill:-0.12}, s_guard:{hp:0.12}, s_breath:{dr:0.08},
+  m_focus:{spell:0.10}, m_ash:{spell:0.08}, m_chant:{cdSkill:-0.12}, m_quick:{cdAtk:-0.15}, m_robe:{mp:0.15,hp:0.06}, m_ward:{dr:0.08},
+  a_aim:{ranged:0.10}, a_pierce:{ranged:0.08}, a_rapid:{cdAtk:-0.12}, a_quiver:{cdSkill:-0.12}, a_light:{cdDg:-0.18}, a_steady:{hp:0.10}
+};
+function talentBudget(level){ return Math.min(3, Math.floor((level|0)/2)); }
+function emptyGrowth(){
+  const skills={}, talents={};
+  CLASS_ORDER.forEach(id=>{ skills[id]={atk:0,sk1:0,sk2:0}; talents[id]=[]; });
+  return {skills, talents};
+}
+function talentById(id, tid){ return (TALENTS[id]||[]).find(t=>t.id===tid)||null; }
+function inspectGrowth(g, level){
+  if(g==null) return {ok:true};
+  if(!g || typeof g!=="object" || Array.isArray(g)) return {ok:false, reason:"成长数据无效，已拒绝导入"};
+  const budget=talentBudget(level||1);
+  for(const id of CLASS_ORDER){
+    const row=g.skills && g.skills[id];
+    if(row!=null){
+      if(typeof row!=="object" || Array.isArray(row)) return {ok:false, reason:"技能数据无效，已拒绝导入"};
+      for(const k of SKILL_KEYS){
+        if(row[k]==null) continue;
+        const n=+row[k];
+        if(!Number.isFinite(n) || n<0 || n>5 || Math.floor(n)!==n) return {ok:false, reason:"技能等级必须是 0 到 5 的整数"};
+      }
+    }
+    const picked=g.talents && g.talents[id];
+    if(picked==null) continue;
+    if(!Array.isArray(picked)) return {ok:false, reason:"天赋数据无效，已拒绝导入"};
+    if(picked.length>budget) return {ok:false, reason:"天赋点数超过当前等级上限，已拒绝导入"};
+    const seen={};
+    for(const tid of picked){
+      if(typeof tid!=="string" || seen[tid] || !talentById(id, tid)) return {ok:false, reason:"天赋编号无效，已拒绝导入"};
+      seen[tid]=1;
+    }
+    for(const tid of picked){
+      const req=talentById(id, tid).req;
+      if(req && !seen[req]) return {ok:false, reason:"天赋前置不成立，已拒绝导入"};
+    }
+  }
+  return {ok:true};
+}
+function sanitizeGrowth(s){
+  const src=s.growth && typeof s.growth==="object" ? s.growth : {};
+  const out=emptyGrowth();
+  const budget=talentBudget(s.level||1);
+  CLASS_ORDER.forEach(id=>{
+    const row=src.skills && src.skills[id];
+    if(row && typeof row==="object"){
+      SKILL_KEYS.forEach(k=>{
+        const n=+row[k];
+        out.skills[id][k]=(Number.isFinite(n) && n>=0) ? Math.max(0, Math.min(5, Math.floor(n))) : 0;
+      });
+    }
+    const picked=src.talents && src.talents[id];
+    const kept=[], seen={};
+    if(Array.isArray(picked)){
+      picked.forEach(tid=>{
+        if(typeof tid!=="string" || seen[tid] || !talentById(id, tid)) return;
+        const req=talentById(id, tid).req;
+        if(req && !seen[req]) return;
+        if(kept.length>=budget) return;
+        seen[tid]=1; kept.push(tid);
+      });
+    }
+    out.talents[id]=kept;
+  });
+  s.growth=out;
+}
+function skillRank(id, key){
+  const g=G.save && G.save.growth && G.save.growth.skills && G.save.growth.skills[id||G.classId];
+  const n=g ? g[key]|0 : 0;
+  return Math.max(0, Math.min(5, n));
+}
+function hasTalent(id, tid){
+  const a=G.save && G.save.growth && G.save.growth.talents && G.save.growth.talents[id||G.classId];
+  return !!(a && a.indexOf(tid)>=0);
+}
+function combatMods(id){
+  id=id||G.classId;
+  const m={melee:1,spell:1,ranged:1,heavy:0,hp:1,mp:1,dr:0,cdAtk:1,cdSkill:1,cdDg:1};
+  const list=G.save && G.save.growth && G.save.growth.talents && G.save.growth.talents[id];
+  (list||[]).forEach(tid=>{
+    const fx=TALENT_FX[tid]; if(!fx) return;
+    if(fx.melee) m.melee+=fx.melee;
+    if(fx.spell) m.spell+=fx.spell;
+    if(fx.ranged) m.ranged+=fx.ranged;
+    if(fx.heavy) m.heavy+=fx.heavy;
+    if(fx.hp) m.hp+=fx.hp;
+    if(fx.mp) m.mp+=fx.mp;
+    if(fx.dr) m.dr+=fx.dr;
+    if(fx.cdAtk) m.cdAtk+=fx.cdAtk;
+    if(fx.cdSkill) m.cdSkill+=fx.cdSkill;
+    if(fx.cdDg) m.cdDg+=fx.cdDg;
+  });
+  m.cdAtk=Math.max(0.55, m.cdAtk);
+  m.cdSkill=Math.max(0.55, m.cdSkill);
+  m.cdDg=Math.max(0.55, m.cdDg);
+  m.dr=Math.min(0.35, Math.max(0, m.dr));
+  return m;
+}
+function schoolOf(id){ return id==="mage"?"spell":id==="archer"?"ranged":"melee"; }
+function outgoing(base, key, heavy){
+  const id=G.classId, m=combatMods(id);
+  let x=base * (1+0.08*skillRank(id, key)) * m[schoolOf(id)];
+  if(heavy) x*=(1+m.heavy);
+  return x;
+}
+function cdScale(base, slot){
+  const m=combatMods();
+  const f=slot==="atk"?m.cdAtk:slot==="dg"?m.cdDg:m.cdSkill;
+  return Math.round(base*f*1000)/1000;
+}
+function spendFresh(){
+  const old=parseJSON(storeGet(SAVE_KEY));
+  if(isNewerSave(old)){ toast("存档版本更高，没有扣费。"); return false; }
+  if(old && (old.rev|0) > ((G.save&&G.save.rev)|0)){ toast("存档已在别的页面更新，没有扣费。请回标题重新继续。"); return false; }
+  return true;
+}
+function clickOnce(key){
+  const n=performance.now();
+  clickOnce.at=clickOnce.at||{};
+  if(clickOnce.at[key] && n-clickOnce.at[key]<400) return false;
+  clickOnce.at[key]=n;
+  return true;
+}
+function skillNextText(id, key){
+  const c=CLASSES[id], rank=skillRank(id, key);
+  const names={atk:c.atkLabel, sk1:c.skillLabel, sk2:c.sk2Label};
+  const nowD=Math.round((1+0.08*rank)*100), nowC=Math.round((1-0.05*rank)*100);
+  if(rank>=5) return {name:names[key], rank, ready:false, line:"已满级 "+rank+"/5", next:"伤害 "+nowD+"%，冷却 "+nowC+"%", cost:0, need:0};
+  const cost=SKILL_COST[rank], need=SKILL_LV[rank];
+  const nxtD=Math.round((1+0.08*(rank+1))*100), nxtC=Math.round((1-0.05*(rank+1))*100);
+  const why=G.save.level<need?"需要 Lv."+need:(G.save.gold<cost?"金币不足":"");
+  return {name:names[key], rank, ready:!why, why, cost, need, line:"当前 "+rank+"/5 · 伤害 "+nowD+"% · 冷却 "+nowC+"%", next:"下一级 "+(rank+1)+"/5 · 伤害 "+nxtD+"% · 冷却 "+nxtC+"% · "+cost+" 金 · 需要 Lv."+need};
+}
+function upgradeSkill(key){
+  if(!clickOnce("up-"+key)) return false;
+  if(!G.save || !spendFresh()) return false;
+  if(SKILL_KEYS.indexOf(key)<0) return false;
+  const id=G.classId, rank=skillRank(id, key);
+  if(rank>=5){ toast("已满级"); return false; }
+  const cost=SKILL_COST[rank], need=SKILL_LV[rank];
+  if((G.save.level|0)<need){ toast("需要 Lv."+need); return false; }
+  if((G.save.gold|0)<cost){ toast("金币不足"); return false; }
+  sanitizeGrowth(G.save);
+  G.save.gold-=cost;
+  G.save.growth.skills[id][key]=rank+1;
+  recalcStats();
+  const ok=persist(G.save);
+  if(!ok){ G.save.gold+=cost; G.save.growth.skills[id][key]=rank; recalcStats(); toast("没有写入存档，费用已退回。"); return false; }
+  refreshHUD(); if($("growth").classList.contains("on")) renderGrowth();
+  toast(CLASSES[id][key==="atk"?"atkLabel":key==="sk1"?"skillLabel":"sk2Label"]+" 升到 "+(rank+1)+" 级");
+  return true;
+}
+function takeTalent(tid){
+  if(!clickOnce("tn-"+tid)) return false;
+  if(!G.save || !spendFresh()) return false;
+  const id=G.classId, node=talentById(id, tid);
+  if(!node) return false;
+  sanitizeGrowth(G.save);
+  const list=G.save.growth.talents[id];
+  if(list.indexOf(tid)>=0) return false;
+  if(node.req && list.indexOf(node.req)<0){ toast("需要先点「"+talentById(id, node.req).name+"」"); return false; }
+  const budget=talentBudget(G.save.level);
+  if(list.length>=budget){ toast(budget<=0?"2 级后获得第 1 点天赋":"天赋点已用完"); return false; }
+  list.push(tid);
+  recalcStats();
+  const ok=persist(G.save);
+  if(!ok){ list.pop(); recalcStats(); toast("没有写入存档，点数没有扣。"); return false; }
+  refreshHUD(); if($("growth").classList.contains("on")) renderGrowth();
+  toast("已点「"+node.name+"」");
+  return true;
+}
+function respecCost(){ return 80+15*((G.save&&G.save.level)|0||1); }
+function confirmRespec(){
+  if(!G.save || !spendFresh()) return false;
+  const id=G.classId;
+  sanitizeGrowth(G.save);
+  const list=G.save.growth.talents[id];
+  if(!list.length){ toast("这个职业还没有天赋"); return false; }
+  const cost=respecCost();
+  if((G.save.gold|0)<cost){ toast("金币不足"); return false; }
+  const prev=list.slice();
+  G.save.gold-=cost;
+  G.save.growth.talents[id]=[];
+  recalcStats();
+  const ok=persist(G.save);
+  if(!ok){ G.save.gold+=cost; G.save.growth.talents[id]=prev; recalcStats(); toast("没有写入存档，费用已退回。"); return false; }
+  refreshHUD(); renderGrowth();
+  toast("已收回本职业天赋，技能等级还在");
+  return true;
+}
+function askRespec(){
+  if(!clickOnce("respec")) return;
+  if(!G.save) return;
+  const id=G.classId, list=(G.save.growth&&G.save.growth.talents&&G.save.growth.talents[id])||[];
+  if(!list.length){ toast("这个职业还没有天赋"); return; }
+  const cost=respecCost();
+  if((G.save.gold|0)<cost){ toast("洗点需要 "+cost+" 金"); return; }
+  askConfirm("花费 "+cost+" 金收回「"+CLASSES[id].name+"」已点的天赋？技能升级不退回，其他职业不受影响。", confirmRespec);
+}
+function renderGrowth(){
+  const id=G.classId, s=G.save; if(!s) return;
+  sanitizeGrowth(s);
+  const budget=talentBudget(s.level), spent=s.growth.talents[id].length;
+  const root=$("growBody"); if(!root) return;
+  const cards=SKILL_KEYS.map(k=>{
+    const d=skillNextText(id, k);
+    const btn=d.rank>=5?"<button type='button' disabled>已满级</button>":"<button type='button' data-up='"+k+"'"+(d.ready?"":" disabled")+">"+(d.why||("升级 · "+d.cost+" 金"))+"</button>";
+    return "<div class='growCard'><b>"+d.name+"</b><div>"+d.line+"</div><div class='sub'>"+d.next+"</div>"+btn+"</div>";
+  }).join("");
+  const talents=(TALENTS[id]||[]).map(t=>{
+    const on=hasTalent(id, t.id);
+    const locked=t.req && !hasTalent(id, t.req);
+    const label=on?"已点":locked?"需要前置":(spent>=budget?"点数不足":"点上");
+    return "<button type='button' data-tn='"+t.id+"'"+(on||locked?" disabled":"")+"><b>"+t.name+"</b><small>"+t.text+"</small><em>"+label+"</em></button>";
+  }).join("");
+  root.innerHTML="<div class='growMeta'>天赋点 "+spent+" / "+budget+" · 每 2 级 1 点，最多 3 点。只作用于当前职业。</div>"+
+    "<h3>技能</h3><div class='growGrid'>"+cards+"</div><h3>天赋</h3><div class='talentGrid'>"+talents+"</div>"+
+    "<button type='button' id='growRespec' class='bigbtn gray'>洗点 · "+respecCost()+" 金</button>";
+}
+function openGrowth(){
+  if(G.mode!=="play"||G.dlg||!G.p||G.p.dead) return;
+  G.paused=true; renderGrowth(); modalOn("growth");
+}
+function closeGrowth(){
+  modalOff("growth");
+  if(!$("settings").classList.contains("on") && !$("bag").classList.contains("on")) G.paused=false;
+  refreshHUD();
+}
 function questEntry(q, raw){
   if(!raw || typeof raw!=="object" || !QST_ST[raw.st]) return null;
   return { st:raw.st, pr:Math.max(0, Math.min(q.count||0, raw.pr|0)) };
@@ -2638,7 +2927,7 @@ function questEntry(q, raw){
 function migrateSave(s){
   if(!s || typeof s!=="object") return s;
   if(isNewerSave(s)){ s._newer=true; return s; }
-  if(s.ver!==2){
+  if(s.ver!==2 && s.ver!==SCHEMA){
     const hadStory=!!s.storyDone;
     const old=s.quests && typeof s.quests==="object" ? s.quests : {};
     s.ver=2; s.pots=s.pots||{ h:3, m:2 }; s.bag=Array.isArray(s.bag)?s.bag:[]; s.equip=s.equip||newEquipSave(s.classId||"swordsman");
@@ -2648,7 +2937,9 @@ function migrateSave(s){
     QUESTS.forEach(q=>{ const e=questEntry(q, old[q.id]); if(e) nq[q.id]=e; });
     s.quests=nq; s.storyDone=hadStory; s.bossKills=s.bossKills||0;
   }
-  s.ver=2; s.hasSave=s.hasSave!==false;
+  s.ver=SCHEMA; s.hasSave=s.hasSave!==false;
+  s.rev=Math.max(0, s.rev|0);
+  sanitizeGrowth(s);
   if(!CLASSES[s.classId]) s.classId="swordsman";
   s.level=Math.max(1, Math.min(99, s.level|0 || 1));
   s.xp=Math.max(0, s.xp|0); s.gold=Math.max(0, Math.min(1000000000, s.gold|0));
@@ -3639,7 +3930,7 @@ function requestImport(text){
   const prev=previewImport(text);
   if(!prev.ok){ toast(prev.reason||"无法导入"); return; }
   askConfirm("用这份本地备份覆盖当前浏览器里的存档？覆盖前会留下上一份本地备份。这不是云存档。", ()=>{
-    if(!persist(prev.save)) return;
+    if(!persist(prev.save, {replace:true})) return;
     G.save=prev.save;
     toast("已写入本地存档");
     if(G.mode==="play") toTitle(); else showTitle();
@@ -4080,13 +4371,13 @@ function achHtml(){
 
 /* ===================== rewritten core loop pieces ===================== */
 function newSave(classId){
-  return { ver:2, classId:classId||"swordsman", level:1, xp:0, gold:30, shards:0, kills:0, storyDone:false, hasSave:true, bossKills:0,
-    pots:{ h:3, m:2 }, bag:[], equip:newEquipSave(classId||"swordsman"), quests:newQuestState(), seen:{} };
+  return { ver:SCHEMA, rev:0, classId:classId||"swordsman", level:1, xp:0, gold:30, shards:0, kills:0, storyDone:false, hasSave:true, bossKills:0,
+    pots:{ h:3, m:2 }, bag:[], equip:newEquipSave(classId||"swordsman"), quests:newQuestState(), seen:{}, growth:emptyGrowth() };
 }
 function spawnBoss(){ if(G.boss && !G.boss.dead) return G.boss; G.boss=spawnEnemy("boss",0,40,8,"altar"); return G.boss; }
 function startAdventure(classId, fresh){
   G.classId=classId;
-  if(fresh || !G.save){ G.save=newSave(classId); persist(G.save); }
+  if(fresh || !G.save){ G.save=newSave(classId); persist(G.save, {replace:true}); }
   else { migrateSave(G.save); G.save.classId=classId; persist(G.save); }
   recalcStats();
   G.p={x:TOWN_CFG.spawnX,z:TOWN_CFG.spawnZ,y:0,yaw:0,vx:0,vz:0,hp:ST.hp,mp:ST.mp,dead:false,atkT:0,atkDur:0.3,spinT:0,spinTick:0,spinN:0,
@@ -4152,8 +4443,9 @@ function hitEnemy(e, dmg, nx, nz, knock, o){
   if(e.dead) return false;
   o=o||{};
   const critC=(o.crit!=null?o.crit:0.10)+(ST.crit-10)/100;
-  const crit=Math.random()<critC;
-  const amt=Math.max(1,Math.round(dmg*ST.mul*(crit?1.8:1)*(0.9+Math.random()*0.2)));
+  const crit=G.forceCrit==null ? Math.random()<critC : !!G.forceCrit;
+  const roll=G.forceRoll==null ? (0.9+Math.random()*0.2) : G.forceRoll;
+  const amt=Math.max(1,Math.round(dmg*ST.mul*(crit?1.8:1)*roll));
   e.hp-=amt; e.flash=1; e.sq=Math.min(1,(o.power||0.6)+(crit?0.3:0));
   if(!e.aggro && e.state!=="intro"){ e.aggro=true; if(e.state==="return"||e.state==="idle") e.state="chase"; }
   const kb=knock*(e.boss?0.12:e.elite?0.25:1)*(crit?1.25:1);
@@ -4256,7 +4548,8 @@ function updateDrops(dt){
 function damagePlayer(amt, sx, sz){
   const P=G.p; if(P.dead||G.mode!=="play") return;
   if(P.invT>0||P.dodgeT>0||P.dashT>0){ if(P.dodgeT>0||P.dashT>0){ spawnNum(P.x,(P.y||0)+1.9,P.z,"闪避",3); sfx("orb"); } return; }
-  amt=Math.max(1,Math.round(amt*(1-ST.def/(ST.def+60))*(0.9+Math.random()*0.2)));
+  const roll=G.forceRoll==null ? (0.9+Math.random()*0.2) : G.forceRoll;
+  amt=Math.max(1,Math.round(amt*(1-combatMods().dr)*(1-ST.def/(ST.def+60))*roll));
   P.hp=Math.max(0,P.hp-amt); P.invT=0.6; P.hurtT=0.16; P.atkT=0; P.lungeT=0; G.comboQueued=false;
   let dx=0, dz=1;
   if(sx!=null){ dx=P.x-sx; dz=P.z-sz; const d=Math.hypot(dx,dz)||1; dx/=d; dz/=d; tryMove(dx*0.5, dz*0.5); }
@@ -4467,6 +4760,15 @@ function bindInput(){
   releasePointers=()=>{ joyPid=null; atkPid=null; endJoy(); G.atkHeld=false; CAM.ptrs.clear(); CAM.dragging=false; CAM.pinch0=0; };
   $("talk").addEventListener("click", tryTalk);
   $("btnBag").addEventListener("click", openBag); $("bagX").addEventListener("click", closeBag);
+  $("btnGrow").addEventListener("click", openGrowth);
+  $("btnGrow2").addEventListener("click", ()=>{ closeSettings(); openGrowth(); });
+  $("growX").addEventListener("click", closeGrowth);
+  $("growth").addEventListener("click", e=>{
+    if(e.target.id==="growth"){ closeGrowth(); return; }
+    const up=e.target.closest("[data-up]"); if(up){ upgradeSkill(up.dataset.up); return; }
+    const tn=e.target.closest("[data-tn]"); if(tn){ takeTalent(tn.dataset.tn); return; }
+    if(e.target.id==="growRespec") askRespec();
+  });
   $("btnSet").addEventListener("click", openSettings); $("setX").addEventListener("click", closeSettings);
   $("btnResume").addEventListener("click", closeSettings);
   $("btnQuit").addEventListener("click", ()=>{ closeSettings(); toTitle(); });
@@ -4750,10 +5052,10 @@ function tryAttack(){
   }
   if(G.atkCd>0||P.atkT>0) return;
   const mage=G.classId==="mage", e=nearestEnemy(13); if(e) aimAt(e);
-  G.atkCd=c.atkCd; P.atkT=mage?0.26:0.2; P.atkDur=P.atkT;
+  G.atkCd=cdScale(c.atkCd,"atk"); P.atkT=mage?0.26:0.2; P.atkDur=P.atkT;
   playAttack(G.player, mage?0.42:0.3);
   sfx(mage?"cast":"draw");
-  later(mage?0.11:0.07, ()=>{ if(!G.p.dead && G.mode==="play") fireShot(mage?1:0, 0, c.atk, mage?14:26, e); });
+  later(mage?0.11:0.07, ()=>{ if(!G.p.dead && G.mode==="play") fireShot(mage?1:0, 0, outgoing(c.atk,"atk"), mage?14:26, e); });
 }
 function doMelee(){
   const P=G.p;
@@ -4767,7 +5069,7 @@ function doMelee(){
   sfx("swing");
   const step=G.combo;
   later(sw.dur*0.32, ()=>meleeHit(step));
-  if(step===3) G.atkCd=0.2;
+  if(step===3) G.atkCd=cdScale(0.2,"atk");
 }
 function meleeHit(step){
   const sw=SWING[step-1], c=CLASSES[G.classId], P=G.p; if(P.dead||G.mode!=="play") return;
@@ -4780,7 +5082,7 @@ function meleeHit(step){
     const dx=e.x-P.x, dz=e.z-P.z, d=Math.hypot(dx,dz); if(d-e.r>sw.reach) continue;
     if(d>0.35 && (dx*fx+dz*fz)/d<cosA) continue;
     const nx=d>0.01?dx/d:fx, nz=d>0.01?dz/d:fz;
-    if(hitEnemy(e, c.atk*sw.dmg, nx, nz, sw.knock, { power:heavy?1:0.55, pop:sw.pop })) crit=true;
+    if(hitEnemy(e, outgoing(c.atk*sw.dmg,"atk",heavy), nx, nz, sw.knock, { power:heavy?1:0.55, pop:sw.pop })) crit=true;
     hits++;
   }
   if(hits){ hitStop(sw.stop*(crit?1.35:1)); addShake(sw.shake*(crit?1.35:1)); }
@@ -4788,7 +5090,7 @@ function meleeHit(step){
 function trySkill(n){
   n=n===2?2:1;
   if(!canAct()||busyPlayer()) return;
-  const P=G.p, c=CLASSES[G.classId], key=n===1?"sk1":"sk2", cost=n===1?c.skillMp:c.sk2Mp, cdv=n===1?c.skillCd:c.sk2Cd;
+  const P=G.p, c=CLASSES[G.classId], key=n===1?"sk1":"sk2", cost=n===1?c.skillMp:c.sk2Mp, cdv=cdScale(n===1?c.skillCd:c.sk2Cd,"skill");
   if(G.cd[key]>0) return;
   if(P.mp<cost){ spawnNum(P.x,(P.y||0)+2.0,P.z,"法力不足",3); return; }
   P.mp-=cost; G.cd[key]=cdv; G.cdMax[key]=cdv;
@@ -4811,7 +5113,7 @@ function spinTick(c){
     const e=G.enemies[i]; if(e.dead) continue;
     const dx=e.x-P.x, dz=e.z-P.z, d=Math.hypot(dx,dz); if(d-e.r>2.15) continue;
     const nx=d>0.01?dx/d:0, nz=d>0.01?dz/d:1;
-    hitEnemy(e, c.skill*(last?0.9:0.42), nx, nz, last?8:2.6, { power:last?1:0.45, pop:last?3.6:0, col:0xbff0ff, crit:last?0.25:0.1 }); hits++;
+    hitEnemy(e, outgoing(c.skill*(last?0.9:0.42),"sk1"), nx, nz, last?8:2.6, { power:last?1:0.45, pop:last?3.6:0, col:0xbff0ff, crit:last?0.25:0.1 }); hits++;
   }
   if(last){ spawnDecal("shock", P.x,P.z, 0.6, 2.9, 0x9fe6ff, 0.32); fxPuffRing(P.x,(P.y||0)+0.1,P.z,10,3.2,0xffffff,0.4); }
   if(hits){ hitStop(P.spinN===1?0.05:(last?0.08:0.022)); addShake(last?0.5:0.16); }
@@ -4834,7 +5136,7 @@ function dashStep(dt, c){
     const dx=e.x-P.x, dz=e.z-P.z, d=Math.hypot(dx,dz); if(d-e.r>1.35) continue;
     if(G.dashHitN<16) G.dashHits[G.dashHitN++]=e;
     const side=(dx*fz-dz*fx)>=0?1:-1, nx=fx*0.6+fz*side*0.8, nz=fz*0.6-fx*side*0.8;
-    hitEnemy(e, c.sk2Dmg, nx, nz, 6.5, { power:1, pop:2.8, col:0xffd070, crit:0.25 });
+    hitEnemy(e, outgoing(c.sk2Dmg,"sk2"), nx, nz, 6.5, { power:1, pop:2.8, col:0xffd070, crit:0.25 });
     hitStop(0.06); addShake(0.35);
   }
   if(P.dashT<=0){
@@ -4852,7 +5154,7 @@ function skNova(){
     FX.add.emit(tx+Math.sin(a)*r,0.1,tz+Math.cos(a)*r, 0,1.6+Math.random()*2.2,0, 0.45+Math.random()*0.35, 0.07, 0.02, 0xd8b8ff, 1, 0.5, -1, 0.06); }
   FX.add.emit(P.x+Math.sin(P.yaw)*0.4,(P.y||0)+1.4,P.z+Math.cos(P.yaw)*0.4, 0,0,0, 0.45, 0.25, 0.7, 0xc8a0ff, 1, 0,0,0);
   sfx("charge");
-  later(0.42, ()=>novaBoom(tx,tz,R,c.skill));
+  later(0.42, ()=>novaBoom(tx,tz,R,outgoing(c.skill,"sk1")));
 }
 function novaBoom(x,z,R,dmg){
   if(G.mode!=="play") return;
@@ -4879,13 +5181,13 @@ function skMissiles(){
   if(list[0]) aimAt(list[0]);
   P.atkT=0.36; P.atkDur=0.36; playAttack(G.player,0.42);
   FX.add.emit(P.x+Math.sin(P.yaw)*0.4,(P.y||0)+1.3,P.z+Math.cos(P.yaw)*0.4, 0,0,0, 0.35, 0.25, 0.8, 0x8fd8ff, 1, 0,0,0);
-  [-0.65,0,0.65].forEach((off,i)=>later(0.06+i*0.08, ()=>{ if(G.p.dead) return; fireShot(2, off, c.sk2Dmg, 11, list.length?list[i%list.length]:null); sfx("cast"); }));
+  [-0.65,0,0.65].forEach((off,i)=>later(0.06+i*0.08, ()=>{ if(G.p.dead) return; fireShot(2, off, outgoing(c.sk2Dmg,"sk2"), 11, list.length?list[i%list.length]:null); sfx("cast"); }));
 }
 function skFan(){
   const P=G.p, c=CLASSES[G.classId], e=nearestEnemy(13); if(e) aimAt(e);
   P.atkT=0.3; P.atkDur=0.3; playAttack(G.player,0.32);
   later(0.07, ()=>{ if(G.p.dead) return;
-    for(let i=0;i<7;i++) fireShot(0, (-30+i*10)*Math.PI/180, c.skill, 25, null);
+    for(let i=0;i<7;i++) fireShot(0, (-30+i*10)*Math.PI/180, outgoing(c.skill,"sk1"), 25, null);
     const fx=Math.sin(G.p.yaw), fz=Math.cos(G.p.yaw);
     for(let k=0;k<10;k++) FX.add.emit(G.p.x+fx*0.6,(G.p.y||0)+0.95,G.p.z+fz*0.6, fx*6+(Math.random()-0.5)*5,(Math.random()-0.3)*3,fz*6+(Math.random()-0.5)*5, 0.25, 0.06, 0.01, 0xd8ffa0, 1, 5, 3, 0.05);
     addShake(0.14); sfx("volley"); });
@@ -4898,7 +5200,7 @@ function skPierce(){
     const ox=Math.cos(a)*Math.cos(el)*r, oy=Math.sin(el)*r*0.6, oz=Math.sin(a)*Math.cos(el)*r;
     FX.add.emit(bx+ox,by+oy,bz+oz, -ox*4,-oy*4,-oz*4, 0.25, 0.06, 0.02, 0xe8ff9a, 1, 0, 0, 0.05); }
   sfx("charge");
-  later(0.26, ()=>{ if(G.p.dead) return; fireShot(3, 0, c.sk2Dmg, 34, null);
+  later(0.26, ()=>{ if(G.p.dead) return; fireShot(3, 0, outgoing(c.sk2Dmg,"sk2"), 34, null);
     spawnFlash(G.p.x+Math.sin(G.p.yaw)*0.6,(G.p.y||0)+0.95,G.p.z+Math.cos(G.p.yaw)*0.6,0.2,1.0,0xe8ff9a,0.16);
     spawnDecal("shock", G.p.x,G.p.z,0.2,1.6,0xe8ff9a,0.3); addShake(0.3); sfx("pierce"); });
 }
@@ -4910,7 +5212,7 @@ function tryDodge(){
   P.dodgeDX=dx; P.dodgeDZ=dz; P.yaw=Math.atan2(dx,dz); P.dodgeT=DODGE.dur; P.dodgeV=DODGE.dist/DODGE.dur;
   P.invT=Math.max(P.invT, DODGE.inv); P.atkT=0; P.spinT=0; P.hurtT=0; P.lungeT=0; G.comboQueued=false;
   if(G.player && G.player.userData) G.player.userData.atkUntil=0;
-  G.cd.dg=DODGE.cd; G.cdMax.dg=DODGE.cd;
+  G.cd.dg=cdScale(DODGE.cd,"dg"); G.cdMax.dg=G.cd.dg;
   fxPuffRing(P.x,(P.y||0)+0.1,P.z,8,2.0,0xffffff,0.4);
   sfx("dodge");
 }
@@ -5083,7 +5385,7 @@ function init(){
   uiInit();
   $("loadtip").textContent=TIPS[Math.floor(Math.random()*TIPS.length)];
   window.__mengyu={ G, GLB, TOWN, TOWN_CFG, CAM, groundAt, inTownBounds, startAdventure, tryAttack, trySkill, tryDodge, damagePlayer, hitEnemy, spawnSlime, spawnEnemy, FX, SFX, SHOTS, DROPS, LATER, camClamp,
-    ST, QUESTS, NPCS, ZONES, ALTAR, ELITE_SPOT, SPAWN, ESHOTS, LOOT, MUS, SET, gainXP, genItem, addItem, equipItem, recalcStats, usePotion, tryTalk, advDlg, closeDlg, openBag, closeBag, openSettings, closeSettings, showTitle, showSelect, selectClass, beginNew, toTitle, resurrect, xpNeed, qst, tracked, loadSave, persist, migrateSave, readSaveState, previewImport, exportSaveText, requestImport, exportCurrent, BUILD, SCHEMA, SAVE_KEY, SAVE_BAK, SAVE_BAD, clearEnemies, populateField, killEnemy, refreshHUD, drawMinimap, charThumb, camera, scene, startTrial, endTrial, TRIAL, checkAchievements, achHtml, ACH, bossLevel, tickCoach, finishCoach, get camera(){ return camera; }, get renderer(){ return renderer; } };
+    ST, QUESTS, NPCS, ZONES, ALTAR, ELITE_SPOT, SPAWN, ESHOTS, LOOT, MUS, SET, gainXP, genItem, addItem, equipItem, recalcStats, usePotion, tryTalk, advDlg, closeDlg, openBag, closeBag, openSettings, closeSettings, showTitle, showSelect, selectClass, beginNew, toTitle, resurrect, xpNeed, qst, tracked, loadSave, persist, migrateSave, readSaveState, previewImport, exportSaveText, requestImport, exportCurrent, BUILD, SCHEMA, SAVE_KEY, SAVE_BAK, SAVE_BAD, clearEnemies, populateField, killEnemy, refreshHUD, drawMinimap, charThumb, camera, scene, startTrial, endTrial, TRIAL, checkAchievements, achHtml, ACH, bossLevel, tickCoach, finishCoach, upgradeSkill, takeTalent, confirmRespec, askRespec, openGrowth, closeGrowth, renderGrowth, outgoing, cdScale, combatMods, skillRank, talentBudget, respecCost, inspectGrowth, get camera(){ return camera; }, get renderer(){ return renderer; } };
   loadCharacterModels(()=>{ upgradeVisuals(); });
   window.addEventListener("resize", ()=>{ uiLayout(); });
 
