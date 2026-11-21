@@ -126,22 +126,33 @@ const INSTALL=`(()=>{
       m.G.atkHeld=false;
       return {dead:false, bd:0, n:0, hp:Math.round(P.hp), max:m.ST.hp};
     }
-    const letHit=style==="dun" && ((m.DUN.stats&&m.DUN.stats.hurt)||0)===0;
-    const ranged=m.G.classId!=="swordsman";
-    const want=letHit?2.4:(ranged?4.6:1.7);
-    const threat=foes.find(e=> (e.state==="windup"||e.state==="leap"||e.state==="strike") && Math.hypot((e.tcx||e.x)-P.x,(e.tcz||e.z)-P.z)<((e.tr||1.6)+1.1));
-    if(bd>want+0.4) window.__face(best.x, best.z);
-    else if(!letHit && ranged && bd<want-1.2) window.__face(P.x-(best.x-P.x), P.z-(best.z-P.z));
+    const melee=m.G.classId==="swordsman";
+    const want=style==="field"?1.7:(melee?1.65:(best.ranged?5.4:4.6));
+    const threat=foes.find(e=>!e.ranged && (e.state==="windup"||e.state==="leap"||e.state==="strike") && Math.hypot((e.tcx||e.x)-P.x,(e.tcz||e.z)-P.z)<((e.tr||1.5)+1.3));
+    if(bd>want+0.45) window.__face(best.x, best.z);
+    else if(!melee && style!=="field" && bd<want-1.3) window.__face(P.x-(best.x-P.x), P.z-(best.z-P.z));
     else m.G.joy.x=m.G.joy.y=0;
-    if(letHit){ m.G.atkHeld=false; return {dead:false, bd:+bd.toFixed(2), n:foes.length, hp:Math.round(P.hp), max:m.ST.hp, hold:true}; }
-    if(threat && (m.G.cd.dg||0)<=0 && P.hp<m.ST.hp*0.8) window.__tap("dg");
-    const reach=ranged?9:2.3;
-    m.G.atkHeld=bd<reach;
-    if(m.G.atkHeld) window.__tap("atk");
+    let skill=false, pot=false;
+    if(threat && (m.G.cd.dg||0)<=0) window.__tap("dg");
+    const reach=melee||style==="field"?2.3:11;
+    m.G.atkHeld=bd<reach && !threat;
     const bossUp=foes.some(e=>e.dunBoss);
-    if((style==="field" || bossUp) && bd<9 && P.mp>18 && (m.G.cd.sk1||0)<=0) window.__tap("sk1");
-    if(P.hp<m.ST.hp*0.45 && m.G.save.pots.h>0 && (m.G.cd.poth||0)<=0) window.__tap("potH");
-    return {dead:false, bd:+bd.toFixed(2), n:foes.length, hp:Math.round(P.hp), max:m.ST.hp};
+    if((style==="field" || bossUp) && bd<8 && P.mp>16 && (m.G.cd.sk1||0)<=0 && !threat){ window.__tap("sk1"); skill=true; }
+    if(P.hp<m.ST.hp*0.55 && m.G.save.pots.h>0 && (m.G.cd.poth||0)<=0){ window.__tap("potH"); pot=true; }
+    return {dead:false, bd:+bd.toFixed(2), n:foes.length, hp:Math.round(P.hp), max:m.ST.hp, skill, pot};
+  };
+  window.__simClear=function(maxSec){
+    let skills=0, pots=0;
+    const max=Math.round((maxSec||90)*60);
+    for(let i=0;i<max;i++){
+      const s=window.__play("dun");
+      if(s&&s.skill) skills++;
+      if(s&&s.pot) pots++;
+      m.simSteps(1, 1/60);
+      if(m.G.p.dead || m.G.save.voucher || !m.DUN.on) break;
+    }
+    const st=m.DUN.stats||{};
+    return {win:!!m.G.save.voucher, dead:!!m.G.p.dead, clock:+(m.DUN.clock||0).toFixed(1), hp:Math.round(m.G.p.hp), max:m.ST.hp, hurt:st.hurt||0, dmg:st.hurtDmg||0, wind:st.windups||0, shots:st.shots||0, shotHits:st.shotHits||0, dodges:st.dodges||0, skills, pots, src:st.src||{}, spawn:st.spawnDist, min:st.minDist};
   };
   return true;
 })()`;
@@ -260,9 +271,9 @@ check("dungeon opens from the guard after the earned quests", opened.ok===true &
 const kids0=await cur.ev(`window.__mengyu.scene.children.length`);
 const mus0=await cur.ev(`(()=>{ const g=window.__mengyu.MUS.gain; if(g) g.userMark=7; return !!(g && g.userMark===7); })()`);
 await cur.ev(`(()=>{ const go=document.querySelector("#dunBody [data-dun='normal']"); if(go && !go.disabled) go.click(); return true; })()`);
-const run=await until(cur, `(()=>{ const s=window.__play("dun"); const m=window.__mengyu; s.ok=!!m.G.save.voucher; s.dead=!!m.G.p.dead; s.clock=m.DUN.clock?+m.DUN.clock.toFixed(1):0; s.stats=Object.assign({}, m.DUN.stats||{}); s.php=Math.round(m.G.p.hp); s.max=m.ST.hp; return s; })()`, 150000);
-const swordOk=run.last && run.last.ok===true && run.last.dead!==true && run.last.stats && run.last.stats.hurt>0 && run.last.stats.windups>0 && run.last.stats.minDist<run.last.stats.spawnDist-0.4;
-check("fresh swordsman clears normal while monsters chase and hit", swordOk, JSON.stringify({wall:run.wall, run:run.last}));
+const run=await cur.ev(`window.__simClear(90)`);
+const swordOk=run && run.win===true && run.dead!==true && run.hurt>0 && run.shotHits>0 && run.clock>=12;
+check("fresh swordsman clears normal on the fixed 60fps clock", swordOk, JSON.stringify(run));
 const claim=await cur.ev(`(()=>{
   const m=window.__mengyu, g0=m.G.save.gold;
   const btn=document.getElementById("dunClaim");
@@ -320,15 +331,53 @@ async function prepClear(id, level, diff, label){
     card.click();
     return {ok:m.DUN.on===true};
   })()`);
-  const fought=go.ok?await until(cur, `(()=>{ const s=window.__play("dun"); const m=window.__mengyu; s.ok=!!m.G.save.voucher; s.dead=!!m.G.p.dead; s.clock=m.DUN.clock?+m.DUN.clock.toFixed(1):0; s.stats=Object.assign({}, m.DUN.stats||{}); s.php=Math.round(m.G.p.hp); s.max=m.ST.hp; return s; })()`, 150000):{wall:0, last:null};
-  const ok=go.ok===true && fought.last && fought.last.ok===true && fought.last.dead!==true && fought.last.stats.hurt>0 && fought.last.stats.windups>0 && fought.last.stats.minDist<fought.last.stats.spawnDist-0.4;
-  check(label, ok, JSON.stringify({door:door.last, go, wall:fought.wall, run:fought.last, note:"separate save, level "+level+", starter weapon"}));
+  const fought=go.ok?await cur.ev(`window.__simClear(90)`):null;
+  const pace=fought && fought.win===true && fought.dead!==true && fought.clock>=18 && fought.shotHits>=1 && fought.dodges>=1 && fought.hurt>0;
+  const hard=diff!=="hard" || (fought && fought.dmg>=150 && fought.src && fought.src.after>0 && fought.shotHits>=3 && fought.clock>=24);
+  check(label, go.ok===true && pace && hard, JSON.stringify({door:door.last, go, run:fought, note:"fixed 1/60 step, level "+level+", starter weapon"}));
   await cur.ev(`(()=>{ const b=document.getElementById("dunClaim"); if(b) b.click(); if(window.__mengyu.DUN.on) window.__mengyu.endDungeon("leave"); if(window.__mengyu.G.p.dead) document.getElementById("goTown").click(); return true; })()`);
   return fought;
 }
-await prepClear("mage", 3, "normal", "SEPARATE mage normal clear");
-await prepClear("archer", 3, "normal", "SEPARATE archer normal clear");
-await prepClear("swordsman", 6, "hard", "SEPARATE swordsman hard clear");
+const clocks=await cur.ev(`(async()=>{
+  const m=window.__mengyu;
+  const sleep=(ms)=>new Promise(r=>setTimeout(r,ms));
+  m.G.p.dead=false; m.G.paused=false; m.G.p.hp=m.ST.hp;
+  m.startDungeon("normal");
+  const c0=m.DUN.clock, w0=performance.now();
+  await sleep(1000);
+  const live={game:+(m.DUN.clock-c0).toFixed(3), wall:+((performance.now()-w0)/1000).toFixed(3), step:m.G.perf.stepMs};
+  m.endDungeon("leave");
+  m.G.p.dead=false; m.G.paused=false; m.G.p.hp=m.ST.hp;
+  m.startDungeon("normal");
+  m.simSteps(60, 1/60);
+  const fixed=+m.DUN.clock.toFixed(3);
+  m.endDungeon("leave");
+  m.G.backgrounded=true;
+  await sleep(400);
+  m.G.backgrounded=false;
+  await sleep(120);
+  return {live, fixed, resume:m.G.perf.stepMs};
+})()`);
+check("realtime headless is slower than the game clock, and a fixed step matches 60fps", clocks.live.game<clocks.live.wall*0.6 && Math.abs(clocks.fixed-1)<0.08 && clocks.resume<=50, JSON.stringify(clocks));
+const stand=await cur.ev(`(()=>{
+  const m=window.__mengyu;
+  m.startAdventure("swordsman", true); m.finishCoach();
+  m.G.save.level=2; m.recalcStats(); m.G.p.hp=m.ST.hp; m.G.p.mp=m.ST.mp; m.G.p.dead=false; m.G.paused=false;
+  m.startDungeon("normal");
+  for(let i=0;i<20*60;i++){
+    m.G.joy.x=m.G.joy.y=0; m.G.atkHeld=false;
+    m.simSteps(1, 1/60);
+    if(m.G.p.dead) break;
+    if((m.DUN.stats.shotHits||0)>0 && m.DUN.stats.hurt>0 && m.DUN.clock>6) break;
+  }
+  return {dead:!!m.G.p.dead, hp:Math.round(m.G.p.hp), max:m.ST.hp, clock:+m.DUN.clock.toFixed(1), hurt:m.DUN.stats.hurt, dmg:m.DUN.stats.hurtDmg, shotHits:m.DUN.stats.shotHits, src:m.DUN.stats.src};
+})()`);
+check("standing still is hit by a bite and a shot without being scripted to die", stand.hurt>0 && stand.shotHits>0, JSON.stringify(stand));
+await cur.ev(INSTALL);
+await prepClear("swordsman", 2, "normal", "SEPARATE swordsman normal at level 2");
+await prepClear("mage", 2, "normal", "SEPARATE mage normal at level 2");
+await prepClear("archer", 2, "normal", "SEPARATE archer normal at level 2");
+await prepClear("swordsman", 6, "hard", "SEPARATE swordsman hard at level 6");
 
 const slow=await attach(base+"index.html");
 let throttled=false, throttleErr="";
@@ -341,7 +390,8 @@ check("throttled load still reaches the title", throttled===true, throttleErr||"
 const blocked=await attach(base+"about:blank");
 let townFail=null, blockErr="";
 try{
-  await cdp.send("Network.setBlockedURLs",{urls:["*town.glb*"]},blocked.sessionId);
+  await cdp.send("Network.setCacheDisabled",{cacheDisabled:true},blocked.sessionId);
+  await cdp.send("Network.setBlockedURLs",{urls:["*town.glb*","*models/town*"]},blocked.sessionId);
   await cdp.send("Page.navigate",{url:base+"index.html"},blocked.sessionId);
   for(let i=0;i<80;i++){ await sleep(250); if(await blocked.ev(`document.documentElement.getAttribute('data-ready')==='1'`)) break; }
   townFail=await blocked.ev(`(()=>{ const n=document.getElementById("saveNote"); return {note:n&&n.textContent, retry:document.getElementById("btnReload")&&document.getElementById("btnReload").style.display}; })()`);

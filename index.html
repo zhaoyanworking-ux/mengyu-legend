@@ -3842,8 +3842,9 @@ function updateEShots(dt){
     s.age+=dt; s.life-=dt; s.x+=s.vx*dt; s.z+=s.vz*dt;
     if(Math.random()<0.7) FX.add.emit(s.x,s.y,s.z,(Math.random()-0.5)*0.5,(Math.random()-0.5)*0.5,(Math.random()-0.5)*0.5,0.3,s.s*0.7,0.03,s.col,0.8,2,0,0);
     if(!P.dead && Math.abs(s.x-P.x)<0.6 && Math.abs(s.z-P.z)<0.6 && Math.hypot(s.x-P.x,s.z-P.z)<0.35+s.s){
-      if(typeof DUN!=="undefined" && DUN.on) DUN.stats.shotHits++;
-      damagePlayer(s.dmg, s.x-s.vx, s.z-s.vz); fxBurst(s.x,s.y,s.z,s.col,10,3,0.3,0.08,2); s.on=false; continue;
+      const res=damagePlayer(s.dmg, s.x-s.vx, s.z-s.vz, "shoot");
+      if(typeof DUN!=="undefined" && DUN.on && res==="hit") DUN.stats.shotHits++;
+      fxBurst(s.x,s.y,s.z,s.col,10,3,0.3,0.08,2); s.on=false; continue;
     }
     if(s.life<=0 || s.x<FIELD.minX-4 || s.x>FIELD.maxX+4 || s.z<15 || s.z>FIELD.maxZ+4){ s.on=false; fxBurst(s.x,s.y,s.z,s.col,5,1.5,0.25,0.07,1); continue; }
     _dummy.position.set(s.x,s.y,s.z); _dummy.rotation.set(0,0,0); _dummy.scale.setScalar(s.s*(1+0.15*Math.sin(s.age*30))); _dummy.updateMatrix();
@@ -3988,7 +3989,7 @@ function enemyStrike(e, P){
     const by=e.fly+0.9; const dx=P.x-e.x, dz=P.z-e.z;
     fireEShot(e.x+dx*0.08, by, e.z+dz*0.08, dx, dz, 8.5, e.dmg, 0xc080ff, 0.3);
     if(e.dun && typeof DUN!=="undefined") DUN.stats.shots++;
-    sfx("eshot"); e.state="recover"; e.t=0.3; e.cd=1.9+Math.random()*1.0; return;
+    sfx("eshot"); e.state="recover"; e.t=0.3; e.cd=(e.dun&&DUN.diff==="hard"?1.05:e.dun?1.45:1.9)+Math.random()*0.35; return;
   }
   if(e.atk==="burst"){
     const n=e.phase===2?16:12, off=Math.random()*Math.PI;
@@ -4009,11 +4010,15 @@ function enemyStrike(e, P){
   e.state="strike"; e.t=0.16; e.vy=3.4; e.lv2=1.0/0.16; e.ax=(e.tcx-e.x); e.az=(e.tcz-e.z); const L=Math.hypot(e.ax,e.az)||1; e.ax/=L; e.az/=L; e.lv2=Math.min(L,1)/0.16;
 }
 function resolveStrike(e, P){
-  if(Math.hypot(P.x-e.tcx,P.z-e.tcz)<e.tr+0.3) damagePlayer(e.atk==="bite"?e.dmg:Math.round(e.dmg*1.35), e.x, e.z);
+  if(Math.hypot(P.x-e.tcx,P.z-e.tcz)<e.tr+0.3) damagePlayer(e.atk==="bite"?e.dmg:Math.round(e.dmg*1.35), e.x, e.z, e.atk||"melee");
   if(e.heavy){ addShake(e.boss?0.75:0.5); spawnDecal("shock", e.tcx,e.tcz,0.5,e.tr*1.3,e.boss?0xd090ff:0xffc080,0.45); fxPuffRing(e.tcx,0.15,e.tcz,14,4.5,0xf0e8ff,0.7); fxBurst(e.tcx,0.3,e.tcz,0xc8b8a8,16,5,0.5,0.12,12); sfx("slam"); }
   else fxPuffRing(e.tcx,0.12,e.tcz,5,1.6,0xffffff,0.3);
   if(e.tele){ releaseDecal(e.tele); e.tele=null; }
-  e.state="recover"; e.t=e.boss?(e.phase===2?0.55:0.8):e.elite?0.9:0.6;
+  if(e.dunBoss && DUN.diff==="hard"){
+    const cx=e.tcx, cz=e.tcz, rad=e.tr+0.9, boom=Math.round(e.dmg*0.85);
+    later(0.55, ()=>{ if(e.dead || !DUN.on || G.p.dead) return; if(Math.hypot(G.p.x-cx, G.p.z-cz)<rad) damagePlayer(boom, e.x, e.z, "after"); });
+  }
+  e.state="recover"; e.t=e.dunBoss?(DUN.diff==="hard"?1.25:1.05):e.boss?(e.phase===2?0.55:0.8):e.elite?0.9:0.6;
 }
 function bossThink(e, dt, P, dx, dz, dist){
   if(e.phase===1 && e.hp<e.max*0.5){ e.phase=2; banner("狂暴！","蚀雾史莱姆王的攻击变得更加猛烈"); sfx("roar"); addShake(0.6); e.spd*=1.25; e.state="recover"; e.t=0.8; return; }
@@ -4841,9 +4846,11 @@ function musDuck(name){
 /* ===================== 蚀雾回廊: one arena, two difficulties, separate from the field ===================== */
 const DUN_DIFF={
   normal:{ name:"普通", lv:2, time:110, gold:90, xp:80, rar:1, pots:[1,0],
-    waves:[["slime",2,2],["wisp",1,2],["captain",1,3]] },
-  hard:{ name:"困难", lv:6, time:120, gold:160, xp:140, rar:2, pots:[1,1],
-    waves:[["slime",2,4],["spike",1,4],["captain",1,5]] }
+    waves:[["slime",2,2],["wisp",2,2],["captain",1,3]],
+    blurb:"史莱姆会追上来咬，雾灵会射。看守的红圈可以翻滚躲开。" },
+  hard:{ name:"困难", lv:6, time:140, gold:160, xp:140, rar:2, pots:[1,1],
+    waves:[["slime",3,4],["wisp",2,4],["captain",1,5]],
+    blurb:"敌人更多，雾灵射得更勤。看守砸完还会再震一次，并带着一只雾灵。" }
 };
 const DUN={ on:false, diff:"", wave:0, t:0, gap:0.8, token:"", phase:"", reward:null, cx:0, cz:28.5, clock:0,
   stats:{hurt:0,hurtDmg:0,windups:0,shots:0,minDist:99} };
@@ -4888,7 +4895,8 @@ function renderDungeon(){
   const cards=["normal","hard"].map(id=>{
     const p=previewDungeon(id,s), blocked=!!(s.voucher&&!s.voucher.taken), low=(s.level|0)<p.need, ok=!blocked && !low;
     const label=ok?"进入"+p.name:(blocked?"先领取上一张凭证":"未达到 Lv."+p.need);
-    return "<button type='button' class='dunCard' data-dun='"+id+"'"+(ok?"":" disabled")+"><b>"+p.name+" · Lv."+p.need+"</b><small>"+p.waves+" 波 · "+p.time+" 秒 · 成长 ×"+p.mul+"</small><small>"+p.gold+" 金 · "+p.xp+" 经验 · 药水 "+p.pots[0]+"/"+p.pots[1]+" · "+p.itemName+"</small><em>"+label+"</em></button>";
+    const blurb=(DUN_DIFF[id]&&DUN_DIFF[id].blurb)||"";
+    return "<button type='button' class='dunCard' data-dun='"+id+"'"+(ok?"":" disabled")+"><b>"+p.name+" · Lv."+p.need+"</b><small>"+p.waves+" 波 · "+p.time+" 秒 · 成长 ×"+p.mul+"</small><small>"+blurb+"</small><small>"+p.gold+" 金 · "+p.xp+" 经验 · 药水 "+p.pots[0]+"/"+p.pots[1]+" · "+p.itemName+"</small><em>"+label+"</em></button>";
   }).join("");
   let claim="";
   if(s.voucher && !s.voucher.taken){
@@ -4921,8 +4929,8 @@ function startDungeon(diff){
   s.run=run;
   if(!persist(s)){ s.run=null; toast("存档没写成，没有进入回廊。"); return false; }
   clearEnemies(); SPAWN.t=1e9;
-  DUN.on=true; DUN.diff=diff; DUN.wave=0; DUN.t=d.time; DUN.gap=0.8; DUN.token=token; DUN.phase="fight"; DUN.reward=reward; DUN.clock=0;
-  DUN.stats={hurt:0,hurtDmg:0,windups:0,shots:0,shotHits:0,minDist:99,spawnDist:0};
+  DUN.on=true; DUN.diff=diff; DUN.wave=0; DUN.t=d.time; DUN.gap=3.0; DUN.token=token; DUN.phase="fight"; DUN.reward=reward; DUN.clock=0;
+  DUN.stats={hurt:0,hurtDmg:0,windups:0,shots:0,shotHits:0,shotDodge:0,dodges:0,minDist:99,spawnDist:0,src:{}};
   G.p.x=DUN.cx; G.p.z=DUN.cz-4.2; G.p.yaw=0; G.p.vx=0; G.p.vz=0;
   camReset(0); updateCamera._init=false;
   closeDungeon(); G.paused=false;
@@ -4932,24 +4940,37 @@ function startDungeon(diff){
   sfx("roar"); setMusicMood("boss");
   return true;
 }
+function dunTune(e, kind){
+  const hard=DUN.diff==="hard";
+  const hp=kind==="captain"?(hard?980:740):kind==="wisp"?(hard?170:150):kind==="spike"?(hard?180:140):(hard?280:240);
+  e.max=e.hp=hp;
+  e.dun=true; e.aggro=true; e.hx=DUN.cx; e.hz=DUN.cz;
+  if(kind==="captain"){
+    e.dunBoss=true; e.heavy=true; e.elite=true; e.name="回廊看守";
+    e.wind=hard?1.15:1.0; e.cd=0.85; e.dmg=Math.round(e.dmg*(hard?1.55:1.15));
+  } else if(kind==="wisp"){
+    e.cd=hard?0.25:0.45; e.wind=0.55;
+  } else e.cd=0.7;
+}
 function dunSpawn(){
   const spec=DUN_DIFF[DUN.diff].waves[DUN.wave]; if(!spec) return;
   const captain=spec[0]==="captain", kind=captain?"elite":spec[0], n=spec[1], lv=spec[2];
   let nearest=99;
+  const ahead=kind==="wisp"?7.4:6.1;
   for(let i=0;i<n;i++){
-    const x=DUN.cx+(i-(n-1)/2)*1.7, z=DUN.cz-4.2+(kind==="wisp"?4.6:3.8);
+    const ang=(i-(n-1)/2)*0.7;
+    const x=DUN.cx+Math.sin(ang)*ahead, z=DUN.cz-4.2+Math.cos(ang)*ahead;
     const e=spawnEnemy(kind, x, z, lv, "slope");
-    e.dun=true; e.aggro=true; e.hx=DUN.cx; e.hz=DUN.cz; e.cd=0.55;
-    if(captain){
-      e.dunBoss=true; e.heavy=true; e.elite=true; e.name="回廊看守";
-      e.max=e.hp=DUN.diff==="hard"?280:150;
-      e.cd=0.35;
-    } else e.max=e.hp=Math.max(e.hp, DUN.diff==="hard"?110:78);
+    dunTune(e, captain?"captain":kind);
     nearest=Math.min(nearest, Math.hypot(e.x-G.p.x, e.z-G.p.z));
+  }
+  if(DUN.wave===0 || (captain && DUN.diff==="hard")){
+    const w=spawnEnemy("wisp", DUN.cx+(captain?2.4:-2.6), DUN.cz+1.8, lv, "slope");
+    dunTune(w, "wisp");
   }
   if(!DUN.stats.spawnDist) DUN.stats.spawnDist=Math.round(nearest*100)/100;
   DUN.wave++;
-  banner("第 "+DUN.wave+" / 3 波", captain?"看守会跳砸，先躲开红圈":"它们会追过来");
+  banner("第 "+DUN.wave+" / 3 波", captain?"看守会跳砸，先躲开红圈":(kind==="wisp"?"雾灵会射，躲开或贴上去":"它们会从远处追过来"));
   sfx("summon");
 }
 function clearDunEnemies(){
@@ -5036,7 +5057,7 @@ function updateDungeon(dt){
   const alive=G.enemies.some(e=>e.dun&&!e.dead);
   if(!alive){
     if(DUN.wave>=DUN_DIFF[DUN.diff].waves.length){ winDungeon(); return; }
-    DUN.gap-=dt; if(DUN.gap<=0){ DUN.gap=0.8; dunSpawn(); }
+    DUN.gap-=dt; if(DUN.gap<=0){ DUN.gap=3.0; dunSpawn(); }
   }
   DUN.clock+=dt;
   const dx=G.p.x-DUN.cx, dz=G.p.z-DUN.cz, dist=Math.hypot(dx,dz);
@@ -5336,18 +5357,25 @@ function updateDrops(dt){
   if(nc) COIN_INST.instanceMatrix.needsUpdate=true; if(no) ORB_INST.instanceMatrix.needsUpdate=true;
   if(np){ POT_INST.instanceMatrix.needsUpdate=true; if(POT_INST.instanceColor) POT_INST.instanceColor.needsUpdate=true; }
 }
-function damagePlayer(amt, sx, sz){
-  const P=G.p; if(P.dead||G.mode!=="play") return;
-  if(P.invT>0||P.dodgeT>0||P.dashT>0){ if(P.dodgeT>0||P.dashT>0){ spawnNum(P.x,(P.y||0)+1.9,P.z,"闪避",3); sfx("orb"); } return; }
+function damagePlayer(amt, sx, sz, why){
+  const P=G.p; if(P.dead||G.mode!=="play") return "dead";
+  if(P.invT>0||P.dodgeT>0||P.dashT>0){
+    if(P.dodgeT>0||P.dashT>0){ spawnNum(P.x,(P.y||0)+1.9,P.z,"闪避",3); sfx("orb"); }
+    if(typeof DUN!=="undefined" && DUN.on && why==="shoot") DUN.stats.shotDodge=(DUN.stats.shotDodge||0)+1;
+    return "iframe";
+  }
   const roll=G.forceRoll==null ? (0.9+Math.random()*0.2) : G.forceRoll;
   amt=Math.max(1,Math.round(amt*(1-combatMods().dr)*(1-ST.def/(ST.def+60))*roll));
   if(G.buff){
     if(G.buff.guardT>0 && G.buff.guard>0){ const a=Math.min(amt, G.buff.guard); G.buff.guard-=a; amt-=a; if(G.buff.guard<=0) G.buff.guardT=0; }
     if(amt>0 && G.buff.barrierT>0 && G.buff.barrier>0){ const a=Math.min(amt, G.buff.barrier); G.buff.barrier-=a; amt-=a; if(G.buff.barrier<=0) G.buff.barrierT=0; }
   }
-  if(amt<=0){ spawnNum(P.x,(P.y||0)+1.8,P.z,"格挡",4); sfx("orb"); return; }
+  if(amt<=0){ spawnNum(P.x,(P.y||0)+1.8,P.z,"格挡",4); sfx("orb"); return "block"; }
   P.hp=Math.max(0,P.hp-amt); P.invT=0.6; P.hurtT=0.16; P.atkT=0; P.lungeT=0; G.comboQueued=false;
-  if(typeof DUN!=="undefined" && DUN.on){ DUN.stats.hurt++; DUN.stats.hurtDmg+=amt; }
+  if(typeof DUN!=="undefined" && DUN.on){
+    DUN.stats.hurt++; DUN.stats.hurtDmg+=amt;
+    const k=why||"hit"; DUN.stats.src[k]=(DUN.stats.src[k]||0)+amt;
+  }
   let dx=0, dz=1;
   if(sx!=null){ dx=P.x-sx; dz=P.z-sz; const d=Math.hypot(dx,dz)||1; dx/=d; dz/=d; tryMove(dx*0.5, dz*0.5); }
   HUDFX.vig=1;
@@ -5356,13 +5384,25 @@ function damagePlayer(amt, sx, sz){
   hitSpark(P.x-dx*0.3,(P.y||0)+0.9,P.z-dz*0.3,dx,dz,0xff6a6a,0.6);
   addShake(0.45); hitStop(0.05); sfx("hurt");
   refreshHUD();
-  if(P.hp<=0){
+    if(P.hp<=0){
     P.dead=true; sfx("die"); timeSlow(0.35, 0.9);
     if(DUN.on) endDungeon("dead");
     clearCombatBuffs();
     const tip=$("overTip"); if(tip) tip.textContent="";
     setTimeout(()=>{ if(G.p.dead) $("over").style.display="flex"; }, 1100);
+    return "hit";
   }
+  return "hit";
+}
+function simSteps(n, step){
+  const base=Math.min(0.05, step>0?step:(1/60));
+  const dt=base*(G.timeScale==null?1:G.timeScale);
+  const count=Math.max(0, n|0);
+  for(let i=0;i<count;i++){
+    if(G.atkHeld && G.mode==="play" && !G.paused && !G.p.dead) tryAttack();
+    update(dt);
+  }
+  return {n:count, dt, clock:DUN.clock};
 }
 function resurrect(){
   if(DUN.on) endDungeon("dead");
@@ -6131,6 +6171,7 @@ function tryDodge(){
   P.invT=Math.max(P.invT, DODGE.inv); P.atkT=0; P.spinT=0; P.hurtT=0; P.lungeT=0; G.comboQueued=false;
   if(G.player && G.player.userData) G.player.userData.atkUntil=0;
   G.cd.dg=cdScale(DODGE.cd,"dg"); G.cdMax.dg=G.cd.dg;
+  if(typeof DUN!=="undefined" && DUN.on) DUN.stats.dodges=(DUN.stats.dodges||0)+1;
   fxPuffRing(P.x,(P.y||0)+0.1,P.z,8,2.0,0xffffff,0.4);
   sfx("dodge");
 }
@@ -6302,7 +6343,7 @@ function init(){
   applyQuality();
   uiInit();
   $("loadtip").textContent=TIPS[Math.floor(Math.random()*TIPS.length)];
-  window.__mengyu={ G, GLB, TOWN, TOWN_CFG, CAM, groundAt, inTownBounds, startAdventure, tryAttack, trySkill, tryDodge, damagePlayer, hitEnemy, spawnSlime, spawnEnemy, FX, SFX, SHOTS, DROPS, LATER, camClamp,
+  window.__mengyu={ G, GLB, TOWN, TOWN_CFG, CAM, groundAt, inTownBounds, startAdventure, tryAttack, trySkill, tryDodge, damagePlayer, hitEnemy, spawnSlime, spawnEnemy, simSteps, FX, SFX, SHOTS, DROPS, LATER, camClamp,
     ST, QUESTS, NPCS, ZONES, ALTAR, ELITE_SPOT, SPAWN, ESHOTS, LOOT, MUS, SET, gainXP, grantXP, genItem, addItem, equipItem, recalcStats, usePotion, tryTalk, advDlg, closeDlg, openBag, closeBag, openSettings, closeSettings, showTitle, showSelect, selectClass, beginNew, toTitle, resurrect, xpNeed, qst, tracked, loadSave, persist, migrateSave, readSaveState, previewImport, exportSaveText, requestImport, exportCurrent, BUILD, SCHEMA, SAVE_KEY, SAVE_BAK, SAVE_BAD, SAVE_NEWER, clearEnemies, populateField, killEnemy, refreshHUD, drawMinimap, charThumb, camera, scene, startTrial, endTrial, TRIAL, DUN, DUN_DIFF, openDungeon, closeDungeon, startDungeon, endDungeon, claimVoucher, takePending, previewDungeon, growthMul, openQuestLog, closeQuestLog, claimQuest, acceptQuest, checkAchievements, achHtml, ACH, bossLevel, tickCoach, finishCoach, upgradeSkill, takeTalent, confirmRespec, askRespec, openGrowth, closeGrowth, renderGrowth, equipSkill, trySkillSlot, castSkill, paintSkills, SKILL_BOOK, loadoutOf, slotCount, clearCombatBuffs, outgoing, cdScale, combatMods, skillRank, talentBudget, respecCost, inspectGrowth, inspectGear, enhanceItem, toggleLock, sellItem, equipItem, addItem, bulkQuote, confirmBulk, effStat, sellValue, enhanceCost, get camera(){ return camera; }, get renderer(){ return renderer; } };
   loadCharacterModels(()=>{ upgradeVisuals(); });
   window.addEventListener("resize", ()=>{ uiLayout(); });

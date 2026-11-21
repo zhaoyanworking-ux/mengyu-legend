@@ -1,7 +1,7 @@
 // RC-4 dungeon and quest rewards. Headless Chrome, not a phone.
 // Normal clear uses the attack button and the skill button. It does not
 // set enemy HP, call killEnemy, skip waves, or write the clear flag.
-// Wave gap stays 0.45s. Injected cases are marked INJECT.
+// The corridor now waits 3s between waves. This script checks entry distance and rewards, not a full clear. Injected cases are marked INJECT.
 import { spawn, execFileSync } from "node:child_process";
 import { writeFileSync, unlinkSync } from "node:fs";
 const base = "http://127.0.0.1:8765/";
