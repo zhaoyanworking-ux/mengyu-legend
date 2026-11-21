@@ -420,6 +420,16 @@
   @keyframes logoFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
   @keyframes fadeUp{0%{transform:translateY(14px);opacity:0}100%{transform:none;opacity:1}}
   #title .ver{position:absolute;right:calc(var(--sr) + calc(var(--u)*14px));bottom:calc(var(--sb) + calc(var(--u)*10px));font-size:calc(var(--u)*11px);font-weight:700;opacity:.85;text-shadow:0 1px 0 rgba(0,0,0,.4)}
+  #loadFail{display:none;position:relative;z-index:2;margin-top:calc(var(--u)*14px);text-align:center;padding:0 calc(var(--u)*18px)}
+  #loadFail p{margin:0 0 calc(var(--u)*10px);font-size:calc(var(--u)*14px);font-weight:700;line-height:1.5;color:#fff}
+  #loadRetry{min-height:44px;min-width:88px;padding:0 calc(var(--u)*22px);border-radius:99px;font-size:calc(var(--u)*16px)}
+  #saveRow{display:flex;gap:calc(var(--u)*8px)}
+  #saveRow button{flex:1;min-height:44px;font-size:calc(var(--u)*14px);padding:calc(var(--u)*8px) calc(var(--u)*6px)}
+  #saveNote{margin:calc(var(--u)*8px) 0 0;text-align:center;font-size:calc(var(--u)*11px);font-weight:700;line-height:1.45;color:#fff7d8;text-shadow:0 1px 0 rgba(20,40,90,.55)}
+  #saveSeg button{min-height:44px;min-width:44px}
+  #coach{display:none;position:absolute;z-index:6;pointer-events:none;left:50%;transform:translateX(-50%);bottom:calc(var(--sb) + var(--pad) + var(--joy-s) + 14px);width:min(240px,72vw);
+    padding:10px 12px;border-radius:14px;background:rgba(10,18,42,.9);color:#fff;font-size:13px;font-weight:700;line-height:1.45;box-shadow:0 6px 18px rgba(0,0,0,.28)}
+  #coach button{pointer-events:auto;display:inline-flex;align-items:center;justify-content:center;margin-top:8px;min-height:44px;min-width:44px;padding:0 14px;border-radius:99px;font-size:14px}
   #title .copy{position:absolute;left:calc(var(--sl) + calc(var(--u)*14px));bottom:calc(var(--sb) + calc(var(--u)*10px));font-size:calc(var(--u)*11px);font-weight:700;opacity:.75;text-shadow:0 1px 0 rgba(0,0,0,.4)}
 
   /* ===== class select ===== */
@@ -525,6 +535,7 @@
     <div class="logo" data-t="萌域传说">萌域传说</div><div class="logo-en">CHIBI REALM LEGENDS</div>
     <div id="loadbar"><div class="bar"><i id="loadfill"></i></div><div id="loadtxt">正在加载 0%</div></div>
     <div id="loadtip">小提示：翻滚瞬间无敌，看到红色预警圈时滚出去！</div>
+    <div id="loadFail"><p id="loadFailMsg"></p><button id="loadRetry" type="button">重试</button></div>
   </div>
   <div id="title">
     <div class="rays"></div>
@@ -534,8 +545,14 @@
       <button id="btnCont" type="button">继续冒险<small id="contInfo"></small></button>
       <button id="btnNew" type="button" class="alt">新的冒险</button>
       <button id="btnTSet" type="button" class="gray">设置</button>
+      <div id="saveRow">
+        <button id="btnExport" type="button" class="gray">导出存档</button>
+        <button id="btnImport" type="button" class="gray">导入存档</button>
+        <button id="btnReload" type="button" class="gray" style="display:none">重新加载</button>
+      </div>
+      <p id="saveNote">存档只在这台浏览器里，不是云存档。</p>
     </div>
-    <div class="copy">萌域传说 · 青岚篇</div><div class="ver">v1.1</div>
+    <div class="copy">萌域传说 · 青岚篇</div><div class="ver" id="buildTag">RC-1</div>
   </div>
   <div id="select">
     <div class="selTop"><h1>选择职业</h1></div>
@@ -578,6 +595,7 @@
     <button id="potM" class="skb pot" type="button"><img id="icPotM" alt=""><span class="n" id="potMn">0</span><i class="cdr"></i><b class="cdt"></b></button>
     <button id="talk" type="button">交谈</button>
     <div id="expbar"><i id="expfill"></i></div><div id="exptxt"></div>
+    <div id="coach"><p id="coachTxt"></p><button id="coachSkip" type="button">跳过引导</button></div>
     <div id="dlg"><div class="who" id="dlgName"></div><div class="body" id="dlgBody"></div><div class="row" id="dlgRow"><button class="next" id="dlgNext" type="button">继续</button></div></div>
     <div id="over"><h2>你倒下了</h2><p>蚀雾还在镇外徘徊……<br>在古井广场重新站起来吧。</p><div class="tip" id="overTip"></div>
       <div><button id="goTown" type="button">回到小镇</button><button id="goTitle" type="button">返回标题</button></div>
@@ -602,6 +620,8 @@
       <div class="srow">镜头灵敏度<input type="range" id="sSens" min="40" max="200" step="10"></div></div>
       <div class="srow">屏幕震动<div class="seg" id="sShake"><button data-v="1" type="button">开</button><button data-v="0" type="button">关</button></div></div>
       <div class="srow">全屏模式<div class="seg"><button id="fs" type="button">切换</button></div></div>
+      <div class="srow">本机存档<div class="seg" id="saveSeg"><button id="btnExport2" type="button">导出</button><button id="btnImport2" type="button">导入</button></div></div>
+      <p class="shelp">导出的是这台浏览器里的存档文件，不是云存档。导入前会再确认，不会静默覆盖。</p>
       <div id="setPlayBtns">
         <button class="bigbtn" id="btnResume" type="button">继续游戏</button>
         <button class="bigbtn gray" id="btnAch" type="button">成就</button>
@@ -614,6 +634,7 @@
   <div id="confirm" class="modal confirm"><div class="sheet"><h2>提示</h2><p id="cfText"></p>
     <div class="row"><button class="bigbtn gray" id="cfNo" type="button">取消</button><button class="bigbtn" id="cfYes" type="button">确定</button></div></div></div>
   <button id="mute" type="button" style="display:none">音效</button>
+  <input id="saveFile" type="file" accept="application/json,.json" hidden>
 </div>
 
 <script src="./three.min.js"></script>
@@ -632,6 +653,13 @@ window.addEventListener("error", ev=>{
 });
 const isMobile = /Android|iPhone|iPad|Mobile/i.test(navigator.userAgent) || matchMedia("(pointer:coarse)").matches;
 const SAVE_KEY = "MengYuLegend_Save_v1";
+const SAVE_BAK = "MengYuLegend_Save_v1.bak";
+const SAVE_BAD = "MengYuLegend_Save_v1.bad";
+const SAVE_NEWER = "MengYuLegend_Save_v1.newer";
+const SCHEMA = 2;
+const SAVE_FORMAT = "mengyu-legend-save";
+const BUILD = { name:"RC-1", note:"本地存档，不是云存档" };
+const QST_ST = { locked:1, avail:1, active:1, ready:1, done:1 };
 
 const CLASSES = {
   swordsman: { id:"swordsman", name:"剑士", en:"Swordsman", sub:"近战连斩 · 高生命",
@@ -656,8 +684,80 @@ const TOWN_CFG = {
 };
 const TOWN = { ready:false, root:null, meshes:[], grid:null, fx:0, fz:0 };
 
-function loadSave(){ try{ return JSON.parse(localStorage.getItem(SAVE_KEY)||"null"); }catch(e){ return null; } }
-function persist(s){ try{ localStorage.setItem(SAVE_KEY, JSON.stringify(s)); }catch(e){} }
+function storeGet(key){ try{ return localStorage.getItem(key); }catch(e){ return null; } }
+function storeSet(key, val){ localStorage.setItem(key, val); }
+function parseJSON(text){ if(!text) return null; try{ const v=JSON.parse(text); return v && typeof v==="object" ? v : null; }catch(e){ return null; } }
+function isNewerSave(raw){ return !!(raw && typeof raw.ver==="number" && raw.ver>SCHEMA); }
+function loadSave(){
+  const found=readSaveState(true);
+  if(typeof G!=="undefined" && G) G.saveNote=found.note||"";
+  return found.save||null;
+}
+function readSaveState(repair){
+  const primaryText=storeGet(SAVE_KEY);
+  const primary=parseJSON(primaryText);
+  if(isNewerSave(primary)) return { save:null, note:"newer", raw:primaryText };
+  if(primary && (primary.ver===2 || primary.level || primary.quests || primary.hasSave)) return { save:migrateSave(primary), note:"", raw:primaryText };
+  const bak=parseJSON(storeGet(SAVE_BAK));
+  if(bak && !isNewerSave(bak) && (bak.ver===2 || bak.level || bak.quests || bak.hasSave)){
+    const save=migrateSave(bak);
+    if(repair){
+      try{ if(primaryText && !primary) storeSet(SAVE_BAD, primaryText); }catch(e){}
+      try{ storeSet(SAVE_KEY, JSON.stringify(save)); }catch(e){}
+    }
+    return { save, note:"recovered", raw:primaryText };
+  }
+  if(primaryText && !primary) return { save:null, note:"corrupt", raw:primaryText };
+  return { save:null, note:"", raw:primaryText };
+}
+function persist(s){
+  if(!s || s._newer) return false;
+  migrateSave(s);
+  let text;
+  try{ text=JSON.stringify(s); }catch(e){ return false; }
+  try{
+    const prev=storeGet(SAVE_KEY);
+    if(prev && prev!==text){
+      const old=parseJSON(prev);
+      if(isNewerSave(old)){
+        if(typeof G!=="undefined" && G) G.saveNote="newer";
+        noteSaveFail("浏览器里有更高版本的存档，已取消写入，原文未改。");
+        return false;
+      }
+      if(old) storeSet(SAVE_BAK, prev);
+      else storeSet(SAVE_BAD, prev);
+    }
+    storeSet(SAVE_KEY, text);
+    if(typeof G!=="undefined" && G){ G.saveOk=true; G.saveErr=""; }
+    return true;
+  }catch(e){
+    if(typeof G!=="undefined" && G){ G.saveOk=false; G.saveErr=(e&&e.name)||"write"; }
+    const denied=e && (e.name==="QuotaExceededError" || e.name==="SecurityError" || e.code===22);
+    noteSaveFail(denied?"存档没能写入（空间不足或浏览器拒绝了存储）。进度还在这次打开里，请先导出备份。":"存档没能写入这台浏览器。进度还在这次打开里，请先导出备份。");
+    return false;
+  }
+}
+function noteSaveFail(msg){
+  if(persist._told) return;
+  persist._told=1;
+  try{ toast(msg); }catch(e){}
+}
+function exportSaveText(s){
+  return JSON.stringify({ format:SAVE_FORMAT, schema:SCHEMA, note:BUILD.note, build:BUILD.name, exportedAt:new Date().toISOString(), save:s });
+}
+function previewImport(text){
+  const wrap=parseJSON(text);
+  if(!wrap) return { ok:false, reason:"文件不是有效的 JSON" };
+  if(wrap.format!==SAVE_FORMAT || !wrap.save || typeof wrap.save!=="object") return { ok:false, reason:"不是萌域传说的本地存档备份" };
+  if(typeof wrap.schema==="number" && wrap.schema>SCHEMA) return { ok:false, newer:true, reason:"备份来自更新的版本，已拒绝。当前存档未改动。" };
+  if(wrap.save.bag && (!Array.isArray(wrap.save.bag) || wrap.save.bag.length>30)) return { ok:false, reason:"背包数据无效或超过 30 件，已拒绝导入" };
+  if(wrap.save.classId && !CLASSES[wrap.save.classId]) return { ok:false, reason:"职业无效，已拒绝导入" };
+  if(wrap.save.quests && typeof wrap.save.quests!=="object") return { ok:false, reason:"任务数据无效，已拒绝导入" };
+  if(isNewerSave(wrap.save)) return { ok:false, newer:true, reason:"存档版本更高，已拒绝。当前存档未改动。" };
+  const save=migrateSave(JSON.parse(JSON.stringify(wrap.save)));
+  if(!save || save._newer || !CLASSES[save.classId]) return { ok:false, reason:"这份备份无法在当前版本使用" };
+  return { ok:true, save };
+}
 
 let renderer, scene, camera, clock, sun, gradientMap, texCache={};
 const tmpO = new THREE.Object3D();
@@ -985,17 +1085,17 @@ function loadCharacterModels(onDone){
         try{
           const bin=atob((window.__GLB_B64||{})[id]||""); const buf=new Uint8Array(bin.length);
           for(let i=0;i<bin.length;i++) buf[i]=bin.charCodeAt(i);
-          loader.parse(buf.buffer, "", g=>{ try{ prepGlb(id,g); }catch(e){ console.warn("GLB prep failed", id, e); delete GLB.data[id]; } prog[id]=1; upd(); fin(); },
-            err=>{ console.warn("GLB parse failed, using procedural", id, err); prog[id]=1; upd(); fin(); });
-        }catch(e){ console.warn("GLB decode failed", id, e); prog[id]=1; upd(); fin(); }
+          loader.parse(buf.buffer, "", g=>{ try{ prepGlb(id,g); }catch(e){ console.warn("GLB prep failed", id, e); LOADP.charFail=true; delete GLB.data[id]; } prog[id]=1; upd(); fin(); },
+            err=>{ console.warn("GLB parse failed, using procedural", id, err); LOADP.charFail=true; prog[id]=1; upd(); fin(); });
+        }catch(e){ console.warn("GLB decode failed", id, e); LOADP.charFail=true; prog[id]=1; upd(); fin(); }
       };
-      sc.onerror=()=>{ console.warn("GLB script missing, using procedural", id); prog[id]=1; upd(); fin(); };
+      sc.onerror=()=>{ console.warn("GLB script missing, using procedural", id); LOADP.charFail=true; prog[id]=1; upd(); fin(); };
       document.head.appendChild(sc); return;
     }
     loader.load(GLB_FILES[id],
-      g=>{ try{ prepGlb(id,g); }catch(e){ console.warn("GLB prep failed, using procedural", id, e); delete GLB.data[id]; } prog[id]=1; upd(); fin(); },
+      g=>{ try{ prepGlb(id,g); }catch(e){ console.warn("GLB prep failed, using procedural", id, e); LOADP.charFail=true; delete GLB.data[id]; } prog[id]=1; upd(); fin(); },
       e=>{ if(e && e.total){ prog[id]=Math.min(0.95, e.loaded/e.total); upd(); } },
-      err=>{ console.warn("GLB load failed, using procedural", id, err && err.message); prog[id]=1; upd(); fin(); });
+      err=>{ console.warn("GLB load failed, using procedural", id, err && err.message); LOADP.charFail=true; prog[id]=1; upd(); fin(); });
   });
 }
 function upgradeVisuals(){
@@ -1598,7 +1698,7 @@ function placeTown(gltf){
 }
 function loadTownModel(onDone){
   window.__townReady=false;
-  function fail(err){ console.warn("town GLB failed", err); window.__townReady=true; setLoad("t",1); if(onDone) onDone(false); checkLoaded(); }
+  function fail(err){ console.warn("town GLB failed", err); LOADP.townFail=true; window.__townReady=true; setLoad("t",1); if(onDone) onDone(false); checkLoaded(); }
   function ok(gltf){ try{ placeTown(gltf); }catch(e){ console.warn("town prep failed", e); } window.__townReady=true; setLoad("t",1); if(onDone) onDone(!!TOWN.ready); checkLoaded(); }
   if(!window.THREE_ADDONS){ fail("no addons"); return; }
   const loader=new THREE_ADDONS.GLTFLoader();
@@ -2411,6 +2511,7 @@ function initViewport(){
   let lastEnd=0; document.addEventListener("touchend", e=>{ const n=performance.now(); if(n-lastEnd<320 && e.target.closest && !e.target.closest("input")) e.preventDefault(); lastEnd=n; }, {passive:false});
   ["touchend","click"].forEach(ev=>document.addEventListener(ev, ()=>{ try{ sfxInit(); }catch(e){} }, true));
   document.addEventListener("visibilitychange", ()=>{
+    if(typeof G!=="undefined" && G) G.backgrounded=document.hidden;
     if(document.hidden){
       if(G.mode==="play" && !G.paused && !G.dlg && G.p && !G.p.dead){ try{ openSettings(); }catch(e){} }
       try{ if(SFX.ctx && SFX.ctx.state==="running") SFX.ctx.suspend(); }catch(e){}
@@ -2530,18 +2631,42 @@ function onLevelUp(){
 function newEquipSave(classId){
   return { weapon:Object.assign(genItem(1,0,"weapon",classId),{ name:"见习"+WNAMES[classId][0] }), armor:null, acc:null };
 }
+function questEntry(q, raw){
+  if(!raw || typeof raw!=="object" || !QST_ST[raw.st]) return null;
+  return { st:raw.st, pr:Math.max(0, Math.min(q.count||0, raw.pr|0)) };
+}
 function migrateSave(s){
-  if(!s) return s;
-  if(!s.level){ s.level=1; s.xp=0; }
+  if(!s || typeof s!=="object") return s;
+  if(isNewerSave(s)){ s._newer=true; return s; }
   if(s.ver!==2){
-    s.ver=2; s.pots=s.pots||{ h:3, m:2 }; s.bag=s.bag||[]; s.equip=s.equip||newEquipSave(s.classId||"swordsman");
-    const old=s.quests||{}; const nq=newQuestState();
-    ["q1","q2"].forEach(k=>{ if(old[k]) nq[k]=old[k]; });
-    if(old.q2 && old.q2.st==="done") nq.q3={ st:"avail", pr:0 };
-    s.quests=nq; s.storyDone=false; s.bossKills=s.bossKills||0;
+    const hadStory=!!s.storyDone;
+    const old=s.quests && typeof s.quests==="object" ? s.quests : {};
+    s.ver=2; s.pots=s.pots||{ h:3, m:2 }; s.bag=Array.isArray(s.bag)?s.bag:[]; s.equip=s.equip||newEquipSave(s.classId||"swordsman");
+    const nq=newQuestState();
+    ["q1","q2"].forEach(k=>{ const e=questEntry(QUESTS.find(q=>q.id===k), old[k]); if(e) nq[k]=e; });
+    if(old.q2 && old.q2.st==="done" && !(old.q3 && QST_ST[old.q3.st])) nq.q3={ st:"avail", pr:0 };
+    QUESTS.forEach(q=>{ const e=questEntry(q, old[q.id]); if(e) nq[q.id]=e; });
+    s.quests=nq; s.storyDone=hadStory; s.bossKills=s.bossKills||0;
   }
-  s.pots=s.pots||{h:0,m:0}; s.bag=s.bag||[]; s.equip=s.equip||{weapon:null,armor:null,acc:null};
-  QUESTS.forEach(q=>{ if(!s.quests[q.id]) s.quests[q.id]={ st:"locked", pr:0 }; });
+  s.ver=2; s.hasSave=s.hasSave!==false;
+  if(!CLASSES[s.classId]) s.classId="swordsman";
+  s.level=Math.max(1, Math.min(99, s.level|0 || 1));
+  s.xp=Math.max(0, s.xp|0); s.gold=Math.max(0, Math.min(1000000000, s.gold|0));
+  s.shards=Math.max(0, s.shards|0); s.kills=Math.max(0, s.kills|0); s.bossKills=Math.max(0, s.bossKills|0);
+  s.storyDone=!!s.storyDone;
+  s.pots=s.pots&&typeof s.pots==="object"?s.pots:{h:0,m:0};
+  s.pots.h=Math.max(0, Math.min(999, s.pots.h|0)); s.pots.m=Math.max(0, Math.min(999, s.pots.m|0));
+  if(!Array.isArray(s.bag)) s.bag=[];
+  s.bag=s.bag.filter(it=>it && typeof it==="object" && it.slot).map(it=>{ if(!it.uid) it.uid="kept-"+Math.random().toString(36).slice(2,8); return it; });
+  s.equip=s.equip&&typeof s.equip==="object"?s.equip:{weapon:null,armor:null,acc:null};
+  ["weapon","armor","acc"].forEach(k=>{ if(s.equip[k] && typeof s.equip[k]!=="object") s.equip[k]=null; });
+  if(!s.quests || typeof s.quests!=="object") s.quests=newQuestState();
+  QUESTS.forEach(q=>{
+    const e=questEntry(q, s.quests[q.id]);
+    s.quests[q.id]=e || { st:"locked", pr:0 };
+  });
+  if(s.seen && typeof s.seen!=="object") delete s.seen;
+  delete s._newer;
   if(typeof unlockPostgame==="function") unlockPostgame(s);
   return s;
 }
@@ -3412,18 +3537,36 @@ function setLoad(k, v){
   $("loadfill").style.width=p+"%"; $("loadtxt").textContent=(p<100?"正在加载 ":"准备就绪 ")+p+"%";
 }
 const TIPS=["小提示：翻滚瞬间无敌，看到红色预警圈时滚出去！","小提示：任务追踪栏和小地图的金色箭头会指引你前进的方向。","小提示：击败魔物有几率掉落装备，光柱颜色越亮，品质越高。","小提示：药师叶青出售药水，金币不够时去雾石坡转转吧。","小提示：拖动屏幕旋转镜头，双指或右侧滑杆可以拉远视角。","小提示：剑士连按攻击可打出三段连斩，第三击会把敌人击飞。"];
+function showBootFail(msg){
+  const loading=$("loading");
+  if(loading){ loading.style.display="flex"; loading.classList.remove("hide"); }
+  const box=$("loadFail"); if(box) box.style.display="block";
+  const bar=$("loadbar"); if(bar) bar.style.display="none";
+  if($("loadFailMsg")) $("loadFailMsg").textContent=msg;
+  const b=$("loadRetry"); if(b) b.onclick=()=>location.reload();
+}
 function checkLoaded(){
   if(LOADP.done || !window.__modelsDone || !window.__townReady) return;
   LOADP.done=true; setLoad("c",1); setLoad("t",1);
   try{ buildMinimapBG(); }catch(e){}
-  setTimeout(()=>{ $("loading").classList.add("hide"); setTimeout(()=>{ $("loading").style.display="none"; }, 550); if(!shot) showTitle(); }, 300);
+  setTimeout(()=>{ $("loading").classList.add("hide"); if($("loadtip")) $("loadtip").style.display="none"; setTimeout(()=>{ $("loading").style.display="none"; }, 550); if(!shot) showTitle(); }, 300);
 }
 function showTitle(){
   G.mode="title"; G.freezeCam=false;
   $("title").style.display="flex"; $("select").style.display="none"; $("playHud").style.display="none";
-  const sv=migrateSave(loadSave());
+  const found=readSaveState(true);
+  G.saveNote=found.note||"";
+  const sv=found.save;
   if(sv && sv.hasSave){ $("btnCont").style.display="block"; $("contInfo").textContent=(CLASSES[sv.classId]||CLASSES.swordsman).name+"  Lv."+sv.level+"　·　"+((QUESTS.find(q=>sv.quests[q.id]&&sv.quests[q.id].st!=="done"&&sv.quests[q.id].st!=="locked")||{title:"自由探索"}).title); }
   else $("btnCont").style.display="none";
+  let note="存档只在这台浏览器里，不是云存档。";
+  if(found.note==="newer") note="发现更高版本的存档。这一版不会读取，也不会改写它。";
+  else if(found.note==="corrupt") note="存档损坏。原文还留在浏览器里，没有被清掉。可以用以前导出的备份导入。";
+  else if(found.note==="recovered") note="已从上一份完好的本地备份恢复。这不是云存档。";
+  else if(LOADP.charFail||LOADP.townFail) note=(LOADP.townFail?"小镇模型":"角色模型")+"没能下载，已用备用造型。可以重新加载再试。";
+  if($("saveNote")) $("saveNote").textContent=note;
+  if($("buildTag")) $("buildTag").textContent=BUILD.name;
+  if($("btnReload")) $("btnReload").style.display=(LOADP.charFail||LOADP.townFail)?"inline-flex":"none";
   if(G.player){ G.player.visible=false; }
   SELV.show(null);
   camera.fov=isPortrait()?52:42; camera.updateProjectionMatrix();
@@ -3466,9 +3609,47 @@ function buildClassCards(){
   try{ cardThumbs(); }catch(e){}
 }
 function beginNew(){
-  const sv=loadSave();
-  const go=()=>startAdventure(G.classId,true);
-  if(sv && sv.hasSave) askConfirm("开始新的冒险会覆盖当前存档（"+(CLASSES[sv.classId]||CLASSES.swordsman).name+" Lv."+(sv.level||1)+"），确定吗？", go); else go();
+  const found=readSaveState(false);
+  const sv=found.save;
+  const go=()=>{
+    if(found.note==="newer"){
+      try{ storeSet(SAVE_NEWER, found.raw); storeSet(SAVE_KEY, ""); localStorage.removeItem(SAVE_KEY); }catch(e){ toast("更高版本的存档没能挪开，已取消新游戏。"); return; }
+    }
+    startAdventure(G.classId,true);
+  };
+  if(found.note==="newer") askConfirm("浏览器里有一份更新版本的存档。新游戏不会改写它的内容，会先原样另存，再开始这一版的新档。确定吗？", go);
+  else if(sv && sv.hasSave) askConfirm("开始新的冒险会覆盖当前本地存档（"+(CLASSES[sv.classId]||CLASSES.swordsman).name+" Lv."+(sv.level||1)+"） 。上一份会留作本地备份。确定吗？", go);
+  else go();
+}
+function downloadText(name, text){
+  const a=document.createElement("a");
+  a.href=URL.createObjectURL(new Blob([text],{type:"application/json"}));
+  a.download=name; document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(()=>URL.revokeObjectURL(a.href), 1500);
+}
+function exportCurrent(){
+  const found=readSaveState(false);
+  if(found.save){ downloadText("mengyu-save.json", exportSaveText(found.save)); toast("已导出本地存档文件，不是云存档。"); return; }
+  const raw=found.raw||storeGet(SAVE_BAD)||storeGet(SAVE_NEWER);
+  if(!raw){ toast("没有可导出的存档"); return; }
+  downloadText("mengyu-save-raw.json", raw);
+  toast("导出的是浏览器里的原文，这一版没有改写它。");
+}
+function requestImport(text){
+  const prev=previewImport(text);
+  if(!prev.ok){ toast(prev.reason||"无法导入"); return; }
+  askConfirm("用这份本地备份覆盖当前浏览器里的存档？覆盖前会留下上一份本地备份。这不是云存档。", ()=>{
+    if(!persist(prev.save)) return;
+    G.save=prev.save;
+    toast("已写入本地存档");
+    if(G.mode==="play") toTitle(); else showTitle();
+  });
+}
+function pickImport(){
+  const inp=$("saveFile"); if(!inp) return;
+  inp.value="";
+  inp.onchange=()=>{ const f=inp.files&&inp.files[0]; if(!f) return; const r=new FileReader(); r.onload=()=>requestImport(String(r.result||"")); r.onerror=()=>toast("没有读到文件"); r.readAsText(f); };
+  inp.click();
 }
 function updateMenuCamera(dt){
   if(G.mode==="title"){
@@ -3792,8 +3973,7 @@ function initGuide(){
   for(let i=0;i<3;i++){ const m=new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ color:0xffe070, transparent:true, opacity:0.0, depthWrite:false, blending:THREE.AdditiveBlending, side:THREE.DoubleSide })); m.renderOrder=3; m.scale.setScalar(1.25); GUIDE.g.add(m); GUIDE.ch.push(m); }
 }
 function updateGuide(dt){
-  if(G.tutAt && Math.hypot(G.p.x-G.tutAt.x,G.p.z-G.tutAt.z)>2.5){ G.tutAt=null; $("joy").classList.remove("tut"); }
-  if(G.tutT!=null){ G.tutT+=dt; if(G.tutT>14){ G.tutAt=null; $("joy").classList.remove("tut"); } if(G.tutT>12.5){ $("atk").classList.remove("tut"); G.tutT=G.tutT>14?null:G.tutT; } }
+  tickCoach();
   if(!GUIDE.g) initGuide();
   let show=G.mode==="play" && !G.p.dead && !G.dlg && (CAM.cf||0)<0.35;
   const tg=show && typeof questTarget==="function" ? questTarget() : null;
@@ -3901,7 +4081,7 @@ function achHtml(){
 /* ===================== rewritten core loop pieces ===================== */
 function newSave(classId){
   return { ver:2, classId:classId||"swordsman", level:1, xp:0, gold:30, shards:0, kills:0, storyDone:false, hasSave:true, bossKills:0,
-    pots:{ h:3, m:2 }, bag:[], equip:newEquipSave(classId||"swordsman"), quests:newQuestState() };
+    pots:{ h:3, m:2 }, bag:[], equip:newEquipSave(classId||"swordsman"), quests:newQuestState(), seen:{} };
 }
 function spawnBoss(){ if(G.boss && !G.boss.dead) return G.boss; G.boss=spawnEnemy("boss",0,40,8,"altar"); return G.boss; }
 function startAdventure(classId, fresh){
@@ -3914,7 +4094,7 @@ function startAdventure(classId, fresh){
   G.cd={sk1:0,sk2:0,dg:0,poth:0,potm:0}; G.cdMax={sk1:1,sk2:1,dg:1,poth:4,potm:4}; G.combo=0; G.comboQueued=false; G.hitStop=0; G.shake=0; LATER.length=0;
   HUDFX.lag=1; HUDFX.vig=0; HUDC.blag=1; for(const k in HUDC) delete HUDC[k];
   G.atkCd=0; G.mode="play"; G.paused=false; G.freezeCam=false; G.dlg=null; G.bagNew=false;
-  clearEnemies(); SPAWN.t=0; SPAWN.eliteT=0; SPAWN.bossT=0; populateField(true);
+  clearEnemies(); G.boss=null; SPAWN.t=0; SPAWN.eliteT=0; SPAWN.bossT=0; populateField(true);
   SELV.show(null);
   spawnPlayerVisual(classId); G.player.visible=true;
   $("select").style.display="none"; $("title").style.display="none"; $("playHud").style.display="block";
@@ -3932,9 +4112,41 @@ function startAdventure(classId, fresh){
   $("over").style.display="none"; $("bossbar").style.display="none";
   TRIAL.on=false; $("trialHud").style.display="none";
   _zoneId=""; updateZone(); refreshHUD();
-  toast(fresh?"欢迎来到青岚镇，"+c.name+"！去找镇长苏晚晴吧":"欢迎回来，"+c.name);
-  if(fresh){ $("joy").classList.add("tut"); G.tutAt={x:G.p.x,z:G.p.z}; G.tutT=0; later(3.2, ()=>{ if(G.mode==="play"){ toast("左侧摇杆移动，右下按钮攻击与释放技能"); $("atk").classList.add("tut"); } }); later(6.8, ()=>{ if(G.mode==="play") toast("拖动屏幕旋转视角，「远/近」滑条可调整镜头"); }); later(10.4, ()=>{ if(G.mode==="play") toast("看到红色预警圈时，点「翻滚」无敌闪避！"); }); }
+  toast(fresh?"欢迎来到青岚镇，"+c.name+"！先跟着提示走两步。":"欢迎回来，"+c.name);
+  if(fresh) startCoach();
   setMusicMood("town");
+}
+function renderCoach(){
+  const box=$("coach"); if(!box) return;
+  ["joy","atk","dg"].forEach(id=>{ const el=$(id); if(el) el.classList.remove("tut"); });
+  if(G.coach==null){ box.style.display="none"; return; }
+  const steps=[
+    ["拖动左下角摇杆，让角色走出两步。","joy"],
+    ["点右下角的攻击按钮，挥出一剑。","atk"],
+    ["在画面空白处拖动来转动镜头，或点「翻滚」。","dg"]
+  ];
+  const s=steps[G.coach]||steps[0];
+  box.style.display="block";
+  $("coachTxt").textContent=s[0];
+  const hi=$(s[1]); if(hi) hi.classList.add("tut");
+  if(G.coach===0) G.coachFrom={x:G.p.x,z:G.p.z};
+  if(G.coach===2) G.coachCam0=CAM.lastUser;
+}
+function nextCoach(){ G.coach=(G.coach|0)+1; if(G.coach>=3) finishCoach(); else renderCoach(); }
+function finishCoach(){
+  G.coach=null;
+  if(G.save){ G.save.seen=G.save.seen||{}; if(!G.save.seen.onboard){ G.save.seen.onboard=1; persist(G.save); } }
+  renderCoach();
+}
+function startCoach(){
+  if(!G.save || (G.save.seen && G.save.seen.onboard)) { G.coach=null; renderCoach(); return; }
+  G.coach=0; G.coachHit=false; renderCoach();
+}
+function tickCoach(){
+  if(G.coach==null || G.mode!=="play" || G.paused || G.dlg) return;
+  if(G.coach===0 && G.coachFrom && Math.hypot(G.p.x-G.coachFrom.x, G.p.z-G.coachFrom.z)>1.2) nextCoach();
+  else if(G.coach===1 && (G.p.atkT>0 || G.coachHit)) nextCoach();
+  else if(G.coach===2 && (G.p.dodgeT>0 || (G.coachCam0!=null && CAM.lastUser!==G.coachCam0))) nextCoach();
 }
 function hitEnemy(e, dmg, nx, nz, knock, o){
   if(e.dead) return false;
@@ -4113,6 +4325,7 @@ function update(dt){
     G.npcs.forEach(n=>animBob(n.mesh,false,dt,false,false,false));
     G.enemies.forEach(e=>{ if(!e.dead){ animBob(e.mesh, false, dt, false,false,false); e.mesh.position.y+=e.fly; } });
     if(G.freezeCam && shot) updateHPBars();
+    if(G.coach!=null){ G.coach=null; renderCoach(); }
     return;
   }
   hudFx(dt);
@@ -4243,6 +4456,7 @@ function bindInput(){
   $("atk").addEventListener("pointerdown", e=>{
     e.preventDefault(); e.stopPropagation(); atkPid=e.pointerId;
     try{ $("atk").setPointerCapture(e.pointerId); }catch(_){}
+    if(G.coach===1) G.coachHit=true;
     tryAttack(); G.atkHeld=true;
   });
   const endAtk=e=>{ if(e.pointerId!==atkPid) return; atkPid=null; G.atkHeld=false; };
@@ -4271,7 +4485,13 @@ function bindInput(){
   $("goTown").addEventListener("click", resurrect);
   $("goTitle").addEventListener("click", toTitle);
   $("btnNew").addEventListener("click", ()=>{ sfxInit(); showSelect(); });
-  $("btnCont").addEventListener("click", ()=>{ sfxInit(); const sv=migrateSave(loadSave()); if(!sv) return; G.save=sv; startAdventure(sv.classId||"swordsman", false); });
+  $("btnCont").addEventListener("click", ()=>{ sfxInit(); const sv=loadSave(); if(!sv){ toast(G.saveNote==="newer"?"更高版本的存档不能在这一版继续。":"没有可继续的存档"); return; } G.save=sv; startAdventure(sv.classId||"swordsman", false); });
+  $("btnExport").addEventListener("click", exportCurrent);
+  $("btnImport").addEventListener("click", pickImport);
+  $("btnExport2").addEventListener("click", exportCurrent);
+  $("btnImport2").addEventListener("click", pickImport);
+  $("btnReload").addEventListener("click", ()=>location.reload());
+  $("coachSkip").addEventListener("click", e=>{ e.stopPropagation(); finishCoach(); });
   $("btnBack").addEventListener("click", ()=>showTitle());
   $("btnGo").addEventListener("click", beginNew);
   $("fs").addEventListener("click", ()=>{
@@ -4343,7 +4563,8 @@ const G = {
   enemies:[], npcs:[], shots:[], parts:[], pickups:[],
   save:null, near:null, dlg:null, atkCd:0, combo:0, comboIdle:0, comboQueued:false, cd:{sk1:0,sk2:0,dg:0}, cdMax:{sk1:1,sk2:1,dg:1},
   hitStop:0, timeScale:1, dashHits:new Array(16), dashHitN:0, saveDirty:false,
-  shake:0, keys:{}, joy:{x:0,y:0,on:false}, paused:false, freezeCam:false, boss:null, bagNew:false
+  shake:0, keys:{}, joy:{x:0,y:0,on:false}, paused:false, freezeCam:false, boss:null, bagNew:false,
+  saveNote:"", saveOk:true, saveErr:"", coach:null, perf:{frames:0, dtMs:0, stepMs:0, draws:0, tris:0, hidden:0}
 };
 
 
@@ -4816,9 +5037,11 @@ function adaptDPR(dt){
   }
 }
 function init(){
-  if(!window.THREE){ document.body.insertAdjacentHTML("beforeend","<p style='padding:20px'>无法加载 Three.js。</p>"); return; }
+  if(!window.THREE){ showBootFail("没有加载到图形库。请检查网络后点重试。"); return; }
   const canvas=$("c");
-  renderer=new THREE.WebGLRenderer({ canvas, antialias:true, alpha:false, powerPreference:"high-performance" });
+  try{ renderer=new THREE.WebGLRenderer({ canvas, antialias:true, alpha:false, powerPreference:"high-performance" }); }
+  catch(e){ showBootFail("这台浏览器没能启动 WebGL。请打开硬件加速，或换用系统浏览器后点重试。"); return; }
+  canvas.addEventListener("webglcontextlost", ev=>{ ev.preventDefault(); showBootFail("图形中断了。点重试重新加载。"); }, false);
   const dpr=Math.min(window.devicePixelRatio||1, isMobile?2:2); G_DPR.max=dpr; G_DPR.cur=dpr;
   renderer.setPixelRatio(dpr);
   renderer.setSize(innerWidth, innerHeight, false);
@@ -4860,7 +5083,7 @@ function init(){
   uiInit();
   $("loadtip").textContent=TIPS[Math.floor(Math.random()*TIPS.length)];
   window.__mengyu={ G, GLB, TOWN, TOWN_CFG, CAM, groundAt, inTownBounds, startAdventure, tryAttack, trySkill, tryDodge, damagePlayer, hitEnemy, spawnSlime, spawnEnemy, FX, SFX, SHOTS, DROPS, LATER, camClamp,
-    ST, QUESTS, NPCS, ZONES, ALTAR, ELITE_SPOT, SPAWN, ESHOTS, LOOT, MUS, SET, gainXP, genItem, addItem, equipItem, recalcStats, usePotion, tryTalk, advDlg, closeDlg, openBag, closeBag, openSettings, closeSettings, showTitle, showSelect, selectClass, beginNew, toTitle, resurrect, xpNeed, qst, tracked, loadSave, persist, migrateSave, clearEnemies, populateField, killEnemy, refreshHUD, drawMinimap, charThumb, camera, scene, startTrial, endTrial, TRIAL, checkAchievements, achHtml, ACH, bossLevel, get camera(){ return camera; }, get renderer(){ return renderer; } };
+    ST, QUESTS, NPCS, ZONES, ALTAR, ELITE_SPOT, SPAWN, ESHOTS, LOOT, MUS, SET, gainXP, genItem, addItem, equipItem, recalcStats, usePotion, tryTalk, advDlg, closeDlg, openBag, closeBag, openSettings, closeSettings, showTitle, showSelect, selectClass, beginNew, toTitle, resurrect, xpNeed, qst, tracked, loadSave, persist, migrateSave, readSaveState, previewImport, exportSaveText, requestImport, exportCurrent, BUILD, SCHEMA, SAVE_KEY, SAVE_BAK, SAVE_BAD, clearEnemies, populateField, killEnemy, refreshHUD, drawMinimap, charThumb, camera, scene, startTrial, endTrial, TRIAL, checkAchievements, achHtml, ACH, bossLevel, tickCoach, finishCoach, get camera(){ return camera; }, get renderer(){ return renderer; } };
   loadCharacterModels(()=>{ upgradeVisuals(); });
   window.addEventListener("resize", ()=>{ uiLayout(); });
 
@@ -4873,6 +5096,8 @@ function init(){
 
   function loop(){
     requestAnimationFrame(loop);
+    if(G.backgrounded){ clock.getDelta(); G.perf.hidden++; if(!loop._ready && LOADP.done && (!shot || G.mode!=="loading")){ loop._ready=1; document.documentElement.setAttribute("data-ready","1"); } return; }
+    const frameT=performance.now();
     const dt=Math.min(0.05, clock.getDelta())*(G.timeScale==null?1:G.timeScale);
     update(dt);
     adaptDPR(dt);
@@ -4886,6 +5111,8 @@ function init(){
     if(G.sky) G.sky.position.set(camera.position.x, 0, camera.position.z);
     if(G.rune){ G.rune.rotation.z+=0.004; G.rune.material.opacity=0.55+0.3*Math.sin(FX.time*2); }
     renderer.render(scene, camera);
+    G.perf.frames++; G.perf.dtMs=Math.round((performance.now()-frameT)*100)/100; G.perf.stepMs=Math.round(dt*1000);
+    if(renderer.info && renderer.info.render){ G.perf.draws=renderer.info.render.calls; G.perf.tris=renderer.info.render.triangles; renderer.info.reset(); }
     if(!loop._ready && LOADP.done && (!shot || G.mode!=="loading")){ loop._ready=1; document.documentElement.setAttribute("data-ready","1"); }
   }
   loop();
