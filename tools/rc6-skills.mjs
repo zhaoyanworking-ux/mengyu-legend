@@ -123,6 +123,34 @@ const hud=await ev(`(()=>{
 const land=await cdp.send("Page.captureScreenshot",{format:"png"},sessionId);
 writeFileSync("/opt/cursor/artifacts/rc6-hud-land.png", Buffer.from(land.data,"base64"));
 check("combat buttons do not overlap and stay tappable", !hud.overlap && hud.sk3>=44 && hud.atk>=44, JSON.stringify(hud));
+const buffs=await ev(`(()=>{
+  const m=window.__mengyu;
+  function ready(){ m.G.p.spinT=0; m.G.p.atkT=0; m.G.p.dashT=0; m.G.p.dodgeT=0; m.G.p.hurtT=0; m.G.p.invT=0; m.G.p.dead=false; m.G.paused=false; m.G.mode="play"; m.G.p.mp=m.ST.mp; }
+  m.G.classId="swordsman"; m.G.save.level=10; m.recalcStats(); ready();
+  const disk=JSON.parse(localStorage.getItem(m.SAVE_KEY)||"{}");
+  m.G.save.rev=disk.rev|0;
+  m.persist(m.G.save,{replace:true});
+  const equipped=m.equipSkill(0,"s_guard"); m.G.cd.s_guard=0;
+  const before={load:m.loadoutOf("swordsman").slice(), mp:m.G.p.mp, act:m.G.mode, dead:m.G.p.dead, paused:m.G.paused, lv:m.G.save.level};
+  m.trySkillSlot(0);
+  const guard=m.G.buff.guard;
+  const cd=m.G.cd.s_guard;
+  m.G.p.hp=1; m.damagePlayer(500, 0, 0);
+  const afterDeath={guard:m.G.buff.guard, trap:m.G.buff.trap, cd:m.G.cd.s_guard, dead:m.G.p.dead};
+  m.resurrect();
+  m.G.classId="archer"; m.recalcStats(); ready();
+  m.G.p.x=0; m.G.p.z=28; m.equipSkill(0,"a_trap"); m.G.cd.a_trap=0; m.trySkillSlot(0);
+  const trap=!!m.G.buff.trap;
+  m.startAdventure("mage", false);
+  const afterClass={trap:m.G.buff.trap, guard:m.G.buff.guard};
+  m.G.save.level=8; m.recalcStats(); ready();
+  m.equipSkill(0,"m_ward"); m.G.cd.m_ward=0; m.trySkillSlot(0);
+  const ward=m.G.buff.barrier;
+  m.startDungeon("normal");
+  m.endDungeon("leave");
+  return {equipped, before, guard, cd:+cd.toFixed(2), afterDeath, trap, afterClass, ward, afterLeave:m.G.buff.barrier, dun:m.DUN.on};
+})()`);
+check("shield, trap and ward clear on death, class change and dungeon exit", buffs.guard>0 && buffs.afterDeath.dead===true && buffs.afterDeath.guard===0 && buffs.afterDeath.cd>0 && buffs.trap===true && buffs.afterClass.trap==null && buffs.ward>0 && buffs.afterLeave===0 && buffs.dun===false, JSON.stringify(buffs));
 const err=logs.filter(l=>!/deprecated with r150/.test(l));
 check("no console errors", err.length===0, err.join(" | ")||"none");
 console.log("FX", JSON.stringify(fx,null,2));

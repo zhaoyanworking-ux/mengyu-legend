@@ -123,7 +123,12 @@
   #growBody button:disabled{color:#8a6840;background:linear-gradient(#f4efe4,#e6dcc8);box-shadow:none}
   .loadRow{display:flex;gap:8px}
   .loadRow button{flex:1;border-radius:14px}
-  .book{display:flex;flex-direction:column;gap:8px}
+  .book{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+  .book button{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;padding:6px 4px;border-radius:14px;line-height:1.15}
+  .book button img{width:28px;height:28px;pointer-events:none}
+  .book button b{font-size:13px}
+  .book button small{font-size:11px;font-weight:800;color:#7a6248}
+  .book button.lock{opacity:.72}
   .tag{display:inline-block;padding:0 8px;border-radius:99px;font-size:11px;font-weight:800;background:#efe2c6;color:#6a4a22}
   .growCard button,.talentGrid button{width:100%;border-radius:12px;padding:6px 8px;text-align:left}
   .talentGrid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
@@ -161,7 +166,15 @@
   #qLog .sheet,#dunM .sheet{width:min(94vw,560px)}
   #qList,#dunBody{padding:10px 14px 16px;display:flex;flex-direction:column;gap:8px}
   .qcard{border-radius:14px;padding:10px 12px;background:rgba(255,255,255,.72);border:1px solid rgba(226,184,102,.7)}
+  .qcard .qh{display:flex;align-items:center;justify-content:space-between;gap:8px}
   .qcard b{display:block;font-size:15px}
+  .tag.st-ready{background:#e5f6df;color:#246b34}
+  .tag.st-active{background:#e4f0ff;color:#2458a8}
+  .tag.st-avail{background:#fff1cc;color:#8a5a12}
+  .tag.st-done{background:#eeeae2;color:#7d7368}
+  .tag.st-locked{background:#f4efe6;color:#9a8d7c}
+  .dunCard{display:flex;flex-direction:column;align-items:flex-start;gap:2px;width:100%;text-align:left;padding:10px 12px;border-radius:14px}
+  .dunCard small{font-size:12px;font-weight:800;color:#7a6248}
   .qcard .meta{color:#7a6248;font-size:12px;font-weight:800;margin-top:2px}
   .qcard p{margin:6px 0 0;font-size:13px;line-height:1.55;overflow-wrap:anywhere}
   .qcard .row,.dunActs{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
@@ -384,6 +397,7 @@
   #btnBulk{align-self:stretch;white-space:normal;line-height:1.25;padding:8px 14px}
   #itemTip .sub{color:#7a6248;font-size:calc(var(--u)*12px);font-weight:700;margin-top:2px}
   #itemTip .row button:disabled{opacity:1;filter:none;color:#8a6840;background:linear-gradient(#f7f1e4,#e7d7b8);box-shadow:inset 0 0 0 1.5px #e4d2ae;cursor:default}
+  #itemTip #tSell{color:#fff;text-shadow:0 1px 0 #8a2030;background:linear-gradient(#ff9a92,#d64545);box-shadow:inset 0 2px 0 rgba(255,255,255,.35),0 3px 0 #9a3040}
   .slot .lock{position:absolute;left:2px;bottom:2px;font-size:10px;font-weight:900;color:#fff;background:#2a3f86;border-radius:99px;padding:0 4px;line-height:14px}
   #bagGrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(calc(var(--u)*56px),1fr));gap:calc(var(--u)*7px);padding:calc(var(--u)*4px) calc(var(--u)*14px) calc(var(--u)*14px)}
   #bagGrid .slot{width:auto;aspect-ratio:1/1;height:auto}
@@ -732,7 +746,7 @@ const SAVE_BAD = "MengYuLegend_Save_v1.bad";
 const SAVE_NEWER = "MengYuLegend_Save_v1.newer";
 const SCHEMA = 6;
 const SAVE_FORMAT = "mengyu-legend-save";
-const BUILD = { name:"RC-4", note:"本地存档，不是云存档" };
+const BUILD = { name:"RC-6", note:"本地存档，不是云存档" };
 const QST_ST = { locked:1, avail:1, active:1, ready:1, done:1 };
 
 const CLASSES = {
@@ -3120,6 +3134,8 @@ function renderGrowth(){
   sanitizeGrowth(s);
   const budget=talentBudget(s.level), spent=s.growth.talents[id].length;
   const root=$("growBody"); if(!root) return;
+  const sheet=$("growth")&&$("growth").querySelector(".sheet");
+  const keep=sheet?sheet.scrollTop:0;
   if(!G.skillPick || !skillDef(id, G.skillPick)) G.skillPick=bookOf(id)[0].id;
   const atk=skillNextText(id, "atk");
   const atkBtn=atk.rank>=5?"<button type='button' disabled>普攻已满级</button>":"<button type='button' data-up='atk'"+(atk.ready?"":" disabled")+">"+(atk.why||("升级普攻 · "+atk.cost+" 金"))+"</button>";
@@ -3136,10 +3152,14 @@ function renderGrowth(){
   const why=!unlocked?"Lv."+pick.lv+" 解锁":rank>=5?"已满级":s.level<need?"需要 Lv."+need:s.gold<cost?"金币不足":"";
   const nowCd=Math.round(pick.cd*Math.max(0.7,1-0.05*rank)*10)/10;
   const nextCd=rank>=5?nowCd:Math.round(pick.cd*Math.max(0.7,1-0.05*(rank+1))*10)/10;
-  const detail="<div class='growCard'><b>"+pick.name+" <span class='tag'>"+pick.role+"</span></b><p>"+pick.text+"</p><div class='sub'>耗蓝 "+pick.mp+" · 冷却 "+nowCd+" 秒 · 当前 "+rank+"/5 · 伤害系数 "+Math.round((1+0.08*rank)*100)+"%</div><div class='sub'>下一级冷却 "+nextCd+" 秒 · 伤害系数 "+Math.round((1+0.08*Math.min(5,rank+1))*100)+"%"+(rank<5?" · "+cost+" 金":"")+"</div><button type='button' data-up='"+pick.id+"'"+(ready?"":" disabled")+">"+(why||("升级 · "+cost+" 金"))+"</button><button type='button' data-equip='"+pick.id+"'"+(unlocked?"":" disabled")+">装到选中的槽</button></div>";
+  const eqAt=loadoutOf(id).indexOf(pick.id);
+  const eqLine=eqAt>=0?"已装在第 "+(eqAt+1)+" 槽":"还没装上";
+  const nowPct=Math.round((1+0.08*rank)*100), nextPct=Math.round((1+0.08*Math.min(5,rank+1))*100);
+  const detail="<div class='growCard'><b>"+pick.name+" <span class='tag'>"+pick.role+"</span></b><p>"+pick.text+"</p><div class='sub'>"+eqLine+" · 耗蓝 "+pick.mp+" · 冷却 "+nowCd+" 秒 · 当前 "+rank+"/5 · 伤害系数 "+nowPct+"%</div><div class='sub'>下一级冷却 "+nextCd+" 秒 · 伤害系数 "+nextPct+"%"+(rank<5?" · "+cost+" 金":"")+"</div><button type='button' data-up='"+pick.id+"'"+(ready?"":" disabled")+">"+(why||("升级 · "+cost+" 金"))+"</button><button type='button' data-equip='"+pick.id+"'"+(unlocked?"":" disabled")+">装到选中的槽</button></div>";
+  const icons={s_spin:"spin",s_dash:"dash",s_guard:"lock",s_leap:"dash",s_shock:"nova",s_rally:"trophy",m_nova:"nova",m_miss:"missiles",m_frost:"shard",m_blink:"roll",m_ward:"gear",m_focus:"staff",a_fan:"fan",a_pierce:"pierce",a_back:"roll",a_mark:"map",a_trap:"lock",a_steady:"bow"};
   const book=bookOf(id).map(sk=>{
-    const on=G.skillPick===sk.id, lock=(s.level|0)<sk.lv;
-    return "<button type='button' data-pick='"+sk.id+"'"+(on?" class='on'":"")+">"+sk.name+" · "+sk.role+(lock?" · Lv."+sk.lv:"")+"</button>";
+    const on=G.skillPick===sk.id, lock=(s.level|0)<sk.lv, slot=loadoutOf(id).indexOf(sk.id);
+    return "<button type='button' data-pick='"+sk.id+"' class='skcard"+(on?" on":"")+(lock?" lock":"")+"'><img src='"+icon(icons[sk.id]||"sword")+"' alt=''><b>"+sk.name+"</b><small>"+(lock?"Lv."+sk.lv:sk.role)+(slot>=0?" · "+(slot+1):"")+"</small></button>";
   }).join("");
   const cards="<div class='growCard'><b>普攻 · "+atk.name+"</b><div>"+atk.line+"</div><div class='sub'>"+atk.next+"</div>"+atkBtn+"</div>";
   const talents=(TALENTS[id]||[]).map(t=>{
@@ -3149,7 +3169,7 @@ function renderGrowth(){
     return "<button type='button' data-tn='"+t.id+"'"+(on||locked?" disabled":"")+"><b>"+t.name+"</b><small>"+t.text+"</small><em>"+label+"</em></button>";
   }).join("");
   root.innerHTML="<div class='growMeta'>主动技能装 3 个，普攻和翻滚不占槽。第 3 槽 4 级开。天赋 "+spent+" / "+budget+"。</div>"+
-    "<h3>装配</h3><div class='loadRow'>"+slots+"</div>"+detail+"<h3>图鉴</h3><div class='book'>"+book+"</div>"+
+    "<h3>装配</h3><div class='loadRow'>"+slots+"</div><h3>图鉴</h3><div class='book'>"+book+"</div>"+detail+
     "<h3>普攻</h3><div class='growGrid'>"+cards+"</div><h3>天赋</h3><div class='talentGrid'>"+talents+"</div>"+
     "<button type='button' id='growRespec' class='bigbtn gray'>洗点 · "+respecCost()+" 金</button>";
   let slotPick=G.slotPick|0;
@@ -3157,6 +3177,7 @@ function renderGrowth(){
   const curSlot=root.querySelector("[data-slot='"+slotPick+"']"); if(curSlot) curSlot.classList.add("on");
   root.querySelectorAll("[data-pick]").forEach(b=>b.addEventListener("click", ()=>{ G.skillPick=b.dataset.pick; renderGrowth(); }));
   root.querySelectorAll("[data-equip]").forEach(b=>b.addEventListener("click", ()=>equipSkill(G.slotPick|0, b.dataset.equip)));
+  if(sheet) sheet.scrollTop=keep;
 }
 function openGrowth(){
   if(G.mode!=="play"||G.dlg||!G.p||G.p.dead) return;
@@ -3649,7 +3670,7 @@ function dlgButtons(){
   else if(d.turnId){ add("完成任务","next",advDlg); }
   else add(d.shop?"好的":"再见","next",advDlg);
   if(d.npc==="guard" && !d.turnId && G.save.level>=4) add("蚀雾试炼","opt",()=>{ closeDlg(); startTrial(); });
-  if(d.npc==="guard" && !d.turnId && G.save.level>=3) add("蚀雾回廊","opt",()=>{ closeDlg(); openDungeon(); });
+  if(d.npc==="guard" && !d.turnId && G.save.level>=DUN_DIFF.normal.lv) add("蚀雾回廊","opt",()=>{ closeDlg(); openDungeon(); });
   if(d.shop && !d.turnId) add("购买药水","opt",()=>{ d.shopMode=true; $("dlgBody").textContent="药水都是今早新熬的。（持有 "+G.save.gold+" 金）"; dlgButtons(); });
 }
 function buyPot(k){
@@ -3869,6 +3890,7 @@ function inField(x,z){ return z>=17.4; }
 function updateEnemy(e, dt, P){
   e.flash=Math.max(0,e.flash-dt*8); e.sq=Math.max(0,e.sq-dt*5);
   if(e.slowT>0) e.slowT=Math.max(0, e.slowT-dt);
+  if(e.stunImm>0) e.stunImm=Math.max(0, e.stunImm-dt);
   if(e.markT>0) e.markT=Math.max(0, e.markT-dt);
   if(G.buff && G.buff.trap && G.buff.trap.t>0 && Math.hypot(e.x-G.buff.trap.x, e.z-G.buff.trap.z)<G.buff.trap.r+e.r) applySlow(e, 0.4, 0.25);
   const kd=Math.exp(-9*dt); e.x+=e.kx*dt; e.z+=e.kz*dt; e.kx*=kd; e.kz*=kd;
@@ -4214,6 +4236,8 @@ function closeBag(){ modalOff("bag"); G.paused=false; refreshHUD(); }
 let BAGRAR="all", BAGSORT="rar";
 function renderBag(){
   const s=G.save;
+  const bagSheet=$("bag")&&$("bag").querySelector(".sheet");
+  const bagKeep=bagSheet?bagSheet.scrollTop:0;
   const rarRow=$("rarRow"), sortRow=$("sortRow");
   if(rarRow && !rarRow.childElementCount){
     [["all","全部"],["0","普通"],["1","优秀"],["2","精良"],["3","史诗"],["4","传说"]].forEach(pair=>{
@@ -4261,7 +4285,7 @@ function renderBag(){
   const tip=$("itemTip");
   let it=null, eqd=false;
   if(bagSel){ if(bagSel.eq){ it=s.equip[bagSel.eq]; eqd=true; } else it=s.bag.find(x=>x.uid===bagSel.uid); }
-  if(!it){ tip.style.display="none"; return; }
+  if(!it){ tip.style.display="none"; if(bagSheet) bagSheet.scrollTop=bagKeep; return; }
   tip.style.display="block";
   const RC=["#b6ae9f","#56c46a","#4a9cff","#b06cff","#ffa13d"], RB=["#f2ece0","#e2f6e0","#e2eeff","#f0e4ff","#fff0d8"];
   tip.style.setProperty("--tc",RC[it.rar]); tip.style.setProperty("--tb",RB[it.rar]);
@@ -4285,7 +4309,7 @@ function renderBag(){
   tip.innerHTML="<div class='th'><div class='slot ib r"+it.rar+"'><img src='"+itemIcon(it)+"' alt=''></div><div><div class='nm c"+it.rar+"'>"+it.name+(p?" +"+p:"")+(it.locked?" · 锁定":"")+"</div><div class='meta'>"+RAR[it.rar].n+" · "+SLOT_NAME[it.slot]+" · 物品等级 "+it.lv+(it.cls?" · "+CLASSES[it.cls].name+"专用":"")+"</div></div></div>"+
     "<div class='tb'><div class='stl'>"+(lines||"<span>没有额外属性</span>")+"</div><div class='sub'>当前强化 +"+p+" / "+PLUS_MAX+"，属性按基础值 +"+(PLUS_RATE*100)+"% × 强化等级</div>"+nextPlus+cmp+
     "<div class='row'>"+enh+"<button type='button' id='tLock'>"+(it.locked?"解锁":"锁定")+"</button></div>"+
-    "<div class='row'>"+(eqd?"<button id='tUn' type='button' class='s'>卸下</button>":"<button id='tEq' type='button'"+(wrong?" disabled":"")+">"+(wrong?"职业不符":"装备")+"</button><button id='tSell' type='button' class='s'"+(it.locked?" disabled":"")+">"+(it.locked?"锁定中":"出售 +"+sellValue(it)+" 金")+"</button>")+"</div></div>";
+    "<div class='row'>"+(eqd?"<button id='tUn' type='button' class='s'>卸下</button>":"<button id='tEq' type='button'"+(wrong?" disabled":"")+">"+(wrong?"职业不符":"装备")+"</button><button id='tSell' type='button' class='danger'"+(it.locked?" disabled":"")+">"+(it.locked?"锁定中":"出售 +"+sellValue(it)+" 金")+"</button>")+"</div></div>";
   $("tEnh").addEventListener("click",()=>{ if(enhanceItem(it.uid)) renderBag(); });
   $("tLock").addEventListener("click",()=>{ if(toggleLock(it.uid)) renderBag(); });
   if(eqd) $("tUn").addEventListener("click",()=>{
@@ -4301,6 +4325,7 @@ function renderBag(){
       const g=sellValue(it), uid=it.uid;
       askConfirm("出售「"+it.name+"」获得 "+g+" 金？锁定和正在穿的不能卖。强化只退回三成。", ()=>{ if(sellItem(uid, g)){ bagSel=null; renderBag(); } });
     }); }
+  if(bagSheet) bagSheet.scrollTop=bagKeep;
 }
 function isUpgrade(it){
   if(it.slot==="weapon" && it.cls && it.cls!==G.classId) return false;
@@ -4815,7 +4840,7 @@ function musDuck(name){
 
 /* ===================== 蚀雾回廊: one arena, two difficulties, separate from the field ===================== */
 const DUN_DIFF={
-  normal:{ name:"普通", lv:3, time:110, gold:90, xp:80, rar:1, pots:[1,0],
+  normal:{ name:"普通", lv:2, time:110, gold:90, xp:80, rar:1, pots:[1,0],
     waves:[["slime",2,2],["wisp",1,2],["captain",1,3]] },
   hard:{ name:"困难", lv:6, time:120, gold:160, xp:140, rar:2, pots:[1,1],
     waves:[["slime",2,4],["spike",1,4],["captain",1,5]] }
@@ -4859,11 +4884,11 @@ function openDungeon(){
 function closeDungeon(){ modalOff("dunM"); if(G.mode==="play" && !DUN.on) G.paused=false; refreshHUD(); }
 function renderDungeon(){
   const s=G.save, box=$("dunBody"); if(!box||!s) return;
-  const rules="<p class='qcard'>清完 3 波，最后是会预警的看守。失败、离开或刷新没有奖励。通关凭证只能领一次。</p>";
+  const rules="<p class='qcard'>清完 3 波。失败、离开或刷新没有奖励。凭证只能领一次。</p>";
   const cards=["normal","hard"].map(id=>{
     const p=previewDungeon(id,s), blocked=!!(s.voucher&&!s.voucher.taken), low=(s.level|0)<p.need, ok=!blocked && !low;
     const label=ok?"进入"+p.name:(blocked?"先领取上一张凭证":"未达到 Lv."+p.need);
-    return "<div class='qcard'><b>"+p.name+" · 需要 Lv."+p.need+"</b><div class='meta'>"+p.waves+" 波 · "+p.time+" 秒 · 成长 ×"+p.mul+"</div><p>预计 "+p.gold+" 金、"+p.xp+" 经验、药水 "+p.pots[0]+"/"+p.pots[1]+"、"+p.itemName+"。按进入时的等级、技能、天赋和强化计算，打完不会因为换装变多。</p><button type='button' data-dun='"+id+"'"+(ok?"":" disabled")+">"+label+"</button></div>";
+    return "<button type='button' class='dunCard' data-dun='"+id+"'"+(ok?"":" disabled")+"><b>"+p.name+" · Lv."+p.need+"</b><small>"+p.waves+" 波 · "+p.time+" 秒 · 成长 ×"+p.mul+"</small><small>"+p.gold+" 金 · "+p.xp+" 经验 · 药水 "+p.pots[0]+"/"+p.pots[1]+" · "+p.itemName+"</small><em>"+label+"</em></button>";
   }).join("");
   let claim="";
   if(s.voucher && !s.voucher.taken){
@@ -5027,15 +5052,16 @@ function openQuestLog(){
 function closeQuestLog(){ modalOff("qLog"); if(G.mode==="play" && !DUN.on) G.paused=false; refreshHUD(); }
 function renderQuestLog(){
   const s=G.save, box=$("qList"); if(!box) return;
+  const sheet=$("qLog")&&$("qLog").querySelector(".sheet");
+  const keep=sheet?sheet.scrollTop:0;
   const main=QUESTS.filter(q=>!q.repeat), rep=QUESTS.filter(q=>q.repeat);
   const card=q=>{
     const e=qst(q.id), kind=q.repeat?"可重复":"主线";
     const st={locked:"未开启",avail:"可接",active:"进行中",ready:"可提交",done:"已完成"}[e.st]||e.st;
-    const long=(q.greet&&q.greet[0])||q.progress&&q.progress[0]||"";
     const reward=q.gold+" 金 · "+q.xp+" 经验"+(q.reward&&q.reward.pots?" · 药水 "+q.reward.pots.join("/"):"")+(q.reward&&q.reward.item?" · 装备":"");
-    const prog=q.type==="talk"?"交谈":(q.tname||"进度")+" "+(e.pr|0)+" / "+q.count;
+    const prog=q.type==="talk"?"去交谈":(q.tname||"进度")+" "+(e.pr|0)+" / "+q.count;
     const btn=(e.st==="ready"?"<button type='button' data-turn='"+q.id+"'>提交</button>":(e.st==="avail"?"<button type='button' class='alt' data-acc='"+q.id+"'>接取</button>":""))+(e.st==="active"||e.st==="ready"||e.st==="avail"?"<button type='button' class='alt' data-track='"+q.id+"'>"+(G.trackId===q.id?"追踪中":"追踪")+"</button>":"");
-    return "<div class='qcard'><b>"+q.title+"</b><div class='meta'>"+kind+" · "+st+" · 第 "+((e.round|0)+1)+" 轮 · "+q.where+"</div><p>"+long+"</p><div class='meta'>"+prog+"</div><div class='meta'>奖励 "+reward+( !q.repeat && (s.paid&&s.paid[q.id]) ?" · 主线已发过":"")+"</div>"+btn+"</div>";
+    return "<div class='qcard'><div class='qh'><b>"+q.title+"</b><span class='tag st-"+e.st+"'>"+st+"</span></div><div class='meta'>"+kind+" · "+q.where+" · "+prog+"</div><div class='meta'>奖励 "+reward+( !q.repeat && (s.paid&&s.paid[q.id]) ?" · 已发过":"")+"</div><div class='row'>"+btn+"</div></div>";
   };
   const pend=(s.pending||[]).map(p=>"<div class='qcard pending'><b>"+p.item.name+"</b><div class='meta'>来自 "+p.from+"</div><button type='button' data-pend='"+p.id+"'>取出</button></div>").join("");
   box.innerHTML="<div class='qsec'>主线</div>"+main.map(card).join("")+"<div class='qsec'>可重复</div>"+rep.map(card).join("")+(pend?"<div class='qsec'>待领取</div>"+pend:"");
@@ -5043,6 +5069,7 @@ function renderQuestLog(){
   box.querySelectorAll("[data-acc]").forEach(b=>b.addEventListener("click", ()=>{ acceptQuest(QUESTS.find(q=>q.id===b.dataset.acc)); renderQuestLog(); }));
   box.querySelectorAll("[data-track]").forEach(b=>b.addEventListener("click", ()=>{ G.trackId=b.dataset.track; toast("地面箭头改指向这个任务"); renderQuestLog(); }));
   box.querySelectorAll("[data-pend]").forEach(b=>b.addEventListener("click", ()=>{ if(takePending(b.dataset.pend)) renderQuestLog(); }));
+  if(sheet) sheet.scrollTop=keep;
 }
 
 /* ===================== 蚀雾试炼: 5-wave timed challenge on the slope ===================== */
@@ -5209,7 +5236,8 @@ function hitEnemy(e, dmg, nx, nz, knock, o){
   const kb=knock*(e.dun?0.05:e.boss?0.12:e.elite?0.25:1)*(crit?1.25:1);
   e.kx=nx*kb; e.kz=nz*kb;
   if(o.pop && !e.heavy) e.vy=Math.max(e.vy, o.pop*(crit?1.2:1));
-  if(!e.heavy && e.state!=="intro"){ if(e.tele){ releaseDecal(e.tele); e.tele=null; } e.state="stun"; e.t=0.28+(crit?0.14:0)+(o.power||0.5)*0.12; }
+  const committed=e.state==="windup"||e.state==="strike"||e.state==="leap";
+  if(!e.heavy && e.state!=="intro" && !committed && (e.stunImm||0)<=0){ if(e.tele){ releaseDecal(e.tele); e.tele=null; } e.state="stun"; e.t=0.22; e.stunImm=0.45; }
   spawnNum(e.x+(Math.random()-0.5)*0.5, e.y+e.fly+(e.boss?3.6:e.elite?2.6:1.2)+Math.random()*0.2, e.z, amt, crit?1:0);
   const hy=e.y+e.fly+(e.boss?1.6:e.elite?1.1:0.5);
   hitSpark(e.x-nx*e.r*0.6, hy, e.z-nz*e.r*0.6, nx, nz, o.col||(crit?0xffb040:0xffe6a0), Math.min(1.4,(o.power||0.6)+(crit?0.4:0)));
