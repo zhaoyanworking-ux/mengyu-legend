@@ -93,7 +93,7 @@ const save = await ev(`(()=>{
   localStorage.setItem(m.SAVE_KEY, raw);
   return out;
 })()`);
-check("ver2 keeps level gold story and migrates to schema 5", save.keep.level===12 && save.keep.gold===777 && save.keep.story===true && save.keep.q5==="done" && save.keep.ver===5 && save.rawVer===5, JSON.stringify(save.keep));
+check("ver2 keeps level gold story and migrates to schema 6", save.keep.level===12 && save.keep.gold===777 && save.keep.story===true && save.keep.q5==="done" && save.keep.ver===6 && save.rawVer===6, JSON.stringify(save.keep));
 check("backup rotates previous good save", save.bakIsOld===true);
 check("corrupt primary restores backup and keeps the bad text", save.recovered===true && save.badKept===true);
 check("double corrupt does not invent or delete the raw", save.corruptNull===true && save.corruptKept===true);
@@ -101,7 +101,7 @@ check("newer schema is not loaded or rewritten", save.newerNull===true && save.n
 check("quota failure does not replace the save", save.quotaFalse===true && save.quotaKept===true);
 check("import rejects junk, newer schema and oversized bag", save.import.bad===false && save.import.newer===true && save.import.bag===false && save.import.ok===true);
 check("export text says it is not a cloud save", save.exportNote===true && save.build==="RC-4");
-check("legacy save keeps story and quest instead of wiping", save.legacy.story===true && save.legacy.q4==="active" && save.legacy.ver===5);
+check("legacy save keeps story and quest instead of wiping", save.legacy.story===true && save.legacy.q4==="active" && save.legacy.ver===6);
 
 const ui = await ev(`(async()=>{
   const m=window.__mengyu;

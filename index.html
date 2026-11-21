@@ -77,7 +77,10 @@
   #gold{position:absolute;left:calc(var(--sl) + var(--edge) + calc(var(--u)*72px));top:calc(var(--st) + var(--edge) + calc(var(--u)*54px));height:calc(var(--u)*22px);max-width:min(42vw,calc(var(--u)*132px));padding:0 calc(var(--u)*10px) 0 calc(var(--u)*3px);border-radius:99px;display:flex;align-items:center;gap:calc(var(--u)*4px);
     background:linear-gradient(rgba(30,40,80,.62),rgba(20,26,56,.55));border:1px solid rgba(255,222,150,.45);font-size:calc(var(--u)*12.5px);font-weight:800;color:#ffe9a8;text-shadow:0 1px 0 rgba(0,0,0,.6)}
   #gold img{width:calc(var(--u)*18px);height:calc(var(--u)*18px);flex:none}
-  #gold{overflow:hidden} #goldv{min-width:0;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  #gold{overflow:hidden;pointer-events:auto;cursor:pointer} #goldv{min-width:0;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  #goldPop{position:absolute;left:calc(var(--sl) + var(--edge));top:calc(var(--st) + var(--edge) + calc(var(--u)*80px));display:none;min-height:44px;max-width:min(78vw,280px);padding:10px 14px;border-radius:14px;z-index:8;pointer-events:auto;
+    color:#3d2f4f;font-weight:800;line-height:1.45;background:linear-gradient(#fffdf6,#f3e2bf);border:1.5px solid #e7c98a;box-shadow:0 8px 18px rgba(20,30,60,.28)}
+  #goldPop.on{display:block}
 
   /* ===== quest card ===== */
   #quest{position:absolute;left:calc(var(--sl) + var(--edge));top:calc(var(--st) + var(--edge) + calc(var(--u)*78px));width:min(calc(var(--u)*188px),62vw);min-height:44px;font-size:calc(var(--u)*12px);line-height:1.45;pointer-events:auto;padding:calc(var(--u)*7px) calc(var(--u)*10px) calc(var(--u)*8px) calc(var(--u)*34px);cursor:pointer;
@@ -114,7 +117,14 @@
   .growCard{background:#fff;border:1px solid #ead9b4;border-radius:14px;padding:8px 10px;font-size:13px;line-height:1.4}
   .growCard b{display:block;font-size:15px}
   .growCard .sub{color:#7a6248;margin:2px 0 6px}
-  .growCard button,#growBody #growRespec,.talentGrid button{min-height:44px;min-width:44px}
+  .growCard button,#growBody #growRespec,.talentGrid button,.loadRow button,.book button{min-height:44px;min-width:44px;border:0;font-weight:800}
+  #growBody button{color:#6a4a22;background:linear-gradient(#fffdf6,#f3e2bf);box-shadow:inset 0 0 0 1.5px #e7c98a}
+  #growBody button.on,#growBody .book button.on{color:#fff;background:linear-gradient(#ffd27a,#f0a03a)}
+  #growBody button:disabled{color:#8a6840;background:linear-gradient(#f4efe4,#e6dcc8);box-shadow:none}
+  .loadRow{display:flex;gap:8px}
+  .loadRow button{flex:1;border-radius:14px}
+  .book{display:flex;flex-direction:column;gap:8px}
+  .tag{display:inline-block;padding:0 8px;border-radius:99px;font-size:11px;font-weight:800;background:#efe2c6;color:#6a4a22}
   .growCard button,.talentGrid button{width:100%;border-radius:12px;padding:6px 8px;text-align:left}
   .talentGrid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
   .talentGrid button{display:flex;flex-direction:column;justify-content:center;background:#fff;border:1px solid #ead9b4}
@@ -220,6 +230,9 @@
   @keyframes rdy{0%{box-shadow:0 0 0 0 rgba(255,236,160,.95),0 calc(var(--u)*5px) calc(var(--u)*12px) rgba(10,20,50,.3)}100%{box-shadow:0 0 0 calc(var(--u)*18px) rgba(255,236,160,0),0 calc(var(--u)*5px) calc(var(--u)*12px) rgba(10,20,50,.3)}}
   #sk2{right:calc(var(--sr) + var(--pad) + var(--atk-s) + var(--pad));bottom:calc(var(--sb) + var(--pad));width:var(--sk-s);height:var(--sk-s)}
   #sk1{right:calc(var(--sr) + var(--pad) + var(--atk-s) + var(--pad));bottom:calc(var(--sb) + var(--pad) + var(--sk-s) + var(--pad));width:var(--sk-s);height:var(--sk-s)}
+  #sk3{right:calc(var(--sr) + var(--pad) + var(--atk-s) + var(--pad));bottom:calc(var(--sb) + var(--pad) + (var(--sk-s) + var(--pad)) * 2);width:var(--sk-s);height:var(--sk-s)}
+  #sk3.empty{background:radial-gradient(circle at 35% 28%,#fffdf6,#e7d7b4 70%);color:#8a6840}
+  html.land #sk3{bottom:calc(var(--sb) + var(--pad) + var(--sk-s) + var(--pad));right:calc(var(--sr) + var(--pad) + var(--atk-s) + var(--pad) + var(--sk-s) + var(--pad))}
   #dg{right:calc(var(--sr) + var(--pad) + (var(--atk-s) - var(--dg-s))/2);bottom:calc(var(--sb) + var(--pad) + var(--atk-s) + var(--pad));width:var(--dg-s);height:var(--dg-s)}
   #sk1,#sk2{background:radial-gradient(circle at 35% 28%,rgba(255,255,255,.4),var(--sc,#6a6ae0) 62%,var(--sc2,#3a3aa0))}
   #dg{background:radial-gradient(circle at 35% 28%,#b8f4e2,#3ab08e 62%,#1d7a62)}
@@ -619,6 +632,7 @@
     </div>
     <div id="lvb">1</div>
     <div id="gold"><img id="goldIc" alt=""><span id="goldv">0</span></div>
+    <div id="goldPop"></div>
     <div id="quest"><b id="qtitle">青岚的访客</b><div id="qprog">去古井广场找镇长苏晚晴。</div><div id="qhint"></div></div>
     <div id="mmwrap"><div id="mmring"><canvas id="minimap" width="208" height="208"></canvas></div><div id="zoneName">青岚镇</div></div>
     <div id="menuRow">
@@ -637,6 +651,7 @@
     <button id="atk" type="button"><img id="icAtk" alt=""><span class="lb" id="atkLb">斩击</span></button>
     <button id="sk1" class="skb" type="button"><img id="icSk1" alt=""><span class="lb">旋斩</span><i class="cdr"></i><b class="cdt"></b></button>
     <button id="sk2" class="skb" type="button"><img id="icSk2" alt=""><span class="lb">突斩</span><i class="cdr"></i><b class="cdt"></b></button>
+    <button id="sk3" class="skb empty" type="button"><img id="icSk3" alt=""><span class="lb">空槽</span><i class="cdr"></i><b class="cdt"></b></button>
     <button id="dg" class="skb" type="button"><img id="icDg" alt=""><span class="lb">翻滚</span><i class="cdr"></i><b class="cdt"></b></button>
     <button id="potH" class="skb pot" type="button"><img id="icPotH" alt=""><span class="n" id="potHn">0</span><i class="cdr"></i><b class="cdt"></b></button>
     <button id="potM" class="skb pot" type="button"><img id="icPotM" alt=""><span class="n" id="potMn">0</span><i class="cdr"></i><b class="cdt"></b></button>
@@ -715,7 +730,7 @@ const SAVE_KEY = "MengYuLegend_Save_v1";
 const SAVE_BAK = "MengYuLegend_Save_v1.bak";
 const SAVE_BAD = "MengYuLegend_Save_v1.bad";
 const SAVE_NEWER = "MengYuLegend_Save_v1.newer";
-const SCHEMA = 5;
+const SCHEMA = 6;
 const SAVE_FORMAT = "mengyu-legend-save";
 const BUILD = { name:"RC-4", note:"本地存档，不是云存档" };
 const QST_ST = { locked:1, avail:1, active:1, ready:1, done:1 };
@@ -2350,6 +2365,7 @@ function fireShot(kind, yawOff, dmg, spd, target){
   s.on=true; s.kind=kind; s.x=P.x+Math.sin(yaw)*0.55; s.z=P.z+Math.cos(yaw)*0.55; s.y=(P.y||0)+(kind===1||kind===2?1.05:0.95);
   s.vx=Math.sin(yaw)*spd; s.vz=Math.cos(yaw)*spd; s.spd=spd; s.dmg=dmg; s.age=0; s.hitN=0; s.fx0=P.x; s.fz0=P.z;
   s.life=kind===0?0.7:(kind===3?1.0:1.2); s.target=target||null; s.knock=kind===3?6:(kind===1?3.6:kind===2?3:2.4);
+  if(G.classId==="archer" && G.buff && G.buff.steadyN>0 && G.buff.steadyT>0 && (kind===0||kind===3)){ s.dmg*=1.1; G.buff.steadyN--; }
   FX.add.emit(s.x,s.y,s.z, 0,0,0, 0.1, 0.25, kind===3?0.9:0.55, SHOT_COL[kind], 1, 0,0,0);
   return s;
 }
@@ -2627,6 +2643,12 @@ function uiInit(){
   ["sVol","sMus","sSens"].forEach(id=>{ const e=$(id); if(e){ e.addEventListener("input", ()=>rangeFill(e)); rangeFill(e); } });
   const db=$("dlgBody"); if(db && window.MutationObserver){ new MutationObserver(()=>{ db.classList.remove("ln"); void db.offsetWidth; db.classList.add("ln"); }).observe(db,{ childList:true, characterData:true }); }
   const qc=$("quest"); if(qc) qc.addEventListener("click", ()=>{ if(G.mode==="play" && !G.dlg && !(G.p&&G.p.dead)) openQuestLog(); });
+  const gold=$("gold"); if(gold) gold.addEventListener("click", ()=>{
+    const pop=$("goldPop"); if(!pop||!G.save) return;
+    const on=pop.classList.toggle("on");
+    pop.textContent=on?("金币 "+(G.save.gold|0)+"，精确到 1。点这里关闭。"):"";
+  });
+  const goldPop=$("goldPop"); if(goldPop) goldPop.addEventListener("click", ()=>goldPop.classList.remove("on"));
   pressFx($("ui"));
   // joystick active ring + attack press state (visual only)
   const joy=$("joy"); joy.addEventListener("pointerdown", ()=>joy.classList.add("on")); ["pointerup","pointercancel"].forEach(ev=>joy.addEventListener(ev, ()=>joy.classList.remove("on")));
@@ -2761,6 +2783,36 @@ function newEquipSave(classId){
 const SKILL_COST=[40,80,140,220,320];
 const SKILL_LV=[2,4,6,9,12];
 const SKILL_KEYS=["atk","sk1","sk2"];
+const SKILL_BOOK={
+  swordsman:[
+    {id:"s_spin", legacy:"sk1", name:"旋斩", lv:1, mp:16, cd:5.5, role:"范围", text:"绕身旋转，多次砍中身边的敌人。"},
+    {id:"s_dash", legacy:"sk2", name:"突斩", lv:1, mp:14, cd:4, role:"位移", text:"向前冲最多约 5 米，路上的敌人吃一刀，冲刺时短暂无敌。"},
+    {id:"s_guard", name:"格挡", lv:4, mp:12, cd:8, role:"防御", text:"获得生命上限 18% 的护盾，最多 2.8 秒。护盾被打空即消失。"},
+    {id:"s_leap", name:"跃斩", lv:6, mp:14, cd:7, role:"位移", text:"朝面朝方向跃出最多 4.2 米，落点小范围伤害。会被墙挡住。"},
+    {id:"s_shock", name:"震地", lv:8, mp:18, cd:9, role:"控制", text:"周围敌人减速 40%、2.2 秒。首领、精英和看守只减速 15%，不会被定住。"},
+    {id:"s_rally", name:"战吼", lv:10, mp:16, cd:12, role:"增益", text:"6 秒内近战伤害 +12%。死亡、离开关卡或换职业会消失。"}
+  ],
+  mage:[
+    {id:"m_nova", legacy:"sk1", name:"魔爆", lv:1, mp:28, cd:7, role:"范围", text:"在目标处炸开一片法术。"},
+    {id:"m_miss", legacy:"sk2", name:"飞弹", lv:1, mp:24, cd:5, role:"输出", text:"三枚会追踪的飞弹。"},
+    {id:"m_frost", name:"冰环", lv:4, mp:22, cd:8, role:"控制", text:"冰环造成少量伤害并减速。首领和看守只减速 15%。"},
+    {id:"m_blink", name:"闪现", lv:6, mp:18, cd:7, role:"位移", text:"沿面朝方向移动最多 3.2 米，被墙挡住，不附带长时间无敌。"},
+    {id:"m_ward", name:"法盾", lv:8, mp:26, cd:10, role:"防御", text:"获得生命上限 22% 的护盾，最多 5 秒。"},
+    {id:"m_focus", name:"聚魔", lv:10, mp:10, cd:9, role:"资源", text:"下一个法术伤害 +25%，并返还 8 点法力。8 秒内没施放就消失。"}
+  ],
+  archer:[
+    {id:"a_fan", legacy:"sk1", name:"扇射", lv:1, mp:20, cd:6, role:"范围", text:"向前扇出七支箭。"},
+    {id:"a_pierce", legacy:"sk2", name:"穿云", lv:1, mp:18, cd:5, role:"输出", text:"一支打得更重的穿透箭。"},
+    {id:"a_back", name:"后跳", lv:4, mp:12, cd:6, role:"位移", text:"向后跳最多 3 米，并朝原方向补一箭。"},
+    {id:"a_mark", name:"标记", lv:6, mp:14, cd:8, role:"输出", text:"最近的敌人 5 秒内受到的伤害 +15%。对首领也生效，但不是控制。"},
+    {id:"a_trap", name:"绊索", lv:8, mp:16, cd:9, role:"控制", text:"脚下留下 3.2 秒的减速圈。首领和看守只减速 15%。"},
+    {id:"a_steady", name:"稳射", lv:10, mp:16, cd:10, role:"增益", text:"接下来 3 支箭伤害 +10%。死亡或换职业会清掉。"}
+  ]
+};
+function bookOf(id){ return SKILL_BOOK[id]||[]; }
+function skillDef(id, sid){ return bookOf(id).find(s=>s.id===sid)||null; }
+function skillStoreKey(id, key){ const d=skillDef(id, key); return d&&d.legacy?d.legacy:key; }
+function slotCount(level){ return (level|0)>=4?3:2; }
 const TALENTS={
   swordsman:[
     {id:"s_edge", name:"锋芒", req:null, text:"近战伤害 +10%"},
@@ -2794,9 +2846,14 @@ const TALENT_FX={
 };
 function talentBudget(level){ return Math.min(3, Math.floor((level|0)/2)); }
 function emptyGrowth(){
-  const skills={}, talents={};
-  CLASS_ORDER.forEach(id=>{ skills[id]={atk:0,sk1:0,sk2:0}; talents[id]=[]; });
-  return {skills, talents};
+  const skills={}, talents={}, loadout={};
+  CLASS_ORDER.forEach(id=>{
+    skills[id]={atk:0,sk1:0,sk2:0};
+    bookOf(id).forEach(s=>{ if(!s.legacy) skills[id][s.id]=0; });
+    talents[id]=[];
+    loadout[id]=[bookOf(id)[0].id, bookOf(id)[1].id, ""];
+  });
+  return {skills, talents, loadout};
 }
 function talentById(id, tid){ return (TALENTS[id]||[]).find(t=>t.id===tid)||null; }
 function inspectGrowth(g, level){
@@ -2807,10 +2864,23 @@ function inspectGrowth(g, level){
     const row=g.skills && g.skills[id];
     if(row!=null){
       if(typeof row!=="object" || Array.isArray(row)) return {ok:false, reason:"技能数据无效，已拒绝导入"};
-      for(const k of SKILL_KEYS){
-        if(row[k]==null) continue;
+      const known={};
+      SKILL_KEYS.forEach(k=>known[k]=1);
+      bookOf(id).forEach(s=>{ known[s.id]=1; if(s.legacy) known[s.legacy]=1; });
+      for(const k of Object.keys(row)){
+        if(!known[k] || row[k]==null) continue;
         const n=+row[k];
         if(!Number.isFinite(n) || n<0 || n>5 || Math.floor(n)!==n) return {ok:false, reason:"技能等级必须是 0 到 5 的整数"};
+      }
+    }
+    const load=g.loadout && g.loadout[id];
+    if(load!=null){
+      if(!Array.isArray(load) || load.length>3) return {ok:false, reason:"技能装配无效，已拒绝导入"};
+      const seenLoad={};
+      for(const sid of load){
+        if(!sid) continue;
+        if(seenLoad[sid] || !skillDef(id, sid)) return {ok:false, reason:"技能装配有重复或无效编号，已拒绝导入"};
+        seenLoad[sid]=1;
       }
     }
     const picked=g.talents && g.talents[id];
@@ -2840,7 +2910,27 @@ function sanitizeGrowth(s){
         const n=+row[k];
         out.skills[id][k]=(Number.isFinite(n) && n>=0) ? Math.max(0, Math.min(5, Math.floor(n))) : 0;
       });
+      bookOf(id).forEach(s=>{
+        if(s.legacy){ out.skills[id][s.legacy]=out.skills[id][s.legacy]|0; return; }
+        const n=+row[s.id];
+        out.skills[id][s.id]=(Number.isFinite(n) && n>=0) ? Math.max(0, Math.min(5, Math.floor(n))) : 0;
+      });
     }
+    const rawLoad=src.loadout && src.loadout[id];
+    const next=[], seenSkill={};
+    const allow=slotCount(s.level||1);
+    if(Array.isArray(rawLoad)){
+      rawLoad.forEach(sid=>{
+        if(next.length>=3) return;
+        if(!sid){ next.push(""); return; }
+        if(seenSkill[sid] || !skillDef(id, sid) || !((s.level|0)>=skillDef(id, sid).lv) || next.length>=allow){ next.push(""); return; }
+        seenSkill[sid]=1; next.push(sid);
+      });
+    }
+    while(next.length<3) next.push("");
+    if(!next[0]) next[0]=bookOf(id)[0].id;
+    if(!next[1]) next[1]=bookOf(id)[1].id;
+    out.loadout[id]=next;
     const picked=src.talents && src.talents[id];
     const kept=[], seen={};
     if(Array.isArray(picked)){
@@ -2853,13 +2943,22 @@ function sanitizeGrowth(s){
       });
     }
     out.talents[id]=kept;
+    if(!out.loadout[id]) out.loadout[id]=[bookOf(id)[0].id, bookOf(id)[1].id, ""];
   });
   s.growth=out;
 }
 function skillRank(id, key){
-  const g=G.save && G.save.growth && G.save.growth.skills && G.save.growth.skills[id||G.classId];
-  const n=g ? g[key]|0 : 0;
+  id=id||G.classId;
+  const g=G.save && G.save.growth && G.save.growth.skills && G.save.growth.skills[id];
+  const store=skillStoreKey(id, key);
+  const n=g ? g[store]|0 : 0;
   return Math.max(0, Math.min(5, n));
+}
+function loadoutOf(id){
+  id=id||G.classId;
+  const g=G.save && G.save.growth && G.save.growth.loadout && G.save.growth.loadout[id];
+  if(!g) return [bookOf(id)[0].id, bookOf(id)[1].id, ""];
+  return g.slice(0,3);
 }
 function hasTalent(id, tid){
   const a=G.save && G.save.growth && G.save.growth.talents && G.save.growth.talents[id||G.classId];
@@ -2893,12 +2992,14 @@ function outgoing(base, key, heavy){
   const id=G.classId, m=combatMods(id);
   let x=base * (1+0.08*skillRank(id, key)) * m[schoolOf(id)];
   if(heavy) x*=(1+m.heavy);
+  if(G.buff && G.buff.rallyT>0 && schoolOf(id)==="melee") x*=1.12;
+  if(G.buff && G.buff.focus && schoolOf(id)==="spell" && key!=="atk" && G.buff.focusUntil>FX.time){ x*=1.25; G.buff.focus=0; }
   return x;
 }
 function cdScale(base, slot){
   const m=combatMods();
   let f=slot==="atk"?m.cdAtk:slot==="dg"?m.cdDg:m.cdSkill;
-  if(slot==="atk"||slot==="sk1"||slot==="sk2") f*=Math.max(0.7, 1-0.05*skillRank(G.classId, slot));
+  if(slot && slot!=="dg") f*=Math.max(0.7, 1-0.05*skillRank(G.classId, slot));
   return Math.round(base*f*1000)/1000;
 }
 function spendFresh(){
@@ -2927,20 +3028,24 @@ function skillNextText(id, key){
 function upgradeSkill(key){
   if(!clickOnce("up-"+key)) return false;
   if(!G.save || !spendFresh()) return false;
-  if(SKILL_KEYS.indexOf(key)<0) return false;
-  const id=G.classId, rank=skillRank(id, key);
+  const id=G.classId;
+  const known=SKILL_KEYS.indexOf(key)>=0 || !!skillDef(id, key);
+  if(!known) return false;
+  if(skillDef(id, key) && (G.save.level|0)<skillDef(id, key).lv){ toast("Lv."+skillDef(id, key).lv+" 解锁"); return false; }
+  const rank=skillRank(id, key);
   if(rank>=5){ toast("已满级"); return false; }
   const cost=SKILL_COST[rank], need=SKILL_LV[rank];
   if((G.save.level|0)<need){ toast("需要 Lv."+need); return false; }
   if((G.save.gold|0)<cost){ toast("金币不足"); return false; }
   sanitizeGrowth(G.save);
   G.save.gold-=cost;
-  G.save.growth.skills[id][key]=rank+1;
+  G.save.growth.skills[id][skillStoreKey(id, key)]=rank+1;
   recalcStats();
   const ok=persist(G.save);
-  if(!ok){ G.save.gold+=cost; G.save.growth.skills[id][key]=rank; recalcStats(); toast("没有写入存档，费用已退回。"); return false; }
+  if(!ok){ G.save.gold+=cost; G.save.growth.skills[id][skillStoreKey(id, key)]=rank; recalcStats(); toast("没有写入存档，费用已退回。"); return false; }
   refreshHUD(); if($("growth").classList.contains("on")) renderGrowth();
-  toast(CLASSES[id][key==="atk"?"atkLabel":key==="sk1"?"skillLabel":"sk2Label"]+" 升到 "+(rank+1)+" 级");
+  const nm=key==="atk"?CLASSES[id].atkLabel:(skillDef(id, key)?skillDef(id, key).name:key);
+  toast(nm+" 升到 "+(rank+1)+" 级");
   return true;
 }
 function takeTalent(tid){
@@ -2990,25 +3095,68 @@ function askRespec(){
   if((G.save.gold|0)<cost){ toast("洗点需要 "+cost+" 金"); return; }
   askConfirm("花费 "+cost+" 金收回「"+CLASSES[id].name+"」已点的天赋？技能升级不退回，其他职业不受影响。", confirmRespec);
 }
+function equipSkill(slot, sid){
+  if(!G.save || !spendFresh()) return false;
+  const id=G.classId;
+  sanitizeGrowth(G.save);
+  const load=G.save.growth.loadout[id];
+  if(slot<0 || slot>2) return false;
+  if(slot>=slotCount(G.save.level)){ toast(slot===2?"4 级解锁第 3 个技能槽":"这个槽还没开"); return false; }
+  if(!sid){ load[slot]=""; if(!persist(G.save)){ return false; } paintSkills(); if($("growth").classList.contains("on")) renderGrowth(); return true; }
+  const d=skillDef(id, sid);
+  if(!d) return false;
+  if((G.save.level|0)<d.lv){ toast("Lv."+d.lv+" 解锁「"+d.name+"」"); return false; }
+  const prevLoad=load.slice();
+  const other=load.indexOf(sid);
+  if(other>=0 && other!==slot) load[other]="";
+  load[slot]=sid;
+  if(!persist(G.save)){ load[0]=prevLoad[0]; load[1]=prevLoad[1]; load[2]=prevLoad[2]; toast("存档没写成，装配已恢复。"); return false; }
+  paintSkills(); if($("growth").classList.contains("on")) renderGrowth();
+  toast("已装备「"+d.name+"」");
+  return true;
+}
 function renderGrowth(){
   const id=G.classId, s=G.save; if(!s) return;
   sanitizeGrowth(s);
   const budget=talentBudget(s.level), spent=s.growth.talents[id].length;
   const root=$("growBody"); if(!root) return;
-  const cards=SKILL_KEYS.map(k=>{
-    const d=skillNextText(id, k);
-    const btn=d.rank>=5?"<button type='button' disabled>已满级</button>":"<button type='button' data-up='"+k+"'"+(d.ready?"":" disabled")+">"+(d.why||("升级 · "+d.cost+" 金"))+"</button>";
-    return "<div class='growCard'><b>"+d.name+"</b><div>"+d.line+"</div><div class='sub'>"+d.next+"</div>"+btn+"</div>";
+  if(!G.skillPick || !skillDef(id, G.skillPick)) G.skillPick=bookOf(id)[0].id;
+  const atk=skillNextText(id, "atk");
+  const atkBtn=atk.rank>=5?"<button type='button' disabled>普攻已满级</button>":"<button type='button' data-up='atk'"+(atk.ready?"":" disabled")+">"+(atk.why||("升级普攻 · "+atk.cost+" 金"))+"</button>";
+  const slots=loadoutOf(id).map((sid,i)=>{
+    const open=i<slotCount(s.level);
+    const d=sid&&skillDef(id, sid);
+    return "<button type='button' data-slot='"+i+"'"+(open?"":" disabled")+">"+(open?(d?d.name:"空槽"):"Lv.4 开启")+"</button>";
   }).join("");
+  const pick=skillDef(id, G.skillPick);
+  const rank=skillRank(id, G.skillPick);
+  const unlocked=(s.level|0)>=pick.lv;
+  const cost=rank>=5?0:SKILL_COST[rank], need=rank>=5?0:SKILL_LV[rank];
+  const ready=unlocked && rank<5 && s.level>=need && s.gold>=cost;
+  const why=!unlocked?"Lv."+pick.lv+" 解锁":rank>=5?"已满级":s.level<need?"需要 Lv."+need:s.gold<cost?"金币不足":"";
+  const nowCd=Math.round(pick.cd*Math.max(0.7,1-0.05*rank)*10)/10;
+  const nextCd=rank>=5?nowCd:Math.round(pick.cd*Math.max(0.7,1-0.05*(rank+1))*10)/10;
+  const detail="<div class='growCard'><b>"+pick.name+" <span class='tag'>"+pick.role+"</span></b><p>"+pick.text+"</p><div class='sub'>耗蓝 "+pick.mp+" · 冷却 "+nowCd+" 秒 · 当前 "+rank+"/5 · 伤害系数 "+Math.round((1+0.08*rank)*100)+"%</div><div class='sub'>下一级冷却 "+nextCd+" 秒 · 伤害系数 "+Math.round((1+0.08*Math.min(5,rank+1))*100)+"%"+(rank<5?" · "+cost+" 金":"")+"</div><button type='button' data-up='"+pick.id+"'"+(ready?"":" disabled")+">"+(why||("升级 · "+cost+" 金"))+"</button><button type='button' data-equip='"+pick.id+"'"+(unlocked?"":" disabled")+">装到选中的槽</button></div>";
+  const book=bookOf(id).map(sk=>{
+    const on=G.skillPick===sk.id, lock=(s.level|0)<sk.lv;
+    return "<button type='button' data-pick='"+sk.id+"'"+(on?" class='on'":"")+">"+sk.name+" · "+sk.role+(lock?" · Lv."+sk.lv:"")+"</button>";
+  }).join("");
+  const cards="<div class='growCard'><b>普攻 · "+atk.name+"</b><div>"+atk.line+"</div><div class='sub'>"+atk.next+"</div>"+atkBtn+"</div>";
   const talents=(TALENTS[id]||[]).map(t=>{
     const on=hasTalent(id, t.id);
     const locked=t.req && !hasTalent(id, t.req);
     const label=on?"已点":locked?"需要前置":(spent>=budget?"点数不足":"点上");
     return "<button type='button' data-tn='"+t.id+"'"+(on||locked?" disabled":"")+"><b>"+t.name+"</b><small>"+t.text+"</small><em>"+label+"</em></button>";
   }).join("");
-  root.innerHTML="<div class='growMeta'>天赋点 "+spent+" / "+budget+" · 每 2 级 1 点，最多 3 点。只作用于当前职业。</div>"+
-    "<h3>技能</h3><div class='growGrid'>"+cards+"</div><h3>天赋</h3><div class='talentGrid'>"+talents+"</div>"+
+  root.innerHTML="<div class='growMeta'>主动技能装 3 个，普攻和翻滚不占槽。第 3 槽 4 级开。天赋 "+spent+" / "+budget+"。</div>"+
+    "<h3>装配</h3><div class='loadRow'>"+slots+"</div>"+detail+"<h3>图鉴</h3><div class='book'>"+book+"</div>"+
+    "<h3>普攻</h3><div class='growGrid'>"+cards+"</div><h3>天赋</h3><div class='talentGrid'>"+talents+"</div>"+
     "<button type='button' id='growRespec' class='bigbtn gray'>洗点 · "+respecCost()+" 金</button>";
+  let slotPick=G.slotPick|0;
+  root.querySelectorAll("[data-slot]").forEach(b=>b.addEventListener("click", ()=>{ G.slotPick=+b.dataset.slot; root.querySelectorAll("[data-slot]").forEach(x=>x.classList.toggle("on", x===b)); }));
+  const curSlot=root.querySelector("[data-slot='"+slotPick+"']"); if(curSlot) curSlot.classList.add("on");
+  root.querySelectorAll("[data-pick]").forEach(b=>b.addEventListener("click", ()=>{ G.skillPick=b.dataset.pick; renderGrowth(); }));
+  root.querySelectorAll("[data-equip]").forEach(b=>b.addEventListener("click", ()=>equipSkill(G.slotPick|0, b.dataset.equip)));
 }
 function openGrowth(){
   if(G.mode!=="play"||G.dlg||!G.p||G.p.dead) return;
@@ -3324,7 +3472,9 @@ function questHint(){
 }
 // world point the minimap arrow should lead to
 function questTarget(){
-  const q=tracked(); if(!q) return null; const e=qst(q.id);
+  const picked=G.trackId && QUESTS.find(q=>q.id===G.trackId);
+  const q=picked && qst(picked.id).st!=="done" && qst(picked.id).st!=="locked" ? picked : tracked();
+  if(!q) return null; const e=qst(q.id);
   let npc=null;
   if(e.st==="avail") npc=q.giver; else if(e.st==="ready") npc=q.turn; else if(q.type==="talk") npc=q.target;
   if(npc){ const n=NPCS[npc]; return { x:n.x, z:n.z, npc:true }; }
@@ -3499,7 +3649,7 @@ function dlgButtons(){
   else if(d.turnId){ add("完成任务","next",advDlg); }
   else add(d.shop?"好的":"再见","next",advDlg);
   if(d.npc==="guard" && !d.turnId && G.save.level>=4) add("蚀雾试炼","opt",()=>{ closeDlg(); startTrial(); });
-  if(d.npc==="guard" && !d.turnId && G.save.level>=6) add("蚀雾回廊","opt",()=>{ closeDlg(); openDungeon(); });
+  if(d.npc==="guard" && !d.turnId && G.save.level>=3) add("蚀雾回廊","opt",()=>{ closeDlg(); openDungeon(); });
   if(d.shop && !d.turnId) add("购买药水","opt",()=>{ d.shopMode=true; $("dlgBody").textContent="药水都是今早新熬的。（持有 "+G.save.gold+" 金）"; dlgButtons(); });
 }
 function buyPot(k){
@@ -3671,6 +3821,7 @@ function updateEShots(dt){
     s.age+=dt; s.life-=dt; s.x+=s.vx*dt; s.z+=s.vz*dt;
     if(Math.random()<0.7) FX.add.emit(s.x,s.y,s.z,(Math.random()-0.5)*0.5,(Math.random()-0.5)*0.5,(Math.random()-0.5)*0.5,0.3,s.s*0.7,0.03,s.col,0.8,2,0,0);
     if(!P.dead && Math.abs(s.x-P.x)<0.6 && Math.abs(s.z-P.z)<0.6 && Math.hypot(s.x-P.x,s.z-P.z)<0.35+s.s){
+      if(typeof DUN!=="undefined" && DUN.on) DUN.stats.shotHits++;
       damagePlayer(s.dmg, s.x-s.vx, s.z-s.vz); fxBurst(s.x,s.y,s.z,s.col,10,3,0.3,0.08,2); s.on=false; continue;
     }
     if(s.life<=0 || s.x<FIELD.minX-4 || s.x>FIELD.maxX+4 || s.z<15 || s.z>FIELD.maxZ+4){ s.on=false; fxBurst(s.x,s.y,s.z,s.col,5,1.5,0.25,0.07,1); continue; }
@@ -3709,6 +3860,7 @@ function updateHPBars(){
 /* ---------- AI ---------- */
 function startTele(e, kind, cx, cz, r, wind){
   e.state="windup"; e.atk=kind; e.wind=e.t=wind; e.tcx=cx; e.tcz=cz; e.tr=r; e.sx=e.x; e.sz=e.z;
+  if(e.dun && typeof DUN!=="undefined") DUN.stats.windups++;
   if(e.tele){ releaseDecal(e.tele); e.tele=null; }
   if(kind!=="burst" && kind!=="summon" && kind!=="shoot") e.tele=spawnDecal("tele", cx, cz, r, r, 0xff5a3c, 99);
   sfx(e.heavy?"windupBig":"windup");
@@ -3716,6 +3868,9 @@ function startTele(e, kind, cx, cz, r, wind){
 function inField(x,z){ return z>=17.4; }
 function updateEnemy(e, dt, P){
   e.flash=Math.max(0,e.flash-dt*8); e.sq=Math.max(0,e.sq-dt*5);
+  if(e.slowT>0) e.slowT=Math.max(0, e.slowT-dt);
+  if(e.markT>0) e.markT=Math.max(0, e.markT-dt);
+  if(G.buff && G.buff.trap && G.buff.trap.t>0 && Math.hypot(e.x-G.buff.trap.x, e.z-G.buff.trap.z)<G.buff.trap.r+e.r) applySlow(e, 0.4, 0.25);
   const kd=Math.exp(-9*dt); e.x+=e.kx*dt; e.z+=e.kz*dt; e.kx*=kd; e.kz*=kd;
   if(!e.heavy && !e.fly && e.state!=="intro" && !P.dead){ const bx=e.x-P.x, bz=e.z-P.z, bd=Math.hypot(bx,bz), mn=e.r+0.3; if(bd<mn && bd>0.001){ const pu=Math.min(mn-bd, 6*dt); e.x+=bx/bd*pu; e.z+=bz/bd*pu; } }
   if(e.heavy && e.state!=="leap" && e.state!=="intro" && !P.dead && !(P.y>0.6)){ const bx=P.x-e.x, bz=P.z-e.z, bd=Math.hypot(bx,bz), mn=e.r*(e.boss?1.25:0.8)+0.35; if(bd<mn){ const ux=bd>0.01?bx/bd:Math.sin(e.mesh.rotation.y), uz=bd>0.01?bz/bd:Math.cos(e.mesh.rotation.y), pu=Math.min(mn-bd, 9*dt+(mn-bd)*0.25); tryMove(ux*pu, uz*pu); } }
@@ -3751,7 +3906,7 @@ function updateEnemy(e, dt, P){
   } else if(e.state==="recover"){ e.t-=dt; if(e.t<=0){ e.state="chase"; e.cd=(e.boss?0.5:0.35)+Math.random()*(e.boss?0.6:0.7); } }
   else if(e.state==="return"){
     const hx=e.hx-e.x, hz=e.hz-e.z, hd=Math.hypot(hx,hz)||1;
-    if(hd>0.6){ const st=e.spd*1.4*dt; e.x+=hx/hd*st; e.z+=hz/hd*st; moving=true; e.mesh.rotation.y=Math.atan2(hx,hz); }
+    if(hd>0.6){ const st=enemySpd(e)*1.4*dt; e.x+=hx/hd*st; e.z+=hz/hd*st; moving=true; e.mesh.rotation.y=Math.atan2(hx,hz); }
     else e.state="idle";
     e.hp=Math.min(e.max, e.hp+e.max*0.25*dt);
   } else {
@@ -3769,12 +3924,12 @@ function updateEnemy(e, dt, P){
         const want=6.2; let mx=0, mz=0;
         if(dist>want+1.2){ mx=dx/dist; mz=dz/dist; } else if(dist<want-1.8){ mx=-dx/dist; mz=-dz/dist; }
         const side=Math.sin(FX.time*0.9+e.hx)*0.6; mx+=-dz/dist*side; mz+=dx/dist*side;
-        const ml=Math.hypot(mx,mz); if(ml>0.05){ e.x+=mx/ml*e.spd*dt; e.z+=mz/ml*e.spd*dt; moving=true; }
+        const ml=Math.hypot(mx,mz); if(ml>0.05){ e.x+=mx/ml*enemySpd(e)*dt; e.z+=mz/ml*enemySpd(e)*dt; moving=true; }
         e.mesh.rotation.y=Math.atan2(dx,dz);
         if(e.cd<=0 && dist<11){ e.state="windup"; e.atk="shoot"; e.wind=e.t=0.6; sfx("charge2"); }
       } else {
         const reach=e.elite?2.6:(ETYPE[e.type].reach||1.5);
-        if(dist>reach*0.8){ const st=e.spd*dt; e.x+=dx/dist*st; e.z+=dz/dist*st; moving=true; }
+        if(dist>reach*0.8){ const st=enemySpd(e)*dt; e.x+=dx/dist*st; e.z+=dz/dist*st; moving=true; }
         e.mesh.rotation.y=Math.atan2(dx,dz);
         if(e.elite && e.cd<=0 && dist>3.2 && dist<9 && e.atkN%2===1){ e.atkN++; startTele(e,"leap",P.x,P.z,2.1,1.0); }
         else if(dist<reach && e.cd<=0){
@@ -3787,8 +3942,14 @@ function updateEnemy(e, dt, P){
       // lazy wander around home
       e.wT=(e.wT||0)-dt;
       if(e.wT<=0){ e.wT=2+Math.random()*3; const a=Math.random()*6.2832, r=Math.random()*2.5; e.wx=e.hx+Math.sin(a)*r; e.wz=e.hz+Math.cos(a)*r; }
-      if(e.wx!=null){ const wx=e.wx-e.x, wz=e.wz-e.z, wd=Math.hypot(wx,wz); if(wd>0.3){ const st=e.spd*0.35*dt; e.x+=wx/wd*st; e.z+=wz/wd*st; moving=true; e.mesh.rotation.y=Math.atan2(wx,wz); } }
+      if(e.wx!=null){ const wx=e.wx-e.x, wz=e.wz-e.z, wd=Math.hypot(wx,wz); if(wd>0.3){ const st=enemySpd(e)*0.35*dt; e.x+=wx/wd*st; e.z+=wz/wd*st; moving=true; e.mesh.rotation.y=Math.atan2(wx,wz); } }
     }
+  }
+  if(e.dun && typeof DUN!=="undefined"){
+    const ax=e.x-DUN.cx, az=e.z-DUN.cz, ad=Math.hypot(ax,az);
+    if(ad>7.4){ e.x=DUN.cx+ax/ad*7.4; e.z=DUN.cz+az/ad*7.4; }
+    const pd=Math.hypot(e.x-G.p.x,e.z-G.p.z);
+    if(!DUN.stats.minDist || pd<DUN.stats.minDist) DUN.stats.minDist=Math.round(pd*100)/100;
   }
   if(e.x<FIELD.minX) e.x=FIELD.minX; if(e.x>FIELD.maxX) e.x=FIELD.maxX; if(e.z<FIELD.minZ) e.z=FIELD.minZ; if(e.z>FIELD.maxZ) e.z=FIELD.maxZ;
   if(e.mat){ const f=e.flash*0.8, enr=e.boss&&e.phase===2?0.18+0.08*Math.sin(FX.time*8):0; e.mat.emissive.setRGB(f+glow+enr, f*0.96+glow*0.32, f*0.88+glow*0.12+(e.type==="wisp"?0.22:0)); }
@@ -3804,6 +3965,7 @@ function enemyStrike(e, P){
   if(e.atk==="shoot"){
     const by=e.fly+0.9; const dx=P.x-e.x, dz=P.z-e.z;
     fireEShot(e.x+dx*0.08, by, e.z+dz*0.08, dx, dz, 8.5, e.dmg, 0xc080ff, 0.3);
+    if(e.dun && typeof DUN!=="undefined") DUN.stats.shots++;
     sfx("eshot"); e.state="recover"; e.t=0.3; e.cd=1.9+Math.random()*1.0; return;
   }
   if(e.atk==="burst"){
@@ -3834,7 +3996,7 @@ function resolveStrike(e, P){
 function bossThink(e, dt, P, dx, dz, dist){
   if(e.phase===1 && e.hp<e.max*0.5){ e.phase=2; banner("狂暴！","蚀雾史莱姆王的攻击变得更加猛烈"); sfx("roar"); addShake(0.6); e.spd*=1.25; e.state="recover"; e.t=0.8; return; }
   const sp=e.phase===2?0.75:1;
-  if(dist>3.2){ const st=e.spd*dt; e.x+=dx/dist*st; e.z+=dz/dist*st; }
+  if(dist>3.2){ const st=enemySpd(e)*dt; e.x+=dx/dist*st; e.z+=dz/dist*st; }
   e.mesh.rotation.y=Math.atan2(dx,dz);
   // keep inside the altar ring
   const ax=e.x-ALTAR.x, az=e.z-ALTAR.z, ad=Math.hypot(ax,az); if(ad>ALTAR.r){ e.x=ALTAR.x+ax/ad*ALTAR.r; e.z=ALTAR.z+az/ad*ALTAR.r; }
@@ -4653,12 +4815,13 @@ function musDuck(name){
 
 /* ===================== 蚀雾回廊: one arena, two difficulties, separate from the field ===================== */
 const DUN_DIFF={
-  normal:{ name:"普通", lv:6, time:80, gold:90, xp:80, rar:1, pots:[1,0],
-    waves:[["slime",1,1],["spike",1,1],["captain",1,1]] },
-  hard:{ name:"困难", lv:10, time:70, gold:160, xp:140, rar:2, pots:[1,1],
-    waves:[["slime",2,2],["wisp",1,3],["captain",1,4]] }
+  normal:{ name:"普通", lv:3, time:110, gold:90, xp:80, rar:1, pots:[1,0],
+    waves:[["slime",2,2],["wisp",1,2],["captain",1,3]] },
+  hard:{ name:"困难", lv:6, time:120, gold:160, xp:140, rar:2, pots:[1,1],
+    waves:[["slime",2,4],["spike",1,4],["captain",1,5]] }
 };
-const DUN={ on:false, diff:"", wave:0, t:0, gap:0.45, token:"", phase:"", reward:null, cx:0, cz:28.5 };
+const DUN={ on:false, diff:"", wave:0, t:0, gap:0.8, token:"", phase:"", reward:null, cx:0, cz:28.5, clock:0,
+  stats:{hurt:0,hurtDmg:0,windups:0,shots:0,minDist:99} };
 function growthMul(s){
   s=s||G.save; if(!s) return 1;
   let ranks=0, talents=0, plus=0;
@@ -4696,7 +4859,7 @@ function openDungeon(){
 function closeDungeon(){ modalOff("dunM"); if(G.mode==="play" && !DUN.on) G.paused=false; refreshHUD(); }
 function renderDungeon(){
   const s=G.save, box=$("dunBody"); if(!box||!s) return;
-  const rules="<p class='qcard'>目标：清完 3 波，最后一波是回廊看守。失败、离开、死亡或中途刷新都不发奖励。通关只记一张凭证，领取一次。背包满时护符留在待领取，不会卖掉，也不会掉在地上。野外和蚀雾试炼照旧。</p>";
+  const rules="<p class='qcard'>清完 3 波，最后是会预警的看守。失败、离开或刷新没有奖励。通关凭证只能领一次。</p>";
   const cards=["normal","hard"].map(id=>{
     const p=previewDungeon(id,s), blocked=!!(s.voucher&&!s.voucher.taken), low=(s.level|0)<p.need, ok=!blocked && !low;
     const label=ok?"进入"+p.name:(blocked?"先领取上一张凭证":"未达到 Lv."+p.need);
@@ -4733,8 +4896,9 @@ function startDungeon(diff){
   s.run=run;
   if(!persist(s)){ s.run=null; toast("存档没写成，没有进入回廊。"); return false; }
   clearEnemies(); SPAWN.t=1e9;
-  DUN.on=true; DUN.diff=diff; DUN.wave=0; DUN.t=d.time; DUN.gap=0.45; DUN.token=token; DUN.phase="fight"; DUN.reward=reward;
-  G.p.x=DUN.cx; G.p.z=DUN.cz-3.15; G.p.yaw=0; G.p.vx=0; G.p.vz=0;
+  DUN.on=true; DUN.diff=diff; DUN.wave=0; DUN.t=d.time; DUN.gap=0.8; DUN.token=token; DUN.phase="fight"; DUN.reward=reward; DUN.clock=0;
+  DUN.stats={hurt:0,hurtDmg:0,windups:0,shots:0,shotHits:0,minDist:99,spawnDist:0};
+  G.p.x=DUN.cx; G.p.z=DUN.cz-4.2; G.p.yaw=0; G.p.vx=0; G.p.vz=0;
   camReset(0); updateCamera._init=false;
   closeDungeon(); G.paused=false;
   dunSpawn();
@@ -4745,16 +4909,22 @@ function startDungeon(diff){
 }
 function dunSpawn(){
   const spec=DUN_DIFF[DUN.diff].waves[DUN.wave]; if(!spec) return;
-  const kind=spec[0]==="captain"?"slime":spec[0], n=spec[1], lv=spec[2];
+  const captain=spec[0]==="captain", kind=captain?"elite":spec[0], n=spec[1], lv=spec[2];
+  let nearest=99;
   for(let i=0;i<n;i++){
-    const a=(i-(n-1)/2)*0.7;
-    const e=spawnEnemy(kind, DUN.cx+Math.sin(a)*0.45, DUN.cz-1.6, lv, "slope");
-    e.dun=true; e.aggro=true; e.hx=DUN.cx; e.hz=DUN.cz; e.spd=1.05; e.cd=1.4;
-    if(DUN.diff==="normal") e.dmg=Math.max(1, Math.round(e.dmg*0.35));
-    if(spec[0]==="captain"){ e.dunBoss=true; e.name="回廊看守"; e.max=e.hp=Math.round(e.max*(DUN.diff==="hard"?3.2:2.4)); }
+    const x=DUN.cx+(i-(n-1)/2)*1.7, z=DUN.cz-4.2+(kind==="wisp"?4.6:3.8);
+    const e=spawnEnemy(kind, x, z, lv, "slope");
+    e.dun=true; e.aggro=true; e.hx=DUN.cx; e.hz=DUN.cz; e.cd=0.55;
+    if(captain){
+      e.dunBoss=true; e.heavy=true; e.elite=true; e.name="回廊看守";
+      e.max=e.hp=DUN.diff==="hard"?280:150;
+      e.cd=0.35;
+    } else e.max=e.hp=Math.max(e.hp, DUN.diff==="hard"?110:78);
+    nearest=Math.min(nearest, Math.hypot(e.x-G.p.x, e.z-G.p.z));
   }
+  if(!DUN.stats.spawnDist) DUN.stats.spawnDist=Math.round(nearest*100)/100;
   DUN.wave++;
-  banner("第 "+DUN.wave+" / 3 波", spec[0]==="captain"?"回廊看守出现了":"击败这波魔物");
+  banner("第 "+DUN.wave+" / 3 波", captain?"看守会跳砸，先躲开红圈":"它们会追过来");
   sfx("summon");
 }
 function clearDunEnemies(){
@@ -4765,6 +4935,7 @@ function clearDunEnemies(){
 function endDungeon(why){
   if(!DUN.on) return false;
   DUN.on=false; DUN.phase=""; $("dunHud").classList.remove("on");
+  clearCombatBuffs();
   clearDunEnemies(); SPAWN.t=2.5;
   const s=G.save;
   if(s && s.run && s.run.token===DUN.token) s.run=null;
@@ -4840,8 +5011,9 @@ function updateDungeon(dt){
   const alive=G.enemies.some(e=>e.dun&&!e.dead);
   if(!alive){
     if(DUN.wave>=DUN_DIFF[DUN.diff].waves.length){ winDungeon(); return; }
-    DUN.gap-=dt; if(DUN.gap<=0){ DUN.gap=0.45; dunSpawn(); }
+    DUN.gap-=dt; if(DUN.gap<=0){ DUN.gap=0.8; dunSpawn(); }
   }
+  DUN.clock+=dt;
   const dx=G.p.x-DUN.cx, dz=G.p.z-DUN.cz, dist=Math.hypot(dx,dz);
   if(dist>8.5){ G.p.x=DUN.cx+dx/dist*8.5; G.p.z=DUN.cz+dz/dist*8.5; }
   const sec=Math.ceil(DUN.t);
@@ -4862,13 +5034,14 @@ function renderQuestLog(){
     const long=(q.greet&&q.greet[0])||q.progress&&q.progress[0]||"";
     const reward=q.gold+" 金 · "+q.xp+" 经验"+(q.reward&&q.reward.pots?" · 药水 "+q.reward.pots.join("/"):"")+(q.reward&&q.reward.item?" · 装备":"");
     const prog=q.type==="talk"?"交谈":(q.tname||"进度")+" "+(e.pr|0)+" / "+q.count;
-    const btn=e.st==="ready"?"<button type='button' data-turn='"+q.id+"'>提交</button>":(e.st==="avail"?"<button type='button' class='alt' data-acc='"+q.id+"'>接取</button>":"");
+    const btn=(e.st==="ready"?"<button type='button' data-turn='"+q.id+"'>提交</button>":(e.st==="avail"?"<button type='button' class='alt' data-acc='"+q.id+"'>接取</button>":""))+(e.st==="active"||e.st==="ready"||e.st==="avail"?"<button type='button' class='alt' data-track='"+q.id+"'>"+(G.trackId===q.id?"追踪中":"追踪")+"</button>":"");
     return "<div class='qcard'><b>"+q.title+"</b><div class='meta'>"+kind+" · "+st+" · 第 "+((e.round|0)+1)+" 轮 · "+q.where+"</div><p>"+long+"</p><div class='meta'>"+prog+"</div><div class='meta'>奖励 "+reward+( !q.repeat && (s.paid&&s.paid[q.id]) ?" · 主线已发过":"")+"</div>"+btn+"</div>";
   };
   const pend=(s.pending||[]).map(p=>"<div class='qcard pending'><b>"+p.item.name+"</b><div class='meta'>来自 "+p.from+"</div><button type='button' data-pend='"+p.id+"'>取出</button></div>").join("");
   box.innerHTML="<div class='qsec'>主线</div>"+main.map(card).join("")+"<div class='qsec'>可重复</div>"+rep.map(card).join("")+(pend?"<div class='qsec'>待领取</div>"+pend:"");
   box.querySelectorAll("[data-turn]").forEach(b=>b.addEventListener("click", ()=>{ claimQuest(QUESTS.find(q=>q.id===b.dataset.turn)); renderQuestLog(); }));
   box.querySelectorAll("[data-acc]").forEach(b=>b.addEventListener("click", ()=>{ acceptQuest(QUESTS.find(q=>q.id===b.dataset.acc)); renderQuestLog(); }));
+  box.querySelectorAll("[data-track]").forEach(b=>b.addEventListener("click", ()=>{ G.trackId=b.dataset.track; toast("地面箭头改指向这个任务"); renderQuestLog(); }));
   box.querySelectorAll("[data-pend]").forEach(b=>b.addEventListener("click", ()=>{ if(takePending(b.dataset.pend)) renderQuestLog(); }));
 }
 
@@ -4958,6 +5131,7 @@ function newSave(classId){
 function spawnBoss(){ if(G.boss && !G.boss.dead) return G.boss; G.boss=spawnEnemy("boss",0,40,8,"altar"); return G.boss; }
 function startAdventure(classId, fresh){
   G.classId=classId;
+  clearCombatBuffs();
   if(fresh || !G.save){ G.save=newSave(classId); persist(G.save, {replace:true}); }
   else { migrateSave(G.save); const abandoned=abandonStaleRun(G.save); G.save.classId=classId; persist(G.save); if(abandoned) toast("上次的蚀雾回廊中断了，没有发放奖励。"); }
   recalcStats();
@@ -4980,6 +5154,7 @@ function startAdventure(classId, fresh){
   const SKC={ swordsman:["#4aa6e8","#f0a030"], mage:["#9a6ae8","#4a8ee8"], archer:["#3fb070","#d89a28"] }[classId];
   const shade=h=>{ const c=new THREE.Color(h); c.multiplyScalar(0.62); return "#"+c.getHexString(); };
   $("sk1").style.setProperty("--sc",SKC[0]); $("sk1").style.setProperty("--sc2",shade(SKC[0])); $("sk2").style.setProperty("--sc",SKC[1]); $("sk2").style.setProperty("--sc2",shade(SKC[1]));
+  paintSkills();
   const pth=charThumb(classId); $("portrait").innerHTML=pth?"<img src='"+pth+"' alt=''>":"";
   $("over").style.display="none"; $("bossbar").style.display="none";
   TRIAL.on=false; $("trialHud").style.display="none";
@@ -5027,7 +5202,8 @@ function hitEnemy(e, dmg, nx, nz, knock, o){
   const critC=(o.crit!=null?o.crit:0.10)+(ST.crit-10)/100;
   const crit=G.forceCrit==null ? Math.random()<critC : !!G.forceCrit;
   const roll=G.forceRoll==null ? (0.9+Math.random()*0.2) : G.forceRoll;
-  const amt=Math.max(1,Math.round(dmg*ST.mul*(crit?1.8:1)*roll));
+  let amt=Math.max(1,Math.round(dmg*ST.mul*(crit?1.8:1)*roll));
+  if(e.markT>0) amt=Math.max(1, Math.round(amt*(1+(e.mark||0))));
   e.hp-=amt; e.flash=1; e.sq=Math.min(1,(o.power||0.6)+(crit?0.3:0));
   if(!e.aggro && e.state!=="intro"){ e.aggro=true; if(e.state==="return"||e.state==="idle") e.state="chase"; }
   const kb=knock*(e.dun?0.05:e.boss?0.12:e.elite?0.25:1)*(crit?1.25:1);
@@ -5137,7 +5313,13 @@ function damagePlayer(amt, sx, sz){
   if(P.invT>0||P.dodgeT>0||P.dashT>0){ if(P.dodgeT>0||P.dashT>0){ spawnNum(P.x,(P.y||0)+1.9,P.z,"闪避",3); sfx("orb"); } return; }
   const roll=G.forceRoll==null ? (0.9+Math.random()*0.2) : G.forceRoll;
   amt=Math.max(1,Math.round(amt*(1-combatMods().dr)*(1-ST.def/(ST.def+60))*roll));
+  if(G.buff){
+    if(G.buff.guardT>0 && G.buff.guard>0){ const a=Math.min(amt, G.buff.guard); G.buff.guard-=a; amt-=a; if(G.buff.guard<=0) G.buff.guardT=0; }
+    if(amt>0 && G.buff.barrierT>0 && G.buff.barrier>0){ const a=Math.min(amt, G.buff.barrier); G.buff.barrier-=a; amt-=a; if(G.buff.barrier<=0) G.buff.barrierT=0; }
+  }
+  if(amt<=0){ spawnNum(P.x,(P.y||0)+1.8,P.z,"格挡",4); sfx("orb"); return; }
   P.hp=Math.max(0,P.hp-amt); P.invT=0.6; P.hurtT=0.16; P.atkT=0; P.lungeT=0; G.comboQueued=false;
+  if(typeof DUN!=="undefined" && DUN.on){ DUN.stats.hurt++; DUN.stats.hurtDmg+=amt; }
   let dx=0, dz=1;
   if(sx!=null){ dx=P.x-sx; dz=P.z-sz; const d=Math.hypot(dx,dz)||1; dx/=d; dz/=d; tryMove(dx*0.5, dz*0.5); }
   HUDFX.vig=1;
@@ -5149,6 +5331,7 @@ function damagePlayer(amt, sx, sz){
   if(P.hp<=0){
     P.dead=true; sfx("die"); timeSlow(0.35, 0.9);
     if(DUN.on) endDungeon("dead");
+    clearCombatBuffs();
     const tip=$("overTip"); if(tip) tip.textContent="";
     setTimeout(()=>{ if(G.p.dead) $("over").style.display="flex"; }, 1100);
   }
@@ -5173,7 +5356,7 @@ function toTitle(){
   showTitle();
 }
 function hudFx(dt){
-  if(!HUDFX.els) HUDFX.els={ vig:$("vig"), lag:$("hplag"), sk1:$("sk1"), sk2:$("sk2"), dg:$("dg"), poth:$("potH"), potm:$("potM") };
+  if(!HUDFX.els) HUDFX.els={ vig:$("vig"), lag:$("hplag"), sk1:$("sk1"), sk2:$("sk2"), sk3:$("sk3"), dg:$("dg"), poth:$("potH"), potm:$("potM") };
   const E=HUDFX.els, c=CLASSES[G.classId], P=G.p;
   HUDFX.vig=Math.max(0,HUDFX.vig-dt*2.2);
   const hpF=Math.max(0,P.hp/ST.hp);
@@ -5182,14 +5365,18 @@ function hudFx(dt){
   if(Math.abs(v-HUDFX.vigLast)>0.008){ E.vig.style.opacity=v.toFixed(3); HUDFX.vigLast=v; }
   if(HUDFX.lag>hpF){ HUDFX.lagHold=(HUDFX.lagHold||0)-dt; if(HUDFX.lagHold<=0) HUDFX.lag=Math.max(hpF,HUDFX.lag-dt*0.7); } else { HUDFX.lag=hpF; HUDFX.lagHold=0.35; }
   const lw=Math.round(HUDFX.lag*1000); if(lw!==HUDFX.lagW){ HUDFX.lagW=lw; E.lag.style.width=(lw/10)+"%"; }
-  const keys=["sk1","sk2","dg","poth","potm"];
+  const keys=["sk1","sk2","sk3","dg","poth","potm"];
   for(let k=0;k<keys.length;k++){
     const key=keys[k], el=E[key], cd=G.cd[key]||0, p=cd>0?cd/(G.cdMax[key]||1):0;
     const pr=Math.round(p*200)/200;
     if(pr!==HUDFX.last[key]){ el.style.setProperty("--p",pr); HUDFX.last[key]=pr; }
     const t=cd<0.05?"":(cd<1?cd.toFixed(1):String(Math.ceil(cd)));
     if(t!==HUDFX.txt[key]){ el.lastChild.textContent=t; HUDFX.txt[key]=t; if(t===""&&HUDFX.ready[key]){ el.classList.remove("rdy"); void el.offsetWidth; el.classList.add("rdy"); } HUDFX.ready[key]=t!==""; }
-    const nm=(key==="sk1"||key==="sk2")? P.mp<(key==="sk1"?c.skillMp:c.sk2Mp) : (key==="poth"?G.save.pots.h<=0:key==="potm"?G.save.pots.m<=0:false);
+    const slotI=key==="sk1"?0:key==="sk2"?1:key==="sk3"?2:-1;
+    const sid=slotI>=0?loadoutOf(G.classId)[slotI]:"";
+    const def=sid&&skillDef(G.classId, sid);
+    if(slotI>=0){ const cd=def?(G.cd[sid]||0):0; const p=cd>0&&def?cd/((G.cdMax[sid])||def.cd||1):0; el.style.setProperty("--p", Math.round(p*200)/200); const t=cd<0.05?"":(cd<1?cd.toFixed(1):String(Math.ceil(cd))); if(el.lastChild) el.lastChild.textContent=t; }
+    const nm=def? P.mp<def.mp : (key==="poth"?G.save.pots.h<=0:key==="potm"?G.save.pots.m<=0:false);
     if(nm!==HUDFX.nomp[key]){ el.classList.toggle("nomp",nm); HUDFX.nomp[key]=nm; }
   }
 }
@@ -5215,7 +5402,21 @@ function update(dt){
   if(stopped){ updateCamera(dt,false); updateHPBars(); return; }
   if(G.paused){ updateHPBars(); return; }
   const c=CLASSES[G.classId], P=G.p;
-  G.cd.sk1=Math.max(0,G.cd.sk1-dt); G.cd.sk2=Math.max(0,G.cd.sk2-dt); G.cd.dg=Math.max(0,G.cd.dg-dt);
+  G.cd.dg=Math.max(0,G.cd.dg-dt);
+  if(G.save) bookOf(G.classId).forEach(s=>{
+    if(G.cd[s.id]>0) G.cd[s.id]=Math.max(0, G.cd[s.id]-dt);
+    if(s.legacy){ G.cd[s.legacy]=G.cd[s.id]||0; G.cdMax[s.legacy]=G.cdMax[s.id]||s.cd; }
+  });
+  if(G.buff){
+    if(G.buff.guardT>0) G.buff.guardT=Math.max(0, G.buff.guardT-dt);
+    if(G.buff.barrierT>0) G.buff.barrierT=Math.max(0, G.buff.barrierT-dt);
+    if(G.buff.rallyT>0) G.buff.rallyT=Math.max(0, G.buff.rallyT-dt);
+    if(G.buff.steadyT>0) G.buff.steadyT=Math.max(0, G.buff.steadyT-dt);
+    if(G.buff.focus && G.buff.focusUntil && FX.time>G.buff.focusUntil && !G.buff.focusMul) G.buff.focus=0;
+    if(G.buff.focus>0 && G.buff.focusUntil===0){ G.buff.focusUntil=FX.time+8; }
+    if(G.buff.focus>0 && FX.time>G.buff.focusUntil) G.buff.focus=0;
+    if(G.buff.trap){ G.buff.trap.t-=dt; if(G.buff.trap.t<=0) G.buff.trap=null; }
+  }
   G.cd.poth=Math.max(0,(G.cd.poth||0)-dt); G.cd.potm=Math.max(0,(G.cd.potm||0)-dt);
   G.atkCd=Math.max(0,G.atkCd-dt);
   runLater(dt);
@@ -5345,7 +5546,7 @@ function bindInput(){
   const endAtk=e=>{ if(e.pointerId!==atkPid) return; atkPid=null; G.atkHeld=false; };
   $("atk").addEventListener("pointerup", endAtk);
   $("atk").addEventListener("pointercancel", endAtk);
-  tap("sk1", ()=>trySkill(1)); tap("sk2", ()=>trySkill(2)); tap("dg", tryDodge);
+  tap("sk1", ()=>trySkillSlot(0)); tap("sk2", ()=>trySkillSlot(1)); tap("sk3", ()=>trySkillSlot(2)); tap("dg", tryDodge);
   tap("potH", ()=>usePotion("h")); tap("potM", ()=>usePotion("m"));
   releasePointers=()=>{ joyPid=null; atkPid=null; endJoy(); G.atkHeld=false; CAM.ptrs.clear(); CAM.dragging=false; CAM.pinch0=0; };
   $("talk").addEventListener("click", tryTalk);
@@ -5471,6 +5672,7 @@ const G = {
   p:{x:TOWN_CFG.spawnX,z:TOWN_CFG.spawnZ,y:0,yaw:0,vx:0,vz:0,hp:160,mp:50,dead:false,atkT:0,spinT:0,hitStop:0},
   enemies:[], npcs:[], shots:[], parts:[], pickups:[],
   save:null, near:null, dlg:null, atkCd:0, combo:0, comboIdle:0, comboQueued:false, cd:{sk1:0,sk2:0,dg:0}, cdMax:{sk1:1,sk2:1,dg:1},
+  buff:{guard:0,guardT:0,barrier:0,barrierT:0,rallyT:0,focus:0,focusMul:1,focusUntil:0,steadyN:0,steadyT:0,trap:null}, skillPick:"", slotPick:0,
   hitStop:0, timeScale:1, dashHits:new Array(16), dashHitN:0, saveDirty:false,
   shake:0, keys:{}, joy:{x:0,y:0,on:false}, paused:false, freezeCam:false, boss:null, bagNew:false,
   saveNote:"", saveOk:true, saveErr:"", coach:null, perf:{frames:0, dtMs:0, stepMs:0, draws:0, tris:0, hidden:0}
@@ -5694,19 +5896,100 @@ function meleeHit(step){
   }
   if(hits){ hitStop(sw.stop*(crit?1.35:1)); addShake(sw.shake*(crit?1.35:1)); }
 }
-function trySkill(n){
-  n=n===2?2:1;
-  if(!canAct()||busyPlayer()) return;
-  const P=G.p, c=CLASSES[G.classId], key=n===1?"sk1":"sk2", cost=n===1?c.skillMp:c.sk2Mp, cdv=cdScale(n===1?c.skillCd:c.sk2Cd, key);
-  if(G.cd[key]>0) return;
-  if(P.mp<cost){ spawnNum(P.x,(P.y||0)+2.0,P.z,"法力不足",3); return; }
-  P.mp-=cost; G.cd[key]=cdv; G.cdMax[key]=cdv;
+function clearCombatBuffs(){
+  G.buff={guard:0,guardT:0,barrier:0,barrierT:0,rallyT:0,focus:0,focusMul:1,focusUntil:0,steadyN:0,steadyT:0,trap:null};
+  if(G.enemies) G.enemies.forEach(e=>{ e.slowT=0; e.markT=0; });
+}
+function enemySpd(e){ let s=e.spd; if(e.slowT>0) s*=Math.max(0.55, 1-(e.slow||0)); return s; }
+function applySlow(e, amt, time){
+  const resist=!!(e.boss||e.elite||e.heavy||e.dunBoss);
+  e.slow=resist?Math.min(0.15, amt):amt;
+  e.slowT=time;
+}
+function stepMove(dist, ux, uz){
+  let moved=0; const step=0.3, n=Math.max(1, Math.ceil(Math.abs(dist)/step));
+  for(let i=0;i<n;i++){
+    const s=Math.min(step, Math.abs(dist)-moved);
+    const x0=G.p.x, z0=G.p.z;
+    tryMove(ux*s*(dist<0?-1:1), uz*s*(dist<0?-1:1));
+    const got=Math.hypot(G.p.x-x0, G.p.z-z0);
+    moved+=got; if(got<s*0.35) break;
+  }
+  return moved;
+}
+function armFocus(){
+  if(!G.buff || !G.buff.focus) return;
+  G.buff.focusMul=1.25; G.buff.focusUntil=(FX.time||0)+0.8; G.buff.focus=0;
+  if(G.p) G.p.mp=Math.min(ST.mp, G.p.mp+8);
+}
+function castSkill(sid){
+  const id=G.classId, c=CLASSES[id], P=G.p;
   P.atkT=0; G.comboQueued=false;
-  const id=G.classId;
-  if(id==="swordsman"){ if(n===1) skSpin(); else skDash(); }
-  else if(id==="mage"){ if(n===1) skNova(); else skMissiles(); }
-  else { if(n===1) skFan(); else skPierce(); }
+  if(id==="mage" && sid!=="m_focus") armFocus();
+  if(sid==="s_spin") return skSpin();
+  if(sid==="s_dash") return skDash();
+  if(sid==="m_nova") return skNova();
+  if(sid==="m_miss") return skMissiles();
+  if(sid==="a_fan") return skFan();
+  if(sid==="a_pierce") return skPierce();
+  if(sid==="s_guard"){ G.buff.guard=Math.round(ST.hp*0.18); G.buff.guardT=2.8; spawnNum(P.x,(P.y||0)+1.6,P.z,"护盾",4); sfx("potion"); return; }
+  if(sid==="m_ward"){ G.buff.barrier=Math.round(ST.hp*0.22); G.buff.barrierT=5; spawnNum(P.x,(P.y||0)+1.6,P.z,"法盾",5); sfx("potion"); return; }
+  if(sid==="s_rally"){ G.buff.rallyT=6; spawnNum(P.x,(P.y||0)+1.6,P.z,"战吼",1); sfx("roar"); return; }
+  if(sid==="m_focus"){ G.buff.focus=1; G.buff.focusUntil=(FX.time||0)+8; spawnNum(P.x,(P.y||0)+1.6,P.z,"聚魔",5); sfx("charge"); return; }
+  if(sid==="a_steady"){ G.buff.steadyN=3; G.buff.steadyT=6; spawnNum(P.x,(P.y||0)+1.6,P.z,"稳射",1); sfx("draw"); return; }
+  if(sid==="s_leap"){
+    const ux=Math.sin(P.yaw), uz=Math.cos(P.yaw);
+    stepMove(4.2, ux, uz);
+    spawnDecal("shock", P.x, P.z, 0.3, 1.8, 0xffd27a, 0.5);
+    G.enemies.forEach(e=>{ if(e.dead) return; if(Math.hypot(e.x-P.x,e.z-P.z)-e.r<1.7) hitEnemy(e, outgoing(c.atk*1.15,"s_leap"), ux, uz, 5, {power:0.8, col:0xffd27a}); });
+    sfx("dash"); return;
+  }
+  if(sid==="m_blink"){ stepMove(3.2, Math.sin(P.yaw), Math.cos(P.yaw)); P.invT=Math.max(P.invT,0.12); sfx("orb"); return; }
+  if(sid==="a_back"){
+    const fx=Math.sin(P.yaw), fz=Math.cos(P.yaw);
+    stepMove(-3, fx, fz);
+    fireShot(0, 0, outgoing(c.atk*0.9,"a_back"), 26, nearestEnemy(12));
+    sfx("dash"); return;
+  }
+  if(sid==="s_shock" || sid==="m_frost"){
+    const R=sid==="s_shock"?2.5:2.7, x=P.x, z=P.z;
+    spawnDecal("shock", x, z, 0.4, R, sid==="s_shock"?0xffb060:0xb9dcff, 0.55);
+    G.enemies.forEach(e=>{ if(e.dead) return; if(Math.hypot(e.x-x,e.z-z)-e.r>R) return; applySlow(e, 0.4, sid==="s_shock"?2.2:2.4); if(sid==="m_frost") hitEnemy(e, outgoing(c.atk*0.55,"m_frost"), 0, 1, 1, {power:0.3, col:0xb9dcff}); });
+    sfx(sid==="s_shock"?"slam":"charge"); return;
+  }
+  if(sid==="a_mark"){
+    const e=nearestEnemy(12); if(!e){ spawnNum(P.x,(P.y||0)+1.6,P.z,"没有目标",3); return; }
+    e.mark=0.15; e.markT=5; spawnNum(e.x,e.y+1.4,e.z,"标记",1); sfx("draw"); return;
+  }
+  if(sid==="a_trap"){ G.buff.trap={x:P.x,z:P.z,r:2.2,t:3.2}; spawnDecal("circle", P.x, P.z, 0.4, 2.2, 0xb7e38a, 0.7); sfx("summon"); return; }
+}
+function trySkillSlot(i){
+  if(!canAct()||busyPlayer()) return;
+  const id=G.classId, sid=loadoutOf(id)[i]||"";
+  if(!sid){ toast("这个技能槽是空的"); return; }
+  const d=skillDef(id, sid);
+  if(!d || (G.save.level|0)<d.lv){ toast("还没解锁"); return; }
+  if((G.cd[sid]||0)>0) return;
+  if(G.p.mp<d.mp){ spawnNum(G.p.x,(G.p.y||0)+2,G.p.z,"法力不足",3); paintSkills(); return; }
+  G.p.mp-=d.mp;
+  const cdv=cdScale(d.cd, sid);
+  G.cd[sid]=cdv; G.cdMax[sid]=cdv;
+  if(d.legacy){ G.cd[d.legacy]=cdv; G.cdMax[d.legacy]=cdv; }
+  castSkill(sid);
   refreshHUD();
+}
+function trySkill(n){ trySkillSlot(n===2?1:0); }
+function paintSkills(){
+  const id=G.classId, load=loadoutOf(id);
+  ["sk1","sk2","sk3"].forEach((el,i)=>{
+    const b=$(el); if(!b) return;
+    const sid=load[i]||"", d=sid&&skillDef(id, sid);
+    b.classList.toggle("empty", !d);
+    const lb=b.querySelector(".lb"); if(lb) lb.textContent=d?d.name:(i===2 && slotCount(G.save.level)<3?"未开":"空槽");
+    const role=d?d.role:"";
+    const col=role==="防御"?"#3aa88a":role==="控制"?"#6a7ad8":role==="位移"?"#d28a3a":role==="增益"||role==="资源"?"#c9a24a":"#4aa6e8";
+    b.style.setProperty("--sc", col); b.style.setProperty("--sc2", col);
+  });
 }
 function skSpin(){
   const P=G.p; P.spinT=0.62; P.spinTick=0; P.spinN=0;
@@ -5992,7 +6275,7 @@ function init(){
   uiInit();
   $("loadtip").textContent=TIPS[Math.floor(Math.random()*TIPS.length)];
   window.__mengyu={ G, GLB, TOWN, TOWN_CFG, CAM, groundAt, inTownBounds, startAdventure, tryAttack, trySkill, tryDodge, damagePlayer, hitEnemy, spawnSlime, spawnEnemy, FX, SFX, SHOTS, DROPS, LATER, camClamp,
-    ST, QUESTS, NPCS, ZONES, ALTAR, ELITE_SPOT, SPAWN, ESHOTS, LOOT, MUS, SET, gainXP, grantXP, genItem, addItem, equipItem, recalcStats, usePotion, tryTalk, advDlg, closeDlg, openBag, closeBag, openSettings, closeSettings, showTitle, showSelect, selectClass, beginNew, toTitle, resurrect, xpNeed, qst, tracked, loadSave, persist, migrateSave, readSaveState, previewImport, exportSaveText, requestImport, exportCurrent, BUILD, SCHEMA, SAVE_KEY, SAVE_BAK, SAVE_BAD, SAVE_NEWER, clearEnemies, populateField, killEnemy, refreshHUD, drawMinimap, charThumb, camera, scene, startTrial, endTrial, TRIAL, DUN, DUN_DIFF, openDungeon, closeDungeon, startDungeon, endDungeon, claimVoucher, takePending, previewDungeon, growthMul, openQuestLog, closeQuestLog, claimQuest, acceptQuest, checkAchievements, achHtml, ACH, bossLevel, tickCoach, finishCoach, upgradeSkill, takeTalent, confirmRespec, askRespec, openGrowth, closeGrowth, renderGrowth, outgoing, cdScale, combatMods, skillRank, talentBudget, respecCost, inspectGrowth, inspectGear, enhanceItem, toggleLock, sellItem, equipItem, addItem, bulkQuote, confirmBulk, effStat, sellValue, enhanceCost, get camera(){ return camera; }, get renderer(){ return renderer; } };
+    ST, QUESTS, NPCS, ZONES, ALTAR, ELITE_SPOT, SPAWN, ESHOTS, LOOT, MUS, SET, gainXP, grantXP, genItem, addItem, equipItem, recalcStats, usePotion, tryTalk, advDlg, closeDlg, openBag, closeBag, openSettings, closeSettings, showTitle, showSelect, selectClass, beginNew, toTitle, resurrect, xpNeed, qst, tracked, loadSave, persist, migrateSave, readSaveState, previewImport, exportSaveText, requestImport, exportCurrent, BUILD, SCHEMA, SAVE_KEY, SAVE_BAK, SAVE_BAD, SAVE_NEWER, clearEnemies, populateField, killEnemy, refreshHUD, drawMinimap, charThumb, camera, scene, startTrial, endTrial, TRIAL, DUN, DUN_DIFF, openDungeon, closeDungeon, startDungeon, endDungeon, claimVoucher, takePending, previewDungeon, growthMul, openQuestLog, closeQuestLog, claimQuest, acceptQuest, checkAchievements, achHtml, ACH, bossLevel, tickCoach, finishCoach, upgradeSkill, takeTalent, confirmRespec, askRespec, openGrowth, closeGrowth, renderGrowth, equipSkill, trySkillSlot, castSkill, paintSkills, SKILL_BOOK, loadoutOf, slotCount, clearCombatBuffs, outgoing, cdScale, combatMods, skillRank, talentBudget, respecCost, inspectGrowth, inspectGear, enhanceItem, toggleLock, sellItem, equipItem, addItem, bulkQuote, confirmBulk, effStat, sellValue, enhanceCost, get camera(){ return camera; }, get renderer(){ return renderer; } };
   loadCharacterModels(()=>{ upgradeVisuals(); });
   window.addEventListener("resize", ()=>{ uiLayout(); });
 

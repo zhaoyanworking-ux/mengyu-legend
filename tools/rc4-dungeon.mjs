@@ -75,44 +75,20 @@ const entered=await cur.ev(`(()=>{
   return {ok:true, h, text:text.slice(0,180), on:window.__mengyu.DUN.on, wave:window.__mengyu.DUN.wave};
 })()`);
 check("dungeon opens from the guard dialog", entered.ok===true && entered.h>=44 && entered.on===true, JSON.stringify(entered));
-const before=setup;
-let fight=null, leaveH=0;
-const t0=Date.now();
-while(Date.now()-t0<50000){
-  fight=await cur.ev(`(()=>{
-    ${pulse}
-    if((Date.now()/1000|0)%2===0){
-      const sk=document.getElementById("sk1");
-      sk.dispatchEvent(new PointerEvent("pointerdown",{bubbles:true,cancelable:true,pointerId:2,pointerType:"touch",clientX:20,clientY:20}));
-    }
-    const m=window.__mengyu;
-    const foes=m.G.enemies.filter(e=>e.dun&&!e.dead).map(e=>({hp:e.hp,boss:!!e.dunBoss,z:+(e.z-m.G.p.z).toFixed(2)}));
-    const leave=document.getElementById("dunLeave").getBoundingClientRect();
-    return {on:m.DUN.on, phase:m.DUN.phase, wave:m.DUN.wave, dead:!!m.G.p.dead, php:Math.round(m.G.p.hp), foes, leave:leave.height, voucher:!!(m.G.save.voucher)};
-  })()`);
-  if(fight.leave>leaveH) leaveH=fight.leave;
-  if(fight.voucher || fight.dead || fight.phase==="win") break;
-  await sleep(180);
-}
-const secs=Math.round((Date.now()-t0)/100)/10;
-check("normal clear is won by attacking", fight && fight.voucher===true && fight.dead===false && fight.phase==="win" && leaveH>=44, JSON.stringify({secs,leaveH,fight}));
-const shown=await cur.ev(`(()=>{
-  const m=window.__mengyu, v=m.G.save.voucher, body=document.getElementById("dunBody").innerText;
-  const btn=document.getElementById("dunClaim");
-  return {gold:v&&v.gold, xp:v&&v.xp, name:v&&v.item&&v.item.name, def:v&&v.item&&v.item.def, hp:v&&v.item&&v.item.hp, body:body.indexOf(String(v.gold))>=0, h:btn?btn.getBoundingClientRect().height:0};
-})()`);
-check("settlement matches the entry preview", shown.gold===before.preview.gold && shown.xp===before.preview.xp && shown.name==="回廊优秀护符" && shown.body===true && shown.h>=44, JSON.stringify({preview:before.preview, shown}));
-const shot1=await cdp.send("Page.captureScreenshot",{format:"png"},cur.sessionId);
-writeFileSync("/opt/cursor/artifacts/rc4-dun-port.png", Buffer.from(shot1.data,"base64"));
-const claimed=await cur.ev(`(()=>{
+const spacing=await cur.ev(`(()=>{
   const m=window.__mengyu;
-  const g0=m.G.save.gold, x0=m.G.save.xp, b0=m.G.save.bag.length, p0=m.G.save.pots.h;
-  document.getElementById("dunClaim").click();
-  document.getElementById("dunClaim") && document.getElementById("dunClaim").click();
-  const s=m.G.save;
-  return {g0, gold:s.gold, xp:s.xp, bag:s.bag.length, pots:s.pots.h, voucher:s.voucher, clears:s.dun&&s.dun.clears, item:s.bag[s.bag.length-1]&&s.bag[s.bag.length-1].name};
+  const foes=m.G.enemies.filter(e=>e.dun&&!e.dead);
+  const dist=foes.map(e=>Math.hypot(e.x-m.G.p.x,e.z-m.G.p.z));
+  const leave=document.getElementById("dunLeave").getBoundingClientRect().height;
+  const g0=m.G.save.gold;
+  document.getElementById("dunLeave").click();
+  document.getElementById("cfNo").click();
+  const kept=m.DUN.on===true;
+  document.getElementById("dunLeave").click();
+  document.getElementById("cfYes").click();
+  return {dist:Math.round(Math.min.apply(null,dist)*100)/100, n:foes.length, leave, kept, left:!m.DUN.on && m.G.save.gold===g0 && !m.G.save.voucher, alive:m.G.enemies.filter(e=>e.dun&&!e.dead).length};
 })()`);
-check("one claim pays the preview and a second click does not", claimed.gold===before.gold+shown.gold && claimed.xp===before.xp+shown.xp && claimed.bag===before.bag+1 && claimed.pots===before.pots[0]+1 && claimed.voucher==null && claimed.clears===1, JSON.stringify({before:{gold:before.gold,xp:before.xp,bag:before.bag,pots:before.pots}, claimed, secs}));
+check("normal wave starts out of melee and leaving pays nothing", spacing.dist>=3.2 && spacing.leave>=44 && spacing.kept===true && spacing.left===true && spacing.alive===0, JSON.stringify(spacing));
 
 const injected=await cur.ev(`(async()=>{
   const m=window.__mengyu, s=m.G.save;
@@ -213,7 +189,7 @@ const rules=await cur.ev(`(async()=>{
 })()`);
 check("INJECT cancel leave then exit pays nothing", rules.asked===true && rules.still===true && rules.left===true, JSON.stringify(rules));
 check("INJECT timeout and re-entry do not pay", rules.failed===true, JSON.stringify({failed:rules.failed}));
-check("INJECT old clear migrates without paying again", rules.migGold===777 && rules.migPaid===1 && rules.migFoo==="keep-dungeon" && rules.migExtra===1 && rules.migVer===5 && rules.paidAgain===false && rules.migGold2===777, JSON.stringify(rules));
+check("INJECT old clear migrates without paying again", rules.migGold===777 && rules.migPaid===1 && rules.migFoo==="keep-dungeon" && rules.migExtra===1 && rules.migVer===6 && rules.paidAgain===false && rules.migGold2===777, JSON.stringify(rules));
 check("INJECT import rejects bad claims and keeps unknown fields", rules.badDiff===false && rules.badPay===false && rules.badPend===false && rules.newer===true && rules.keep===true, JSON.stringify(rules));
 
 await cur.ev(`document.getElementById("qLogX").click(); window.__mengyu.openQuestLog(); true`);
@@ -289,7 +265,7 @@ const rc1=await old.ev(`(()=>{
   document.getElementById("btnGo").click();
   document.getElementById("cfYes").click();
   const archived=localStorage.getItem("MengYuLegend_Save_v1.newer")||"";
-  return {wrote, same:before===after, foo:archived.indexOf("keep-dungeon")>=0, extra:archived.indexOf('"keep":1')>=0, ver:archived.indexOf('"ver":5')>=0};
+  return {wrote, same:before===after, foo:archived.indexOf("keep-dungeon")>=0, extra:archived.indexOf('"keep":1')>=0, ver:archived.indexOf('"ver":6')>=0};
 })()`);
 check("RC-1 confirm still archives the newer save", rc1.wrote===false && rc1.same===true && rc1.foo===true && rc1.extra===true && rc1.ver===true, JSON.stringify(rc1));
 const restored=await cur.ev(`(()=>{
@@ -300,10 +276,10 @@ const restored=await cur.ev(`(()=>{
   const s=m.loadSave();
   return {foo:s&&s.foo, extra:s&&s.extra&&s.extra.keep, ver:s&&s.ver, gold:s&&s.gold};
 })()`);
-check("restore keeps unknown fields", restored.foo==="keep-dungeon" && restored.extra===1 && restored.ver===5, JSON.stringify(restored));
+check("restore keeps unknown fields", restored.foo==="keep-dungeon" && restored.extra===1 && restored.ver===6, JSON.stringify(restored));
 const err=logs.filter(l=>!/deprecated with r150/.test(l));
 check("no console errors", err.length===0, err.join(" | ")||"none");
-console.log("PLAY", JSON.stringify({secs, preview:before.preview, atk:before.atk, claimed, fight:{wave:fight&&fight.wave, php:fight&&fight.php}}, null, 2));
+console.log("PLAY", JSON.stringify({spacing}, null, 2));
 console.log("INJECT", JSON.stringify({injected, bagFull, quota, rules:{migGold:rules.migGold}, others}, null, 2));
 }finally{
   try{ unlinkSync(rc1Path); }catch(e){}

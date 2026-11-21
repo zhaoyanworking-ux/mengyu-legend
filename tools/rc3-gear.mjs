@@ -146,7 +146,7 @@ const rc1=await old.ev(`(()=>{
   document.getElementById("cfYes").click();
   const primary=localStorage.getItem("MengYuLegend_Save_v1");
   const archived=localStorage.getItem("MengYuLegend_Save_v1.newer");
-  return {wrote, same:before===after, asked, archivedIsV4:archived&&archived.indexOf('"ver":5')>=0 && archived.indexOf("keep-gear")>=0, primaryVer:primary&&JSON.parse(primary).ver, build:m.BUILD.name};
+  return {wrote, same:before===after, asked, archivedIsV4:archived&&archived.indexOf('"ver":6')>=0 && archived.indexOf("keep-gear")>=0, primaryVer:primary&&JSON.parse(primary).ver, build:m.BUILD.name};
 })()`);
 check("real RC-1 autosave does not overwrite a v4 save", rc1.build==="RC-1" && rc1.wrote===false && rc1.same===true, JSON.stringify({wrote:rc1.wrote,same:rc1.same,build:rc1.build}));
 check("RC-1 new game confirms, archives the raw v4, then writes its own save", rc1.asked===true && rc1.archivedIsV4===true && rc1.primaryVer===2, JSON.stringify({asked:rc1.asked,arch:rc1.archivedIsV4,ver:rc1.primaryVer}));
@@ -160,7 +160,7 @@ const restored=await cur.ev(`(async()=>{
   const s=m.loadSave();
   return {visible, gold:s&&s.gold, plus:s&&s.equip&&s.equip.weapon&&s.equip.weapon.plus, foo:s&&s.foo, ver:s&&s.ver};
 })()`);
-check("current build can restore the archived v5 save", restored.visible===true && restored.plus===1 && restored.foo==="keep-gear" && restored.ver===5, JSON.stringify(restored));
+check("current build can restore the archived v6 save", restored.visible===true && restored.plus===1 && restored.foo==="keep-gear" && restored.ver===6, JSON.stringify(restored));
 
 await cdp.send("Emulation.setDeviceMetricsOverride",{width:360,height:640,deviceScaleFactor:1,mobile:true},cur.sessionId);
 const layout=await cur.ev(`(()=>{
